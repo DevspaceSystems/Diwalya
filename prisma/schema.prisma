@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  WORKER
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum JobStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  phone         String?   @unique
+  passwordHash  String?
+  name          String
+  role          Role      @default(CLIENT)
+  profilePicture String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  workerProfile   WorkerProfile?
+  clientJobs      Job[]     @relation("ClientJobs")
+  workerJobs      Job[]     @relation("WorkerJobs")
+  reviewsGiven    Review[]  @relation("ReviewsGiven")
+  reviewsReceived Review[]  @relation("ReviewsReceived")
+  wallet          Wallet?
+  withdrawals     WithdrawalRequest[]
+}
+
+model WorkerProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        String
+  bio             String?
+  experienceYears Int      @default(0)
+  location        String
+  hourlyRate      Float?
+  isVerified      Boolean  @default(false)
+  availability    String?  // Could be JSON or simple text
+  portfolioImages String[] // Array of image URLs
+  portfolioVideos String[] // Array of video URLs
+  businessName    String?
+  ghanaCardUrl    String?
+  rejectionReason String?
+  verificationStatus VerificationStatus @default(PENDING)
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      User     @relation("ClientJobs", fields: [clientId], references: [id])
+  workerId    String
+  worker      User     @relation("WorkerJobs", fields: [workerId], references: [id])
+  serviceType String
+  description String
+  location    String
+  scheduledAt DateTime
+  status      JobStatus @default(PENDING)
+  priceAmount Float?
+  paymentId   String?  @unique
+  payment     Payment? @relation(fields: [paymentId], references: [id])
+  createdAt   DateTime @default(now())
+  
+  review      Review?
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  amount        Float
+  currency      String   @default("GHS")
+  status        String   // PENDING, SUCCESS, FAILED
+  reference     String   @unique // Paystack transaction reference
+  createdAt     DateTime @default(now())
+  
+  job           Job?
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  jobId       String   @unique
+  job         Job      @relation(fields: [jobId], references: [id])
+  authorId    String
+  author      User     @relation("ReviewsGiven", fields: [authorId], references: [id])
+  targetId    String
+  target      User     @relation("ReviewsReceived", fields: [targetId], references: [id])
+  rating      Int      // 1 to 5
+  comment     String?
+  createdAt   DateTime @default(now())
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance   Float    @default(0.0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum TransactionPurpose {
+  JOB_PAYMENT
+  WITHDRAWAL
+  PLATFORM_FEE
+  REFUND
+}
+
+model Transaction {
+  id        String             @id @default(cuid())
+  walletId  String
+  wallet    Wallet             @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount    Float
+  type      TransactionType
+  purpose   TransactionPurpose
+  reference String?            @unique // e.g. from Paystack or internal job ID
+  status    String             @default("SUCCESS") // PENDING, SUCCESS, FAILED
+  metadata  String?            // JSON string for extra info
+  createdAt DateTime           @default(now())
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+enum WithdrawalMethod {
+  MOMO
+  BANK
+}
+
+model WithdrawalRequest {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount         Float
+  status         WithdrawalStatus @default(PENDING)
+  method         WithdrawalMethod 
+  accountName    String
+  accountNumber  String
+  bankName       String?          // Required if BANK, e.g. MTN, Vodafone, GCB
+  adminNotified  Boolean          @default(false)
+  processedAt    DateTime?
+  adminNotes     String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
