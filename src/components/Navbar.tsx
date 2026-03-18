@@ -16,7 +16,8 @@ import {
   Briefcase, 
   HelpCircle,
   Bell,
-  ChevronDown
+  ChevronDown,
+  ClipboardList
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -109,9 +110,14 @@ export default function Navbar() {
             ) : (
               <div className="flex items-center space-x-8">
                 {role === 'CLIENT' ? (
-                  <Link href="/bookings" className={cn("text-secondary hover:text-secondary-light font-bold transition-colors flex items-center gap-2", pathname === '/bookings' && "text-secondary underline underline-offset-8 decoration-2")}>
-                    <Briefcase size={18} /> My Bookings
-                  </Link>
+                  <div className="flex items-center space-x-8">
+                    <Link href="/special-request" className={cn("text-primary hover:text-primary-light font-bold transition-colors flex items-center gap-2", pathname === '/special-request' && "text-primary underline underline-offset-8 decoration-2")}>
+                      <ClipboardList size={18} /> Request a Worker
+                    </Link>
+                    <Link href="/bookings" className={cn("text-secondary hover:text-secondary-light font-bold transition-colors flex items-center gap-2", pathname === '/bookings' && "text-secondary underline underline-offset-8 decoration-2")}>
+                      <Briefcase size={18} /> My Bookings
+                    </Link>
+                  </div>
                 ) : (
                   <>
                     <Link href="/dashboard/worker" className={cn("text-gray-600 hover:text-primary font-medium transition-colors flex items-center gap-2", pathname === '/dashboard/worker' && "text-primary font-bold")}>

@@ -117,7 +117,15 @@ export default function SearchPage() {
                       <div>
                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                           {worker.name}
-                          {worker.verified && <ShieldCheck size={18} className="text-blue-500 fill-blue-50" />}
+                          {worker.verified ? (
+                            <div className="flex items-center gap-1 text-blue-500 font-black text-[10px] uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded">
+                               <ShieldCheck size={14} className="fill-blue-50" /> Verified
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-gray-400 font-black text-[10px] uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded">
+                               <XCircle size={14} /> Unverified
+                            </div>
+                          )}
                         </h3>
                         <p className="text-primary font-bold">{worker.category}</p>
                       </div>

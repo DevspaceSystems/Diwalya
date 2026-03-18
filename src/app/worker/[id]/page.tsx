@@ -3,7 +3,7 @@
 import React, { use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, MapPin, ShieldCheck, Clock, CheckCircle, Calendar, MessageSquare, ArrowRight, Share2, Heart, Briefcase, X, Send, AlertTriangle } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, Clock, CheckCircle, Calendar, MessageSquare, ArrowRight, Share2, Heart, Briefcase, X, Send, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 
 export default function WorkerProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -114,9 +114,13 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
               <div className="flex-grow">
                 <div className="flex flex-wrap items-center gap-3 mb-2">
                   <h1 className="text-3xl font-black text-gray-900">{worker.name}</h1>
-                  {worker.verified && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-black uppercase tracking-wider rounded-full border border-blue-100">
-                      <ShieldCheck size={14} className="fill-blue-50" /> Verified
+                  {worker.verified ? (
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-xl border border-blue-100">
+                      <ShieldCheck size={14} className="fill-blue-50" /> Verified Worker
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-wider rounded-xl border border-gray-100">
+                      <X size={14} /> Unverified Worker
                     </div>
                   )}
                 </div>
@@ -213,8 +217,17 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                   onClick={() => setShowChat(true)}
                   className="w-full bg-gray-50 hover:bg-gray-100 text-gray-800 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all"
                 >
-                  <MessageSquare size={20} /> Chat with Kwame
+                  <MessageSquare size={20} /> Chat with {worker.name.split(' ')[0]}
                 </button>
+              </div>
+
+              <div className="mt-6 p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50">
+                <div className="flex items-center gap-2 text-orange-700 font-black text-[10px] uppercase tracking-widest mb-1">
+                  <ShieldAlert size={14} /> Platform Protected
+                </div>
+                <p className="text-[10px] text-gray-400 font-medium leading-tight">
+                  Contact details are strictly hidden until booking is confirmed and payment is completed through Diwalya.
+                </p>
               </div>
 
               <p className="text-center text-xs text-gray-400 mt-6 font-medium">

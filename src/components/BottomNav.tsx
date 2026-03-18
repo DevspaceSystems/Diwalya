@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Briefcase, User, LogIn, Search, Wallet, LayoutDashboard } from 'lucide-react';
+import { Home, Briefcase, User, LogIn, Search, Wallet, LayoutDashboard, ClipboardList } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { cn } from '../lib/utils';
 
@@ -47,6 +47,7 @@ export default function BottomNav() {
     ] : [
         { label: 'Home', href: '/', icon: Home },
         { label: 'Search', href: '/search', icon: Search },
+        { label: 'Request', href: '/special-request', icon: ClipboardList },
         { label: 'Bookings', href: '/bookings', icon: Briefcase },
         { label: 'Profile', href: '/profile', icon: User },
     ];

@@ -1,134 +1,165 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
 import { 
-  CreditCard, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
   Wallet, 
+  CreditCard, 
+  TrendingUp, 
+  TrendingDown, 
   Search, 
   Filter, 
   Download,
-  Users,
-  CheckCircle2,
+  ArrowUpRight,
+  ArrowDownRight,
+  Clock,
+  User,
   ShieldCheck,
-  MoreHorizontal
+  Zap
 } from 'lucide-react';
+import { getFinancialData } from '@/app/actions/finance';
+import { cn } from '@/lib/utils';
 
-export default function AdminPaymentManagement() {
-  const transactions = [
-    { id: 'TX-1004', type: 'Payout', user: 'Kwame Mensah', amount: '-₵160.00', status: 'Completed', date: 'Oct 24, 09:12', method: 'MTN MoMo' },
-    { id: 'BK-7215', type: 'Payment', user: 'John Mensah', amount: '+₵850.00', status: 'In Escrow', date: 'Oct 24, 10:15', method: 'Visa Card' },
-    { id: 'TX-1002', type: 'Payout', user: 'Sarah Mensah', amount: '-₵420.00', status: 'Pending', date: 'Oct 23, 18:00', method: 'Vodafone Cash' },
-  ];
+export default function FinancialLedgerPage() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const res = await getFinancialData();
+    if (res.success) setData(res.data);
+    setLoading(false);
+  };
+
+  if (loading || !data) {
+     return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-black text-slate-400 uppercase tracking-widest text-xs animate-pulse">Auditing platform finances...</div>;
+  }
+
+  const { stats, transactions, wallets } = data;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar Placeholder */}
-      <aside className="w-64 bg-slate-900 text-slate-400 flex flex-col fixed inset-y-0 z-50">
-        <div className="p-8">
-           <div className="bg-white p-2 rounded-lg inline-block">
-              <Image src="/diwalya-logo.png" alt="Diwalya Admin" width={120} height={30} className="object-contain" />
-           </div>
+    <div className="min-h-screen bg-slate-50 p-8 space-y-10">
+      <div className="max-w-7xl mx-auto space-y-10">
+        <div className="flex justify-between items-end">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Financial Ledger</h1>
+            <p className="text-slate-500 font-medium mt-1 uppercase text-[10px] tracking-widest font-black">Platform-wide economics</p>
+          </div>
+          <button className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:scale-[1.02] transition-all">
+            <Download size={16} /> Export Reconciliation
+          </button>
         </div>
-        <nav className="flex-grow px-4 space-y-1">
-          <Link href="/dashboard/admin" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <ShieldCheck size={20} /> Overview
-          </Link>
-          <Link href="/dashboard/admin/workers" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <Users size={20} /> Manage Workers
-          </Link>
-          <Link href="/dashboard/admin/bookings" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <CheckCircle2 size={20} /> Oversight
-          </Link>
-          <Link href="/dashboard/admin/payments" className="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-xl font-bold transition-all">
-            <CreditCard size={20} /> Payments
-          </Link>
-        </nav>
-      </aside>
 
-      <main className="flex-grow ml-64 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-end mb-10">
-            <div>
-              <h1 className="text-3xl font-black text-gray-900 mb-2">Payment Management</h1>
-              <p className="text-gray-500">Manage platform commissions, escrow funds, and payouts.</p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-[#0F172A] p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
+                <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl"></div>
+                <div className="flex justify-between items-start mb-6">
+                    <div className="p-4 bg-white/10 rounded-2xl">
+                        <TrendingUp size={28} className="text-emerald-400" />
+                    </div>
+                </div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Total Transaction Volume</p>
+                <p className="text-4xl font-black">₵{stats.totalVolume.toLocaleString()}</p>
             </div>
-            <button className="bg-white px-6 py-3 border border-gray-200 rounded-2xl font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2">
-              Export CSV <Download size={18} />
-            </button>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total in Escrow</p>
-                <h3 className="text-4xl font-black text-gray-900">₵14,280</h3>
-                <div className="mt-4 flex items-center gap-2 text-green-500 font-bold text-xs">
-                   <ArrowUpRight size={14} /> +₵1.2k today
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden">
+                <div className="flex justify-between items-start mb-6">
+                    <div className="p-4 bg-primary/5 rounded-2xl text-primary">
+                        <Zap size={28} />
+                    </div>
                 </div>
-             </div>
-             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Platform Commission</p>
-                <h3 className="text-4xl font-black text-primary">₵2,140</h3>
-                <p className="mt-4 text-xs font-bold text-gray-400">Net revenue this month</p>
-             </div>
-             <div className="bg-slate-900 p-8 rounded-3xl text-white">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Active Payouts</p>
-                <h3 className="text-4xl font-black">24</h3>
-                <button className="mt-6 w-full py-3 bg-secondary text-white font-black rounded-xl text-xs hover:scale-105 transition-all">
-                  Process All Payouts
-                </button>
-             </div>
-          </div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Platform Commission (5%)</p>
+                <p className="text-4xl font-black text-slate-900">₵{stats.platformCommission.toLocaleString()}</p>
+            </div>
 
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-             <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                <div className="flex gap-4">
-                   <button className="bg-white border rounded-xl px-4 py-2 text-xs font-bold text-primary border-primary">All Transactions</button>
-                   <button className="bg-white border rounded-xl px-4 py-2 text-xs font-bold text-gray-400 border-gray-100 hover:border-gray-200">Payouts</button>
-                   <button className="bg-white border rounded-xl px-4 py-2 text-xs font-bold text-gray-400 border-gray-100 hover:border-gray-200">Payments</button>
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden">
+                <div className="flex justify-between items-start mb-6">
+                    <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-600">
+                        <Wallet size={28} />
+                    </div>
                 </div>
-                <div className="relative">
-                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                   <input type="text" placeholder="Search Trans ID..." className="pl-9 pr-4 py-2 bg-white border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary w-48" />
-                </div>
-             </div>
-
-             <div className="divide-y divide-gray-50">
-                {transactions.map((txn) => (
-                   <div key={txn.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center gap-6">
-                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${txn.type === 'Payout' ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-600'}`}>
-                            {txn.type === 'Payout' ? <ArrowUpRight size={24} /> : <ArrowDownLeft size={24} />}
-                         </div>
-                         <div>
-                            <h4 className="font-black text-gray-900 flex items-center gap-2">
-                               {txn.user}
-                               <span className="text-[10px] font-bold text-gray-400 font-mono tracking-tighter">{txn.id}</span>
-                            </h4>
-                            <p className="text-xs text-gray-500 font-bold">{txn.date} • {txn.method}</p>
-                         </div>
-                      </div>
-                      <div className="flex items-center gap-12">
-                         <div className="text-right">
-                            <p className={`text-xl font-black ${txn.amount.startsWith('-') ? 'text-gray-900' : 'text-green-600'}`}>{txn.amount}</p>
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${
-                               txn.status === 'Completed' ? 'text-green-500' : 
-                               txn.status === 'In Escrow' ? 'text-blue-500' : 'text-orange-500'
-                            }`}>{txn.status}</span>
-                         </div>
-                         <button className="p-2 text-gray-300 hover:text-gray-600">
-                            <MoreHorizontal size={20} />
-                         </button>
-                      </div>
-                   </div>
-                ))}
-             </div>
-          </div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Active User Wallets</p>
+                <p className="text-4xl font-black text-slate-900">{stats.activeWallets}</p>
+            </div>
         </div>
-      </main>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+            {/* Recent Transactions */}
+            <div className="space-y-6">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                   <CreditCard className="text-primary" /> Audit Trail
+                </h2>
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="max-h-[600px] overflow-y-auto no-scrollbar">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50/50 sticky top-0 border-b border-slate-100 backdrop-blur-md">
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Total</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50 font-medium">
+                                {transactions.map((t: any) => (
+                                    <tr key={t.id} className="hover:bg-slate-50/50">
+                                        <td className="px-6 py-5">
+                                            <p className="text-sm font-black text-slate-900">Ref: {t.payment?.reference.slice(-12) || 'N/A'}</p>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase">{t.serviceType}</p>
+                                        </td>
+                                        <td className="px-6 py-5 text-sm font-black text-slate-900">₵{t.priceAmount}</td>
+                                        <td className="px-6 py-5">
+                                            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                                                SUCCESS
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {/* Wallet Balances */}
+            <div className="space-y-6">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                   <Wallet className="text-indigo-600" /> Wallet Balances
+                </h2>
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="max-h-[600px] overflow-y-auto no-scrollbar">
+                        <div className="p-8 space-y-4">
+                            {wallets.map((w: any) => (
+                                <div key={w.id} className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:border-indigo-200 transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-white rounded-xl shadow-inner border border-slate-100 flex items-center justify-center font-black text-slate-400">
+                                            {w.user.name[0]}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900">{w.user.name}</p>
+                                            <span className={cn(
+                                                "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
+                                                w.user.role === 'WORKER' ? "bg-indigo-50 text-indigo-600" : "bg-blue-50 text-blue-600"
+                                            )}>
+                                                {w.user.role}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-lg font-black text-slate-900 tracking-tight">₵{w.balance.toFixed(2)}</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Available Funds</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
     </div>
   );
 }

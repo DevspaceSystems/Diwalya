@@ -2,6 +2,8 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { sendNotification } from '@/lib/notifications'
+import { logActivity } from './activity'
 
 export async function createWorkerProfile(userId: string, data: {
   businessName: string
@@ -44,6 +46,15 @@ export async function createWorkerProfile(userId: string, data: {
     })
 
     revalidatePath('/dashboard/worker')
+
+    // Log Activity
+    await logActivity({
+      type: 'REGISTRATION',
+      content: `User ${userId} created a worker profile for ${data.businessName}`,
+      userId,
+      metadata: { profileId: profile.id, category: data.category }
+    });
+
     return { success: true, profile }
   } catch (error: any) {
     console.error('Create Worker Profile Error:', error)
@@ -61,9 +72,23 @@ export async function rejectWorker(userId: string, reason: string) {
       }
     })
     
+    // Notify Worker
+    await sendNotification({
+        userId,
+        title: 'Verification Rejected',
+        body: `Your worker verification request was rejected. Reason: ${reason}. Please update your profile and try again.`
+    })
+    
     // In a real app, send email/notification here
     
-    revalidatePath('/dashboard/admin/workers')
+    // Log Activity
+    await logActivity({
+      type: 'VERIFICATION_REJECTED' as any,
+      content: `Worker ${userId} verification rejected: ${reason}`,
+      userId,
+      metadata: { status: 'REJECTED', reason }
+    });
+
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
@@ -81,5 +106,78 @@ export async function notifyAdminOfRejection(userId: string, reason: string) {
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
+  }
+}
+
+export async function approveWorker(userId: string) {
+  try {
+    await prisma.workerProfile.update({
+      where: { userId },
+      data: {
+        verificationStatus: 'APPROVED',
+        isVerified: true
+      }
+    })
+    
+    revalidatePath('/dashboard/admin/verifications')
+    revalidatePath(`/worker/${userId}`)
+    revalidatePath('/search')
+    
+    // Notify Worker
+    await sendNotification({
+        userId,
+        title: 'Verification Approved!',
+        body: 'Congratulations! Your worker profile has been verified. You now have the verified badge and will rank higher in search results.'
+    })
+
+    // Log Activity
+    await logActivity({
+      type: 'VERIFICATION_APPROVED' as any,
+      content: `Worker ${userId} has been verified as a Pro`,
+      userId,
+      metadata: { status: 'APPROVED' }
+    });
+
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getPendingVerifications() {
+  try {
+    const profiles = await prisma.workerProfile.findMany({
+      where: { verificationStatus: 'PENDING' },
+      include: {
+        user: true
+      }
+    })
+    return { success: true, data: profiles }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function requestVerification(userId: string) {
+  try {
+    await prisma.workerProfile.update({
+      where: { userId },
+      data: {
+        verificationStatus: 'PENDING'
+      }
+    })
+    revalidatePath('/dashboard/worker')
+
+    // Log Activity
+    await logActivity({
+      type: 'VERIFICATION_REQUEST',
+      content: `Worker ${userId} requested verification`,
+      userId,
+      metadata: { status: 'PENDING' }
+    });
+
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
   }
 }

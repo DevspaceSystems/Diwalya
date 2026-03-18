@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { creditWallet } from '@/lib/wallet'
 import { Prisma } from '@prisma/client'
+import { sendNotification } from '@/lib/notifications';
+import { logActivity } from '@/app/actions/activity';
 
 export async function POST(req: Request) {
   try {
@@ -63,37 +65,51 @@ export async function POST(req: Request) {
             }
         })
 
-        // Credit Worker Wallet (95%)
-        // We use the top-level helper but pass the transaction context if we can. 
-        // Since creditWallet uses tx internally if implemented that way, but here we just call the helper.
-        // To be safe within a transaction, we'll manually do it here or refactor creditWallet to accept tx.
+        // 4. Split Commission (5% to Admin, 95% to Worker)
         
-        // Manual implementation for transaction safety:
-        let wallet = await tx.wallet.findUnique({ where: { userId: workerId } })
-        if (!wallet) {
-            wallet = await tx.wallet.create({ data: { userId: workerId, balance: 0 } })
+        // Find an admin to receive the platform fee
+        const admin = await tx.user.findFirst({
+            where: { role: 'ADMIN' }
+        })
+
+        if (admin) {
+            await creditWallet(admin.id, platformFee, 'PLATFORM_FEE', reference, tx)
+        } else {
+            console.warn('No admin found to receive platform fee. Reference:', reference)
+            // Optionally: You might want to credit a dedicated system account or log this to a separate table
         }
 
-        await tx.wallet.update({
-            where: { id: wallet.id },
-            data: { balance: { increment: workerAmount } }
-        })
+        // Credit Worker Wallet (95%)
+        await creditWallet(workerId, workerAmount, 'JOB_PAYMENT', reference, tx)
 
-        await tx.transaction.create({
-            data: {
-                walletId: wallet.id,
-                amount: workerAmount,
-                type: 'CREDIT',
-                purpose: 'JOB_PAYMENT' as any,
-                reference: reference,
-                status: 'SUCCESS'
-            }
-        })
-
-        return { job, payment, workerAmount, platformFee }
+        return { job, payment, workerAmount, platformFee, adminId: admin?.id }
     })
 
-    return NextResponse.json({ success: true, data: result })
+    // 5. Notify Both Parties
+    const { job } = result;
+
+    // Notify Client
+    await sendNotification({
+        userId: job.clientId,
+        title: 'Payment Successful',
+        body: `Your payment for ${job.serviceType} was successful. The booking is now confirmed.`
+    })
+
+    // Notify Worker
+    await sendNotification({
+        userId: job.workerId,
+        title: 'Booking Confirmed',
+        body: `Payment received for ${job.serviceType}. You have been credited ₵${workerAmount.toFixed(2)}. Check your dashboard for details.`
+    })
+    // Log Activity
+    await logActivity({
+      type: 'PAYMENT_COMPLETED',
+      content: `Payment of ₵${totalAmount} completed for job ${jobId}`,
+      userId: job.clientId,
+      metadata: { jobId, amount: totalAmount, reference }
+    });
+
+    return NextResponse.json({ success: true, data: job });
 
   } catch (error: any) {
     console.error('Paystack Verify Error:', error)

@@ -21,6 +21,9 @@ enum VerificationStatus {
 
 enum JobStatus {
   PENDING
+  ADMIN_REVIEW
+  WORKER_REVIEW
+  RESCHEDULE_REQUESTED
   ACCEPTED
   IN_PROGRESS
   COMPLETED
@@ -37,14 +40,27 @@ model User {
   profilePicture String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  fcmToken      String?
 
   workerProfile   WorkerProfile?
-  clientJobs      Job[]     @relation("ClientJobs")
-  workerJobs      Job[]     @relation("WorkerJobs")
+  jobsAsClient    Job[]     @relation("ClientJobs")
+  jobsAsWorker    Job[]     @relation("WorkerJobs")
   reviewsGiven    Review[]  @relation("ReviewsGiven")
   reviewsReceived Review[]  @relation("ReviewsReceived")
   wallet          Wallet?
   withdrawals     WithdrawalRequest[]
+  specialRequests SpecialRequest[]
+  reportsFiled    PlatformReport[] @relation("ReportsFiled")
+  reportsReceived PlatformReport[] @relation("ReportsReceived")
+  
+  // Admin Controls
+  isSuspended     Boolean  @default(false)
+  isBanned        Boolean  @default(false)
+  warningCount    Int      @default(0)
+  suspensionReason String?
+  
+  messages        ChatMessage[]
+  activities      ActivityLog[]
 }
 
 model WorkerProfile {
@@ -83,6 +99,7 @@ model Job {
   createdAt   DateTime @default(now())
   
   review      Review?
+  messages    ChatMessage[]
 }
 
 model Payment {
@@ -172,4 +189,72 @@ model WithdrawalRequest {
   adminNotes     String?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+}
+
+model SpecialRequest {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceType   String
+  description   String
+  location      String
+  preferredTime DateTime
+  budget        Float?
+  status        String   @default("PENDING") // PENDING, ASSIGNED, COMPLETED, CONTACTED
+  adminNotes    String?
+  assignedWorkerId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model PlatformReport {
+  id            String   @id @default(cuid())
+  reporterId    String
+  reporter      User     @relation("ReportsFiled", fields: [reporterId], references: [id])
+  targetId      String
+  target        User     @relation("ReportsReceived", fields: [targetId], references: [id])
+  jobId         String?
+  reason        String
+  description   String
+  evidenceUrls  String[]
+  status        String   @default("PENDING") // PENDING, REVIEWED, RESOLVED, DISMISSED
+  adminNotes    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  jobId     String
+  senderId  String
+  content   String
+  isFlagged Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id])
+}
+
+enum ActivityType {
+  REGISTRATION
+  BOOKING_REQUEST
+  BOOKING_ACCEPTED
+  BOOKING_REJECTED
+  PAYMENT_COMPLETED
+  WALLET_WITHDRAWAL
+  REPORT_SUBMITTED
+  VERIFICATION_REQUEST
+  VERIFICATION_APPROVED
+  SYSTEM_ALERT
+}
+
+model ActivityLog {
+  id        String       @id @default(cuid())
+  type      ActivityType
+  content   String
+  userId    String?
+  metadata  Json?        // To store IDs like jobId, amount, etc.
+  createdAt DateTime     @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
 }

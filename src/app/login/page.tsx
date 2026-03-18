@@ -21,12 +21,27 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const { error: loginError } = await supabase.auth.signInWithPassword({
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (loginError) throw loginError;
+
+      // Check account status in our DB
+      const { checkUserStatus } = await import('@/app/actions/report');
+      const statusResult = await checkUserStatus(email);
+
+      if (statusResult.success && statusResult.data) {
+        if (statusResult.data.isBanned) {
+          await supabase.auth.signOut();
+          throw new Error('Your account has been permanently banned for violating terms of service.');
+        }
+        if (statusResult.data.isSuspended) {
+          await supabase.auth.signOut();
+          throw new Error(`Your account is currently suspended. Reason: ${statusResult.data.suspensionReason || 'Contact support'}`);
+        }
+      }
       
       router.push('/dashboard'); 
     } catch (err: any) {

@@ -1,134 +1,149 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
 import { 
   Briefcase, 
   Search, 
+  Filter, 
+  CheckCircle, 
+  XCircle, 
   Clock, 
-  CheckCircle2, 
-  AlertCircle, 
   MapPin, 
   User, 
-  MoreVertical,
-  ExternalLink,
-  Users,
-  ShieldCheck
+  Calendar,
+  CreditCard,
+  MessageSquare,
+  AlertCircle
 } from 'lucide-react';
+import { getGlobalBookings } from '@/app/actions/booking';
+import { cn } from '@/lib/utils';
 
-export default function AdminBookingOversight() {
-  const bookings = [
-    { id: 'BK-7214', worker: 'Kwame Mensah', client: 'Alice Freeman', service: 'Emergency Leak', status: 'Ongoing', price: '₵200', date: 'Oct 24, 14:20' },
-    { id: 'BK-7215', worker: 'Sarah Mensah', client: 'John Mensah', service: 'Full Rewiring', status: 'Pending', price: '₵850', date: 'Oct 24, 10:15' },
-    { id: 'BK-7212', worker: 'Amma Serwaa', client: 'Mike Arhin', service: 'AC Repair', status: 'Completed', price: '₵320', date: 'Oct 23, 16:45' },
-  ];
+export default function GlobalBookingsPage() {
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('');
+
+  useEffect(() => {
+    fetchBookings();
+  }, [statusFilter]);
+
+  const fetchBookings = async () => {
+    setLoading(true);
+    const res = await getGlobalBookings(statusFilter as any);
+    if (res.success) setBookings(res.data || []);
+    setLoading(false);
+  };
+
+  const statusColors: Record<string, string> = {
+    PENDING: 'bg-yellow-50 text-yellow-600',
+    ADMIN_REVIEW: 'bg-blue-50 text-blue-600 border-blue-100',
+    WORKER_REVIEW: 'bg-slate-50 text-slate-600 border-slate-100',
+    ACCEPTED: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+    IN_PROGRESS: 'bg-primary/10 text-primary border-primary/20',
+    COMPLETED: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    CANCELLED: 'bg-red-50 text-red-600 border-red-100',
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar Placeholder */}
-      <aside className="w-64 bg-slate-900 text-slate-400 flex flex-col fixed inset-y-0 z-50">
-        <div className="p-8">
-           <div className="bg-white p-2 rounded-lg inline-block">
-              <Image src="/diwalya-logo.png" alt="Diwalya Admin" width={120} height={30} className="object-contain" />
-           </div>
-        </div>
-        <nav className="flex-grow px-4 space-y-1">
-          <Link href="/dashboard/admin" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <ShieldCheck size={20} /> Overview
-          </Link>
-          <Link href="/dashboard/admin/workers" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <Users size={20} /> Manage Workers
-          </Link>
-          <Link href="/dashboard/admin/bookings" className="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-xl font-bold transition-all">
-            <CheckCircle2 size={20} /> Oversight
-          </Link>
-        </nav>
-      </aside>
-
-      <main className="flex-grow ml-64 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-10">
-            <div>
-              <h1 className="text-3xl font-black text-gray-900 mb-2">Booking Oversight</h1>
-              <p className="text-gray-500">Monitor and resolve all platform service transactions.</p>
-            </div>
-            <div className="flex gap-4">
-               <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
-                  <span className="text-sm font-bold text-gray-600">12 Live Jobs</span>
-               </div>
-            </div>
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex justify-between items-end">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Global Bookings</h1>
+            <p className="text-slate-500 font-medium mt-1 uppercase text-[10px] tracking-widest font-black">All platform jobs</p>
           </div>
+          <div className="flex gap-4">
+             <select 
+               value={statusFilter}
+               onChange={(e) => setStatusFilter(e.target.value)}
+               className="px-6 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all font-bold text-sm appearance-none cursor-pointer"
+             >
+               <option value="">All Statuses</option>
+               <option value="PENDING">Pending</option>
+               <option value="ADMIN_REVIEW">Admin Review</option>
+               <option value="WORKER_REVIEW">Worker Review</option>
+               <option value="ACCEPTED">Accepted</option>
+               <option value="IN_PROGRESS">In Progress</option>
+               <option value="COMPLETED">Completed</option>
+               <option value="CANCELLED">Cancelled</option>
+             </select>
+          </div>
+        </div>
 
-          <div className="grid grid-cols-1 gap-6">
-            {bookings.map((booking) => (
-              <div key={booking.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-center gap-8 group">
-                <div className="flex-grow grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
-                  <div className="col-span-1">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Booking ID</p>
-                    <p className="font-black text-primary text-lg">{booking.id}</p>
-                    <p className="text-xs text-gray-500 font-bold">{booking.date}</p>
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {loading ? (
+             <div className="col-span-full py-20 text-center font-black text-slate-400 animate-pulse uppercase tracking-widest text-xs">
+               Syncing platform jobs...
+             </div>
+          ) : bookings.length === 0 ? (
+             <div className="col-span-full py-20 text-center font-black text-slate-400 uppercase tracking-widest text-xs">
+               No bookings found.
+             </div>
+          ) : bookings.map((job) => (
+            <div key={job.id} className="bg-white rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all p-8 flex flex-col group">
+              <div className="flex justify-between items-start mb-6">
+                <span className={cn(
+                  "px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border",
+                  statusColors[job.status] || "bg-slate-50 text-slate-400"
+                )}>
+                  {job.status.replace('_', ' ')}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 group-hover:text-primary transition-colors">
+                  <Clock size={12} /> {new Date(job.createdAt).toLocaleDateString()}
+                </span>
+              </div>
 
-                  <div className="col-span-1 border-l pl-6">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Participants</p>
-                    <div className="space-y-2">
-                       <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded bg-blue-50 text-primary text-[10px] font-black flex items-center justify-center">W</div>
-                          <p className="text-xs font-bold text-gray-700">{booking.worker}</p>
-                       </div>
-                       <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded bg-gray-50 text-gray-500 text-[10px] font-black flex items-center justify-center">C</div>
-                          <p className="text-xs font-bold text-gray-700">{booking.client}</p>
-                       </div>
+              <div className="space-y-6 flex-grow">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 leading-tight mb-2">{job.serviceType}</h3>
+                  <p className="text-xs text-slate-500 line-clamp-2 font-medium">{job.description}</p>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-slate-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
+                      <User size={16} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</p>
+                      <p className="text-sm font-bold text-slate-800">{job.client.name}</p>
                     </div>
                   </div>
 
-                  <div className="col-span-1 border-l pl-6">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Service & Value</p>
-                    <p className="font-bold text-gray-800">{booking.service}</p>
-                    <p className="font-black text-gray-900">{booking.price}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+                      <Briefcase size={16} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Worker</p>
+                      <p className="text-sm font-bold text-slate-800">{job.worker.workerProfile?.businessName || job.worker.name}</p>
+                    </div>
                   </div>
 
-                  <div className="col-span-1 border-l pl-6 flex flex-col justify-center">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Status</p>
-                    <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider w-fit ${
-                      booking.status === 'Ongoing' ? 'bg-blue-100 text-blue-600' :
-                      booking.status === 'Pending' ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'
-                    }`}>
-                      {booking.status}
-                    </span>
+                  <div className="flex items-center gap-3 pt-2">
+                    <div className="flex-grow">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Financials</p>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl font-black text-slate-900 leading-none">₵{job.priceAmount || 'N/A'}</span>
+                            {job.paymentId && <div className="p-1 bg-emerald-100 text-emerald-600 rounded-lg" title="Paid"><CreditCard size={12}/></div>}
+                        </div>
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex gap-2 shrink-0">
-                   <button className="px-6 py-3 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold rounded-2xl transition-all text-xs flex items-center gap-2">
-                      Details <ExternalLink size={14} />
-                   </button>
-                   <button className="p-3 text-gray-400 hover:text-red-500 transition-colors">
-                      <AlertCircle size={20} />
-                   </button>
-                   <button className="p-3 text-gray-400 hover:text-gray-900 transition-colors">
-                      <MoreVertical size={20} />
-                   </button>
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="mt-12 p-8 bg-blue-900 rounded-3xl text-white relative overflow-hidden">
-             <div className="relative z-10">
-                <h3 className="text-2xl font-black mb-2">Dispute Management</h3>
-                <p className="text-blue-200 max-w-lg mb-6">Review flagged jobs, late arrivals, or payment disputes from either clients or workers.</p>
-                <button className="bg-white text-blue-900 px-8 py-3 rounded-2xl font-black hover:scale-105 transition-all shadow-xl">
-                  Open Resolution Center
-                </button>
-             </div>
-             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-20 -translate-y-20 blur-3xl"></div>
-          </div>
+              <div className="mt-8 pt-6 border-t border-slate-100 flex gap-2">
+                 <button className="flex-grow py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
+                    View Details
+                 </button>
+                 <button className="p-3 bg-slate-100 text-slate-400 hover:text-primary rounded-xl transition-all">
+                    <MessageSquare size={18} />
+                 </button>
+              </div>
+            </div>
+          ))}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Briefcase, Calendar, MapPin, Clock, ChevronRight, Filter, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Briefcase, Calendar, MapPin, Clock, ChevronRight, Filter, AlertCircle, CheckCircle2, XCircle, ShieldAlert, Flag, Send, Loader2 } from 'lucide-react';
+import { createReport } from '@/app/actions/report';
+import { cn } from '@/lib/utils';
+import ChatWindow from '@/components/Chat/ChatWindow';
 
 // Enhanced Mock bookings data with all requested statuses
 const MOCK_BOOKINGS = [
@@ -50,6 +53,36 @@ const MOCK_BOOKINGS = [
 
 export default function BookingsPage() {
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [reportingJob, setReportingJob] = useState<any>(null);
+  const [reportForm, setReportForm] = useState({ reason: 'CONDUCT', description: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [activeChat, setActiveChat] = useState<any>(null);
+
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    // In a real app, we'd get the actual user ID from session
+    const result = await createReport({
+      reporterId: 'current-user-id', 
+      targetId: reportingJob.targetId || 'worker-id',
+      jobId: reportingJob.id,
+      reason: reportForm.reason,
+      description: reportForm.description
+    });
+
+    if (result.success) {
+      setMessage({ type: 'success', text: 'Report submitted successfully. Admins will review it.' });
+      setTimeout(() => {
+        setReportingJob(null);
+        setReportForm({ reason: 'CONDUCT', description: '' });
+        setMessage(null);
+      }, 3000);
+    } else {
+      setMessage({ type: 'error', text: 'Failed to submit report. Please try again.' });
+    }
+    setIsSubmitting(false);
+  };
 
   const filteredBookings = MOCK_BOOKINGS.filter(booking => {
     if (activeFilter === 'ALL') return true;
@@ -143,10 +176,16 @@ export default function BookingsPage() {
                         <Clock size={18} className="text-gray-400" />
                         {booking.time}
                       </div>
-                      <div className="flex items-center gap-2.5 text-sm text-gray-500 font-bold col-span-full">
-                        <MapPin size={18} className="text-gray-400" />
-                        {booking.address}
-                      </div>
+                      {booking.status === 'ACCEPTED' ? (
+                        <div className="flex items-center gap-2.5 text-sm text-gray-500 font-bold col-span-full">
+                          <MapPin size={18} className="text-gray-400" />
+                          {booking.address}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2.5 text-[10px] text-orange-600 font-black uppercase tracking-widest col-span-full bg-orange-50 px-3 py-1 rounded-lg border border-orange-100 italic">
+                          <ShieldAlert size={14} /> Contact details hidden until payment
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -157,9 +196,20 @@ export default function BookingsPage() {
                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Service Fee</p>
                   </div>
                   
-                  <button className="w-full md:w-auto flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-2xl font-bold transition-all group/btn">
-                    Details <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
+                  <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto mt-6 md:mt-0">
+                    <button 
+                      onClick={() => setReportingJob(booking)}
+                      className="flex items-center justify-center gap-2 text-red-400 hover:text-red-500 hover:bg-red-50 px-4 py-3 rounded-2xl font-black text-[10px] uppercase transition-all"
+                    >
+                      <Flag size={14} /> Report
+                    </button>
+                    <button 
+                      onClick={() => setActiveChat(booking)}
+                      className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-2xl font-bold transition-all group/btn"
+                    >
+                      Chat & Details <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -196,6 +246,86 @@ export default function BookingsPage() {
           </div>
         )}
       </div>
+
+      {/* Report Modal */}
+      {reportingJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="p-8 bg-red-50 border-b border-red-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                 <ShieldAlert className="text-red-500" size={28} />
+                 <h2 className="text-xl font-black text-gray-900">Report Issue</h2>
+              </div>
+              <button 
+                onClick={() => setReportingJob(null)}
+                className="w-10 h-10 rounded-full hover:bg-white flex items-center justify-center text-gray-400 transition-colors"
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleReportSubmit} className="p-8 space-y-6">
+              {message && (
+                <div className={cn(
+                  "p-4 rounded-2xl text-sm font-black text-center animate-in slide-in-from-top-2",
+                  message.type === 'success' ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
+                )}>
+                  {message.text}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Reason</label>
+                <select 
+                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-red-500/20 outline-none appearance-none cursor-pointer"
+                  value={reportForm.reason}
+                  onChange={(e) => setReportForm({ ...reportForm, reason: e.target.value })}
+                >
+                  <option value="CONDUCT">Unprofessional Conduct</option>
+                  <option value="LATE">Extreme Tardiness</option>
+                  <option value="QUALITY">Poor Job Quality</option>
+                  <option value="SCAM">Payment/Scam Attempt</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Description</label>
+                <textarea 
+                  required
+                  rows={4}
+                  className="w-full p-6 bg-gray-50 border border-gray-100 rounded-[2rem] text-sm font-medium focus:ring-2 focus:ring-red-500/20 outline-none resize-none"
+                  placeholder="Tell us what happened..."
+                  value={reportForm.description}
+                  onChange={(e) => setReportForm({ ...reportForm, description: e.target.value })}
+                />
+              </div>
+
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-5 bg-red-500 text-white rounded-[1.5rem] font-black shadow-xl shadow-red-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <><Send size={18} /> File Official Report</>}
+              </button>
+              
+              <p className="text-[10px] text-center text-gray-400 font-bold px-6 leading-relaxed">
+                Platform admins will review this report within 24 hours. False reports may lead to account suspension.
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Window */}
+      {activeChat && (
+        <ChatWindow 
+          jobId={activeChat.id}
+          senderId="current-user-id" // In real app, from auth
+          recipientName={activeChat.workerName}
+          onClose={() => setActiveChat(null)}
+        />
+      )}
     </div>
   );
 }

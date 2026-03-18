@@ -7,22 +7,42 @@ import {
   Users, 
   Briefcase, 
   CreditCard, 
-  ShieldCheck, 
   LayoutDashboard, 
   Settings, 
   Bell, 
   Search, 
   MoreVertical,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  ClipboardList,
+  ShieldAlert,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function AdminDashboard() {
+  const [platformStats, setPlatformStats] = React.useState({
+    commission: 0,
+    totalRevenue: 0,
+    activeBookings: 0,
+    totalWorkers: 0
+  });
+
+  React.useEffect(() => {
+    async function loadStats() {
+      const { getPlatformStats } = await import('@/app/actions/admin');
+      const result = await getPlatformStats();
+      if (result.success && result.stats) {
+        setPlatformStats(result.stats);
+      }
+    }
+    loadStats();
+  }, []);
+
   const stats = [
-    { label: 'Total Workers', value: '482', change: '+12%', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Active Bookings', value: '25', change: '+5%', icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Revenue (MTN/Vod)', value: '₵12,450', change: '+18%', icon: CreditCard, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Pending Verifications', value: '14', change: 'Action Required', icon: ShieldCheck, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Total Workers', value: platformStats.totalWorkers.toString(), change: '+12%', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Active Bookings', value: platformStats.activeBookings.toString(), change: '+5%', icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Revenue (Total)', value: `₵${platformStats.totalRevenue.toLocaleString()}`, change: '+18%', icon: CreditCard, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Platform Fees', value: `₵${platformStats.commission.toLocaleString()}`, change: 'Real-time', icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/5' },
   ];
 
   const pendingWorkers = [
@@ -55,8 +75,20 @@ export default function AdminDashboard() {
           <Link href="/dashboard/admin/payments" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
             <CreditCard size={20} /> Payments
           </Link>
+          <Link href="/dashboard/admin/bookings" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
+            <Briefcase size={20} /> Booking Oversight
+          </Link>
+          <Link href="/dashboard/admin/verifications" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
+            <ShieldCheck size={20} /> Identity Verification
+          </Link>
+          <Link href="/dashboard/admin/reports" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
+            <ShieldAlert size={20} /> Reports & Safety
+          </Link>
           <Link href="/dashboard/admin/withdrawals" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
             <TrendingUp size={20} /> Withdrawals
+          </Link>
+          <Link href="/dashboard/admin/special-requests" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
+            <ClipboardList size={20} /> Special Requests
           </Link>
         </nav>
 

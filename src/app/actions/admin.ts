@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
+import { sendNotification } from '@/lib/notifications'
 
 export async function getWithdrawalRequests() {
   try {
@@ -53,8 +54,57 @@ export async function updateWithdrawalStatus(requestId: string, status: 'APPROVE
       return request
     })
 
+    // Notify Worker
+    const request = await prisma.withdrawalRequest.findUnique({ where: { id: requestId } })
+    if (request) {
+        await sendNotification({
+            userId: request.userId,
+            title: `Withdrawal ${status.toLowerCase()}`,
+            body: `Your withdrawal request for ₵${request.amount} has been ${status.toLowerCase()}. ${adminNotes ? `Note: ${adminNotes}` : ''}`
+        })
+    }
+
     return { success: true, data: result }
   } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getPlatformStats() {
+  try {
+    // 1. Calculate Total Commission (Sum of all PLATFORM_FEE transactions)
+    const commissionStats = await prisma.transaction.aggregate({
+      where: { purpose: 'PLATFORM_FEE', status: 'SUCCESS' },
+      _sum: { amount: true }
+    })
+
+    // 2. Calculate Total Processing Revenue (Sum of all successful payments)
+    const totalRevenue = await prisma.payment.aggregate({
+      where: { status: 'SUCCESS' },
+      _sum: { amount: true }
+    })
+
+    // 3. Count Active Bookings
+    const activeBookingsCount = await prisma.job.count({
+      where: { status: { in: ['ACCEPTED', 'IN_PROGRESS', 'PENDING'] } }
+    })
+
+    // 4. Count Total Workers
+    const totalWorkers = await prisma.user.count({
+      where: { role: 'WORKER' }
+    })
+
+    return {
+      success: true,
+      stats: {
+        commission: commissionStats._sum.amount || 0,
+        totalRevenue: totalRevenue._sum.amount || 0,
+        activeBookings: activeBookingsCount,
+        totalWorkers: totalWorkers
+      }
+    }
+  } catch (error: any) {
+    console.error('Get Platform Stats Error:', error)
     return { success: false, error: error.message }
   }
 }
