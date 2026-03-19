@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 import { createReport } from '@/app/actions/report';
 import { getClientJobs, declineEstimate, completeJobAndReleaseFunds } from '@/app/actions/booking';
-import { PaystackButton } from 'react-paystack';
+import dynamic from 'next/dynamic';
+const PaystackButton = dynamic(() => import('react-paystack').then(mod => mod.PaystackButton), { ssr: false });
 import { supabase } from '@/lib/supabase';
 import { cn, formatGHS } from '@/lib/utils';
 import ChatWindow from '@/components/Chat/ChatWindow';
