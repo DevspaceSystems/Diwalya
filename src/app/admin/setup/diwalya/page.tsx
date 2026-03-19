@@ -53,6 +53,12 @@ export default function AdminSetupPage() {
         },
       });
       if (signupError) throw signupError;
+      
+      if (data.user) {
+        const { syncUserToPrisma } = await import('@/app/actions/auth');
+        await syncUserToPrisma(data.user.id, email, name, 'ADMIN');
+      }
+
       router.push('/dashboard/admin');
     } catch (err: any) {
       setError(err.message || 'Setup failed.');

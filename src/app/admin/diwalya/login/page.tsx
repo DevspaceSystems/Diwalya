@@ -55,6 +55,15 @@ export default function AdminDiwalyaLoginPage() {
         await supabase.auth.signOut();
         throw new Error('Access denied. This portal is for administrators only.');
       }
+
+      // Sync to Prisma to ensure access in AdminLayout
+      const { syncUserToPrisma } = await import('@/app/actions/auth');
+      await syncUserToPrisma(
+        data.user.id, 
+        data.user.email!, 
+        data.user.user_metadata?.full_name || 'Admin', 
+        'ADMIN'
+      );
       
       router.push('/dashboard/admin');
     } catch (err: any) {

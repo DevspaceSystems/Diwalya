@@ -212,7 +212,7 @@ export default function AdminDashboard() {
                </div>
 
                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                  <h3 className="font-black text-gray-900 text-lg mb-6">Recent Payments</h3>
+                  <h3 className="font-black text-gray-900 text-lg mb-6">Ledger Activity</h3>
                   <div className="space-y-4">
                      {[1, 2, 3].map((i) => (
                         <div key={i} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">

@@ -32,3 +32,23 @@ export async function logAdminAction(adminId: string, content: string, metadata?
     metadata
   })
 }
+
+/**
+ * Synchronizes a Supabase user into the Prisma User table.
+ */
+export async function syncUserToPrisma(userId: string, email: string, name: string, role: string) {
+  return await prisma.user.upsert({
+    where: { id: userId },
+    update: {
+      email,
+      name,
+      role: role as any
+    },
+    create: {
+      id: userId,
+      email,
+      name,
+      role: role as any
+    }
+  })
+}
