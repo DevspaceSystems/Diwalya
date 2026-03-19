@@ -170,3 +170,14 @@ export async function requestVerification(userId: string) {
     return { success: false, error: error.message }
   }
 }
+
+export async function getWorkerProfile(userId: string) {
+  try {
+    const profile = await prisma.workerProfile.findUnique({
+      where: { userId }
+    });
+    return { success: true, data: profile };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

@@ -27,11 +27,11 @@ export default function WorkerDashboard() {
         }
 
         // Fetch worker profile for verification status
-        const { prisma } = await import('@/lib/prisma');
-        const profile = await prisma.workerProfile.findUnique({
-           where: { userId: session.user.id }
-        });
-        setWorkerProfile(profile);
+        const { getWorkerProfile } = await import('@/app/actions/worker');
+        const profileRes = await getWorkerProfile(session.user.id);
+        if (profileRes.success) {
+          setWorkerProfile(profileRes.data);
+        }
       }
       setLoading(false);
     }

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { submitJobEstimate, getJobEstimate } from '@/app/actions/booking';
-import { prisma } from '@/lib/prisma'; // Note: client side prisma usage is discouraged, I'll use a server action if needed, but for now I'll use the job data I fetch
 import { 
   Calculator, 
   Clock, 
