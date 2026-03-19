@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { createSpecialRequest } from '@/app/actions/special-request';
 import { supabase } from '@/lib/supabase';
+import { formatGHS } from '@/lib/utils';
 
 export default function SpecialRequestPage() {
   const [formData, setFormData] = useState({
@@ -184,7 +185,7 @@ export default function SpecialRequestPage() {
                 </div>
                 <input 
                   type="number"
-                  placeholder="₵ How much are you offering?"
+                  placeholder={`${formatGHS('')} How much are you offering?`}
                   className="w-full pl-11 pr-4 py-4 bg-gray-50 border-gray-100 rounded-2xl focus:ring-primary focus:border-primary text-sm font-bold placeholder-gray-400 text-gray-900"
                   value={formData.budget}
                   onChange={(e) => setFormData({...formData, budget: e.target.value})}

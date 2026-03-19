@@ -184,3 +184,159 @@ export async function getGlobalBookings(status?: JobStatus) {
     return { success: false, error: error.message };
   }
 }
+
+// ─── INSPECTION ACTIONS ───────────────────────────────────────────────────────
+
+export async function createInspectionRequest(data: {
+  clientId: string
+  workerId: string
+  serviceType: string
+  description: string
+  location: string
+  scheduledAt: Date
+}) {
+  try {
+    let settings = await prisma.systemSettings.findUnique({ where: { id: 'default' } })
+    if (!settings) {
+      settings = await prisma.systemSettings.create({
+        data: { id: 'default', inspectionFee: 100.0, inspectionWorkerShare: 60.0 }
+      })
+    }
+
+    const job = await prisma.job.create({
+      data: {
+        ...data,
+        type: 'INSPECTION',
+        status: 'PENDING',
+        priceAmount: settings.inspectionFee,
+        inspectionWorkerAmount: settings.inspectionWorkerShare,
+        inspectionAdminAmount: settings.inspectionFee - settings.inspectionWorkerShare,
+      }
+    })
+
+    await logActivity({
+      type: 'BOOKING_REQUEST',
+      content: `Inspection request submitted for ${data.serviceType} at ${data.location}`,
+      userId: data.clientId,
+      metadata: { jobId: job.id, type: 'INSPECTION', amount: settings.inspectionFee }
+    })
+
+    return { success: true, jobId: job.id, inspectionFee: settings.inspectionFee }
+  } catch (error: any) {
+    console.error('createInspectionRequest Error:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function assignInspectionWorker(
+  jobId: string,
+  workerId: string,
+  teamMember?: string
+) {
+  try {
+    const job = await prisma.job.update({
+      where: { id: jobId },
+      data: { workerId, assignedTeamMember: teamMember || null, status: 'ACCEPTED' },
+      include: { client: true, worker: true }
+    })
+
+    await logActivity({
+      type: 'BOOKING_ACCEPTED',
+      content: `Worker assigned to inspection job ${jobId}${teamMember ? `. Team: ${teamMember}` : ''}`,
+      metadata: { jobId, workerId, teamMember }
+    })
+
+    await sendNotification({
+      userId: job.clientId,
+      title: 'Inspection Scheduled ✅',
+      body: `Worker ${job.worker.name} will conduct your inspection.${teamMember ? ` Team member ${teamMember} will also be present.` : ''}`
+    })
+    await sendNotification({
+      userId: workerId,
+      title: 'Inspection Assigned 📋',
+      body: `You have been assigned an inspection for "${job.serviceType}" at ${job.location}.`
+    })
+
+    revalidatePath('/dashboard/admin/inspections')
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function confirmInspection(jobId: string, notes?: string) {
+  try {
+    const job = await prisma.job.update({
+      where: { id: jobId },
+      data: { status: 'IN_PROGRESS', workerConfirmedAt: new Date(), inspectionNotes: notes || null },
+      include: { client: true }
+    })
+
+    await sendNotification({
+      userId: job.clientId,
+      title: 'Inspection Confirmed 🔍',
+      body: `The worker has confirmed your inspection for "${job.serviceType}". Awaiting admin verification.`
+    })
+
+    await logActivity({
+      type: 'BOOKING_ACCEPTED',
+      content: `Worker confirmed inspection for job ${jobId}`,
+      metadata: { jobId, notes }
+    })
+
+    revalidatePath('/dashboard/admin/inspections')
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function verifyInspection(jobId: string) {
+  try {
+    const job = await prisma.job.update({
+      where: { id: jobId },
+      data: { status: 'COMPLETED', isInspectionVerified: true, adminVerifiedAt: new Date() },
+      include: { client: true, worker: true }
+    })
+
+    if (job.inspectionWorkerAmount && job.inspectionWorkerAmount > 0) {
+      const { creditWallet } = await import('@/lib/wallet')
+      await creditWallet(job.workerId, job.inspectionWorkerAmount, 'INSPECTION_FEE', `inspection-${jobId}`)
+    }
+
+    await sendNotification({
+      userId: job.clientId,
+      title: 'Inspection Complete ✅',
+      body: `Your inspection for "${job.serviceType}" is verified. You can now book the full service.`
+    })
+    await sendNotification({
+      userId: job.workerId,
+      title: 'Payment Credited 💰',
+      body: `₵${job.inspectionWorkerAmount?.toFixed(2)} has been credited to your wallet for the inspection.`
+    })
+
+    await logActivity({
+      type: 'PAYMENT_COMPLETED',
+      content: `Admin verified inspection ${jobId}. Worker credited ₵${job.inspectionWorkerAmount}`,
+      metadata: { jobId, workerAmount: job.inspectionWorkerAmount, adminAmount: job.inspectionAdminAmount }
+    })
+
+    revalidatePath('/dashboard/admin/inspections')
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getInspections(status?: string) {
+  try {
+    const jobs = await prisma.job.findMany({
+      where: { type: 'INSPECTION', ...(status ? { status: status as JobStatus } : {}) },
+      include: { client: true, worker: { include: { workerProfile: true } } },
+      orderBy: { createdAt: 'desc' }
+    })
+    return { success: true, data: jobs }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}

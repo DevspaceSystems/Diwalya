@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, MapPin, Filter, Star, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Filter, Star, ShieldCheck, ArrowRight, XCircle } from 'lucide-react';
+import { formatGHS } from '@/lib/utils';
 
 // Mock data for initial scaffolding
 const MOCK_WORKERS = [
@@ -82,8 +83,8 @@ export default function SearchPage() {
                   <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Price Range</label>
                   <input type="range" className="w-full mt-2 accent-primary" />
                   <div className="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>₵0</span>
-                    <span>₵500+</span>
+                    <span>{formatGHS(0)}</span>
+                    <span>{formatGHS(500)}+</span>
                   </div>
                 </div>
               </div>
@@ -130,7 +131,7 @@ export default function SearchPage() {
                         <p className="text-primary font-bold">{worker.category}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-black text-gray-900">₵{worker.price}</p>
+                        <p className="text-xl font-black text-gray-900">{formatGHS(worker.price)}</p>
                         <p className="text-xs text-gray-400">avg job</p>
                       </div>
                     </div>

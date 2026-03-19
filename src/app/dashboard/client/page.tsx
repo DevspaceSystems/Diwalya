@@ -4,17 +4,18 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutDashboard, Briefcase, Clock, Wallet, Settings, Bell, Search, Star, MessageSquare } from 'lucide-react';
+import { formatGHS } from '@/lib/utils';
 
 export default function ClientDashboard() {
   const stats = [
     { label: 'Pending Jobs', value: '2', color: 'text-orange-500', bg: 'bg-orange-50' },
     { label: 'Ongoing Jobs', value: '1', color: 'text-blue-500', bg: 'bg-blue-50' },
-    { label: 'Total Spent', value: '₵1,240', color: 'text-green-500', bg: 'bg-green-50' },
+    { label: 'Total Spent', value: formatGHS(1240), color: 'text-green-500', bg: 'bg-green-50' },
   ];
 
   const recentJobs = [
-    { id: '1', worker: 'Kwame Mensah', service: 'Plumbing', status: 'Pending', date: 'Oct 24, 2023', price: '₵150' },
-    { id: '2', worker: 'Amma Serwaa', service: 'Electrical', status: 'Completed', date: 'Oct 18, 2023', price: '₵320' },
+    { id: '1', worker: 'Kwame Mensah', service: 'Plumbing', status: 'Pending', date: 'Oct 24, 2023', price: formatGHS(150) },
+    { id: '2', worker: 'Amma Serwaa', service: 'Electrical', status: 'Completed', date: 'Oct 18, 2023', price: formatGHS(320) },
   ];
 
   return (

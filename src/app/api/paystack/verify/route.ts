@@ -4,6 +4,7 @@ import { creditWallet } from '@/lib/wallet'
 import { Prisma } from '@prisma/client'
 import { sendNotification } from '@/lib/notifications';
 import { logActivity } from '@/app/actions/activity';
+import { formatGHS } from '@/lib/utils';
 
 export async function POST(req: Request) {
   try {
@@ -99,12 +100,12 @@ export async function POST(req: Request) {
     await sendNotification({
         userId: job.workerId,
         title: 'Booking Confirmed',
-        body: `Payment received for ${job.serviceType}. You have been credited ₵${workerAmount.toFixed(2)}. Check your dashboard for details.`
+        body: `Payment received for ${job.serviceType}. You have been credited ${formatGHS(workerAmount)}. Check your dashboard for details.`
     })
     // Log Activity
     await logActivity({
       type: 'PAYMENT_COMPLETED',
-      content: `Payment of ₵${totalAmount} completed for job ${jobId}`,
+      content: `Payment of ${formatGHS(totalAmount)} completed for job ${jobId}`,
       userId: job.clientId,
       metadata: { jobId, amount: totalAmount, reference }
     });

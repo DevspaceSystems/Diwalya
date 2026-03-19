@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutDashboard, Briefcase, Wallet, Settings, Bell, Star, TrendingUp, DollarSign, Clock, CheckCircle2, MapPin, ArrowRight, Loader2, ShieldCheck } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatGHS } from '@/lib/utils';
 import ChatWindow from '@/components/Chat/ChatWindow';
 
 
@@ -39,7 +39,7 @@ export default function WorkerDashboard() {
   }, []);
 
   const stats = [
-    { label: 'Total Earnings', value: '₵0', icon: DollarSign, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Total Earnings', value: formatGHS(0), icon: DollarSign, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Active Jobs', value: jobs.filter(j => j.status === 'ACCEPTED').length.toString(), icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Avg Rating', value: '5.0', icon: Star, color: 'text-yellow-600', bg: 'bg-yellow-50' },
     { label: 'Incoming', value: jobs.filter(j => j.status === 'WORKER_REVIEW').length.toString(), icon: Bell, color: 'text-purple-600', bg: 'bg-purple-50' },
@@ -191,7 +191,7 @@ export default function WorkerDashboard() {
                           </div>
                           
                           <div className="flex md:flex-col justify-between items-end gap-4 min-w-[120px]">
-                            <p className="text-2xl font-black text-gray-900">₵{job.priceAmount}</p>
+                            <p className="text-2xl font-black text-gray-900">{formatGHS(job.priceAmount)}</p>
                             {isMasked ? (
                               <div className="flex gap-2 w-full md:w-auto">
                                 <button 
@@ -245,7 +245,7 @@ export default function WorkerDashboard() {
                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm text-center">
                   <h3 className="font-black text-gray-900 text-lg mb-6 text-left">Wallet Balance</h3>
                   <div className="mb-8">
-                     <p className="text-5xl font-black text-gray-900 mb-2">₵1,820</p>
+                     <p className="text-5xl font-black text-gray-900 mb-2">{formatGHS(1820)}</p>
                      <p className="text-green-500 font-bold text-sm flex items-center justify-center gap-1">
                        <TrendingUp size={14} /> +12% this week
                      </p>

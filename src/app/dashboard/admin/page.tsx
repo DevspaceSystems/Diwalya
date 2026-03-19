@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   ShieldCheck
 } from 'lucide-react';
+import { formatGHS } from '@/lib/utils';
 
 export default function AdminDashboard() {
   const [platformStats, setPlatformStats] = React.useState({
@@ -41,8 +42,8 @@ export default function AdminDashboard() {
   const stats = [
     { label: 'Total Workers', value: platformStats.totalWorkers.toString(), change: '+12%', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Active Bookings', value: platformStats.activeBookings.toString(), change: '+5%', icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Revenue (Total)', value: `₵${platformStats.totalRevenue.toLocaleString()}`, change: '+18%', icon: CreditCard, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Platform Fees', value: `₵${platformStats.commission.toLocaleString()}`, change: 'Real-time', icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Revenue (Total)', value: formatGHS(platformStats.totalRevenue), change: '+18%', icon: CreditCard, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Platform Fees', value: formatGHS(platformStats.commission), change: 'Real-time', icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/5' },
   ];
 
   const pendingWorkers = [

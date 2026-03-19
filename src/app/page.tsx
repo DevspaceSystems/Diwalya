@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, Star, ShieldCheck, MapPin, Wrench, Zap, Briefcase, Camera, Car, Calendar, Menu, ArrowRight } from 'lucide-react';
+import { formatGHS } from '@/lib/utils';
 
 export default function Home() {
   return (
@@ -166,7 +167,7 @@ export default function Home() {
                       <div>
                         <p className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">Expert Plumber</p>
                       </div>
-                      <p className="font-bold text-gray-900">₵150 <span className="text-sm font-normal text-gray-500">/ job avg</span></p>
+                      <p className="font-bold text-gray-900">{formatGHS(150)} <span className="text-sm font-normal text-gray-500">/ job avg</span></p>
                     </div>
                     <p className="text-gray-600 text-sm line-clamp-2 mb-6">Experienced plumber specializing in residential and commercial pipe installations, leak repairs, and water heater maintenance.</p>
                     <Link href="/worker/1" className="w-full py-3 bg-gray-50 hover:bg-primary hover:text-white text-primary font-bold rounded-xl transition-colors border border-gray-200 hover:border-primary block text-center">

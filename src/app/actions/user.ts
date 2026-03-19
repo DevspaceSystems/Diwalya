@@ -28,6 +28,18 @@ export async function getUsers(query?: string, role?: string) {
   }
 }
 
+export async function getWorkers() {
+  try {
+    const workers = await prisma.user.findMany({
+      where: { role: 'WORKER' },
+      include: { workerProfile: true },
+      orderBy: { name: 'asc' }
+    });
+    return { success: true, data: workers };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
 export async function updateUser(userId: string, data: any) {
   try {
     const user = await (prisma as any).user.update({

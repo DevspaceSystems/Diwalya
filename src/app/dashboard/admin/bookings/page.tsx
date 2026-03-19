@@ -16,7 +16,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { getGlobalBookings } from '@/app/actions/booking';
-import { cn } from '@/lib/utils';
+import { cn, formatGHS } from '@/lib/utils';
 
 export default function GlobalBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -124,7 +124,7 @@ export default function GlobalBookingsPage() {
                     <div className="flex-grow">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Financials</p>
                         <div className="flex items-center gap-2">
-                            <span className="text-xl font-black text-slate-900 leading-none">₵{job.priceAmount || 'N/A'}</span>
+                            <span className="text-xl font-black text-slate-900 leading-none">{formatGHS(job.priceAmount)}</span>
                             {job.paymentId && <div className="p-1 bg-emerald-100 text-emerald-600 rounded-lg" title="Paid"><CreditCard size={12}/></div>}
                         </div>
                     </div>

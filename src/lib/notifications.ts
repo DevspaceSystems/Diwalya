@@ -1,4 +1,34 @@
+'use server'
+
 import { prisma } from './prisma';
+import { sendEmail } from './email';
+
+/**
+ * Centralized notification service for Diwalya.
+ * Handles both Email (via SMTP) and Push Notifications (via Firebase).
+ */
+
+async function getFirebaseAdmin() {
+  const admin = typeof window === 'undefined' ? eval('require')('firebase-admin') : null;
+  if (!admin) return null;
+
+  if (!admin.apps.length) {
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        }),
+      });
+    } catch (error: any) {
+      console.error('Firebase admin initialization error', error.stack);
+      return null;
+    }
+  }
+  return admin;
+}
+
 export async function sendNotification({
   userId,
   title,
@@ -13,24 +43,7 @@ export async function sendNotification({
   channels?: ('email' | 'push')[];
 }) {
   try {
-    const admin = typeof window === 'undefined' ? eval('require')('firebase-admin') : null;
-    if (!admin) return { success: false, error: 'Internal Server Error' };
-
-    // Initialize Firebase Admin SDK
-    if (!admin.apps.length) {
-      try {
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-          }),
-        });
-      } catch (error: any) {
-        console.error('Firebase admin initialization error', error.stack);
-      }
-    }
-
+    const admin = await getFirebaseAdmin();
     const user: any = await prisma.user.findUnique({
       where: { id: userId },
       select: { email: true, fcmToken: true, name: true } as any
@@ -43,50 +56,74 @@ export async function sendNotification({
 
     const results: any = {};
 
-    // 1. Send Email Notification
-    if (channels.includes('email') && process.env.RESEND_API_KEY !== 're_xxx') {
-      try {
-        // Mocking Resend for now (until API key is real)
-        console.log(`[EMAIL] To: ${user.email} | Subject: ${title} | Body: ${body}`);
-        results.email = { success: true, provider: 'resend-mock' };
-      } catch (err: any) {
-        console.error(`[EMAIL Error] ${err.message}`);
-        results.email = { success: false, error: err.message };
-      }
-    } else if (channels.includes('email')) {
-      console.log(`[EMAIL MOCK] To: ${user.email} | Subject: ${title} | Body: ${body}`);
-      results.email = { success: true, mock: true };
+    // 1. Email Channel
+    if (channels.includes('email')) {
+      results.email = await sendEmail({ to: user.email, subject: title, body });
     }
 
-    // 2. Send Push Notification (Firebase)
-    if (channels.includes('push') && user.fcmToken && process.env.FIREBASE_PROJECT_ID !== 'xxx') {
-      try {
-        const message = {
-          notification: { title, body },
-          token: user.fcmToken,
-          data: data,
-        };
-
-        const responseAddress = await admin.messaging().send(message);
-        console.log(`[PUSH SUCCESS] Message sent to ${user.name}: ${responseAddress}`);
-        results.push = { success: true, messageId: responseAddress };
-      } catch (err: any) {
-        console.error(`[PUSH Error] Sending to dev: ${err.message}`);
-        results.push = { success: false, error: err.message };
-      }
-    } else if (channels.includes('push')) {
-      if (user.fcmToken) {
-        console.log(`[PUSH MOCK] To Token: ${user.fcmToken} | Title: ${title} | Body: ${body}`);
-        results.push = { success: true, mock: true };
+    // 2. Push Channel
+    if (channels.includes('push')) {
+      if (user.fcmToken && admin && process.env.FIREBASE_PROJECT_ID !== 'xxx') {
+        try {
+          const response = await admin.messaging().send({
+            notification: { title, body },
+            token: user.fcmToken,
+            data: data,
+          });
+          results.push = { success: true, messageId: response };
+        } catch (err: any) {
+          results.push = { success: false, error: err.message };
+        }
       } else {
-        console.log(`[PUSH] Skipped: No FCM token for user ${user.name}`);
-        results.push = { success: false, error: 'No FCM token' };
+        results.push = { success: true, mock: true, note: 'Token missing or admin uninitialized' };
       }
     }
 
     return { success: true, results };
   } catch (error: any) {
-    console.error(`[Notification System Error] ${error.message}`);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Sends a multicast push notification to multiple tokens.
+ */
+export async function sendMulticastPush({
+  tokens,
+  title,
+  body,
+  imageUrl,
+  data = {}
+}: {
+  tokens: string[];
+  title: string;
+  body: string;
+  imageUrl?: string;
+  data?: Record<string, string>;
+}) {
+  try {
+    const admin = await getFirebaseAdmin();
+    if (!admin) return { success: false, error: 'Firebase Admin not initialized' };
+
+    const validTokens = tokens.filter(t => t && t.length > 10);
+    if (validTokens.length === 0) return { success: true, count: 0, note: 'No valid tokens' };
+
+    const response = await admin.messaging().sendEachForMulticast({
+      tokens: validTokens,
+      notification: {
+        title,
+        body,
+        ...(imageUrl ? { imageUrl } : {})
+      },
+      data: data
+    });
+
+    return { 
+      success: true, 
+      successCount: response.successCount, 
+      failureCount: response.failureCount 
+    };
+  } catch (error: any) {
     return { success: false, error: error.message };
   }
 }

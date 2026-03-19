@@ -18,7 +18,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { getSpecialRequests, updateSpecialRequestStatus } from '@/app/actions/special-request';
-import { cn } from '@/lib/utils';
+import { cn, formatGHS } from '@/lib/utils';
 
 export default function AdminSpecialRequestsPage() {
   const [requests, setRequests] = useState<any[]>([]);
@@ -33,7 +33,7 @@ export default function AdminSpecialRequestsPage() {
     setLoading(true);
     const result = await getSpecialRequests();
     if (result.success) {
-      setRequests(result.data);
+      setRequests(result.data || []);
     }
     setLoading(false);
   }
@@ -136,7 +136,7 @@ export default function AdminSpecialRequestsPage() {
                     </div>
                     {req.budget && (
                       <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-xl">
-                        ₵{req.budget.toLocaleString()} Budget
+                        {formatGHS(req.budget)} Budget
                       </div>
                     )}
                   </div>

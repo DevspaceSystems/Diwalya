@@ -3,6 +3,8 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { sendNotification } from '@/lib/notifications'
+import { ensureAdmin, logAdminAction } from './auth'
+import { formatGHS } from '@/lib/utils'
 
 export async function getWithdrawalRequests() {
   try {
@@ -16,8 +18,9 @@ export async function getWithdrawalRequests() {
   }
 }
 
-export async function updateWithdrawalStatus(requestId: string, status: 'APPROVED' | 'REJECTED' | 'PROCESSED', adminNotes?: string) {
+export async function updateWithdrawalStatus(requestId: string, status: 'APPROVED' | 'REJECTED' | 'PROCESSED', adminId: string, adminNotes?: string) {
   try {
+    await ensureAdmin(adminId)
     const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const request = await tx.withdrawalRequest.update({
         where: { id: requestId },
@@ -60,10 +63,11 @@ export async function updateWithdrawalStatus(requestId: string, status: 'APPROVE
         await sendNotification({
             userId: request.userId,
             title: `Withdrawal ${status.toLowerCase()}`,
-            body: `Your withdrawal request for ₵${request.amount} has been ${status.toLowerCase()}. ${adminNotes ? `Note: ${adminNotes}` : ''}`
+            body: `Your withdrawal request for ${formatGHS(request.amount)} has been ${status.toLowerCase()}. ${adminNotes ? `Note: ${adminNotes}` : ''}`
         })
     }
 
+    await logAdminAction(adminId, `Updated withdrawal ${requestId} status to ${status}`, { requestId, status });
     return { success: true, data: result }
   } catch (error: any) {
     return { success: false, error: error.message }

@@ -14,14 +14,31 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getWithdrawalRequests, updateWithdrawalStatus } from '@/app/actions/admin';
+import { formatGHS } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminWithdrawalsPage() {
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState<any[]>([]);
   const [error, setError] = useState('');
   const [processing, setProcessing] = useState<string | null>(null);
+  const [adminId, setAdminId] = useState<string | null>(null);
 
   useEffect(() => {
+    async function getAdmin() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) {
+            const { checkAdminAccess } = await import('@/app/actions/auth-check');
+            // We need the admin's database ID
+            const { prisma } = await import('@/lib/prisma');
+            const user = await prisma.user.findUnique({
+                where: { email: session.user.email },
+                select: { id: true }
+            }) as any;
+            if (user) setAdminId(user.id);
+        }
+    }
+    getAdmin();
     fetchRequests();
   }, []);
 
@@ -46,7 +63,7 @@ export default function AdminWithdrawalsPage() {
     
     setProcessing(id);
     try {
-      const res = await updateWithdrawalStatus(id, status);
+      const res = await updateWithdrawalStatus(id, status, adminId || '');
       if (res.success) {
         fetchRequests();
       } else {

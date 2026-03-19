@@ -17,7 +17,7 @@ import {
   Zap
 } from 'lucide-react';
 import { getFinancialData } from '@/app/actions/finance';
-import { cn } from '@/lib/utils';
+import { cn, formatGHS } from '@/lib/utils';
 
 export default function FinancialLedgerPage() {
   const [data, setData] = useState<any>(null);
@@ -63,7 +63,7 @@ export default function FinancialLedgerPage() {
                     </div>
                 </div>
                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Total Transaction Volume</p>
-                <p className="text-4xl font-black">₵{stats.totalVolume.toLocaleString()}</p>
+                <p className="text-4xl font-black">{formatGHS(stats.totalVolume)}</p>
             </div>
 
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden">
@@ -73,7 +73,7 @@ export default function FinancialLedgerPage() {
                     </div>
                 </div>
                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Platform Commission (5%)</p>
-                <p className="text-4xl font-black text-slate-900">₵{stats.platformCommission.toLocaleString()}</p>
+                <p className="text-4xl font-black text-slate-900">{formatGHS(stats.platformCommission)}</p>
             </div>
 
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden">
@@ -110,7 +110,7 @@ export default function FinancialLedgerPage() {
                                             <p className="text-sm font-black text-slate-900">Ref: {t.payment?.reference.slice(-12) || 'N/A'}</p>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase">{t.serviceType}</p>
                                         </td>
-                                        <td className="px-6 py-5 text-sm font-black text-slate-900">₵{t.priceAmount}</td>
+                                        <td className="px-6 py-5 text-sm font-black text-slate-900">{formatGHS(t.priceAmount)}</td>
                                         <td className="px-6 py-5">
                                             <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">
                                                 SUCCESS
@@ -149,7 +149,7 @@ export default function FinancialLedgerPage() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-lg font-black text-slate-900 tracking-tight">₵{w.balance.toFixed(2)}</p>
+                                        <p className="text-lg font-black text-slate-900 tracking-tight">{formatGHS(w.balance)}</p>
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Available Funds</p>
                                     </div>
                                 </div>

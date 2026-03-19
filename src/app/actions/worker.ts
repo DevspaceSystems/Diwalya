@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { sendNotification } from '@/lib/notifications'
 import { logActivity } from './activity'
+import { ensureAdmin, logAdminAction } from './auth'
 
 export async function createWorkerProfile(userId: string, data: {
   businessName: string
@@ -62,8 +63,9 @@ export async function createWorkerProfile(userId: string, data: {
   }
 }
 
-export async function rejectWorker(userId: string, reason: string) {
+export async function rejectWorker(userId: string, reason: string, adminId: string) {
   try {
+    await ensureAdmin(adminId)
     await prisma.workerProfile.update({
       where: { userId },
       data: {
@@ -81,14 +83,7 @@ export async function rejectWorker(userId: string, reason: string) {
     
     // In a real app, send email/notification here
     
-    // Log Activity
-    await logActivity({
-      type: 'VERIFICATION_REJECTED' as any,
-      content: `Worker ${userId} verification rejected: ${reason}`,
-      userId,
-      metadata: { status: 'REJECTED', reason }
-    });
-
+    await logAdminAction(adminId, `Rejected worker ${userId} verification`, { targetId: userId, reason });
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
@@ -109,8 +104,9 @@ export async function notifyAdminOfRejection(userId: string, reason: string) {
   }
 }
 
-export async function approveWorker(userId: string) {
+export async function approveWorker(userId: string, adminId: string) {
   try {
+    await ensureAdmin(adminId)
     await prisma.workerProfile.update({
       where: { userId },
       data: {
@@ -130,14 +126,7 @@ export async function approveWorker(userId: string) {
         body: 'Congratulations! Your worker profile has been verified. You now have the verified badge and will rank higher in search results.'
     })
 
-    // Log Activity
-    await logActivity({
-      type: 'VERIFICATION_APPROVED' as any,
-      content: `Worker ${userId} has been verified as a Pro`,
-      userId,
-      metadata: { status: 'APPROVED' }
-    });
-
+    await logAdminAction(adminId, `Approved worker ${userId} verification`, { targetId: userId });
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }

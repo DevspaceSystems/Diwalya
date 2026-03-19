@@ -56,22 +56,26 @@ export async function getReports() {
     return { success: false, error: error.message }
   }
 }
+import { ensureAdmin, logAdminAction } from './auth'
 
-export async function updateReportStatus(id: string, status: string, adminNotes?: string) {
+export async function updateReportStatus(id: string, status: string, adminId: string, adminNotes?: string) {
   try {
+    await ensureAdmin(adminId)
     await (prisma as any).platformReport.update({
       where: { id },
       data: { status, adminNotes }
     })
     revalidatePath('/dashboard/admin/reports')
+    await logAdminAction(adminId, `Updated report ${id} status to ${status}`, { reportId: id, status });
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
   }
 }
 
-export async function moderateUser(userId: string, action: 'WARN' | 'SUSPEND' | 'BAN', reason?: string) {
+export async function moderateUser(userId: string, action: 'WARN' | 'SUSPEND' | 'BAN', adminId: string, reason?: string) {
   try {
+    await ensureAdmin(adminId)
     const data: any = {}
     if (action === 'WARN') {
       data.warningCount = { increment: 1 }
@@ -111,14 +115,16 @@ export async function moderateUser(userId: string, action: 'WARN' | 'SUSPEND' | 
         body
     })
 
+    await logAdminAction(adminId, `Moderated user ${userId}: ${action}`, { targetId: userId, action, reason });
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
   }
 }
 
-export async function liftSanctions(userId: string) {
+export async function liftSanctions(userId: string, adminId: string) {
   try {
+    await ensureAdmin(adminId)
     await (prisma as any).user.update({
       where: { id: userId },
       data: {

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getWalletData, requestWithdrawal } from '@/app/actions/wallet';
+import { formatGHS } from '@/lib/utils';
 
 export default function WorkerWalletPage() {
   const [loading, setLoading] = useState(true);
@@ -99,7 +100,7 @@ export default function WorkerWalletPage() {
            
            <div className="relative z-10">
               <p className="text-slate-400 font-bold uppercase tracking-widest text-sm mb-2">Available Balance</p>
-              <h2 className="text-6xl font-black mb-10">₵{data?.balance?.toFixed(2) || '0.00'}</h2>
+              <h2 className="text-6xl font-black mb-10">{formatGHS(data?.balance)}</h2>
               
               <div className="flex flex-wrap gap-4">
                  <button 
@@ -141,7 +142,7 @@ export default function WorkerWalletPage() {
                      <p className={`text-lg font-black ${
                        tx.type === 'CREDIT' ? 'text-green-600' : 'text-gray-900'
                      }`}>
-                       {tx.type === 'CREDIT' ? '+' : '-'}₵{tx.amount.toFixed(2)}
+                       {tx.type === 'CREDIT' ? '+' : '-'}{formatGHS(tx.amount)}
                      </p>
                   </div>
                 ))

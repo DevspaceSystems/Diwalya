@@ -17,11 +17,13 @@ import {
   ShieldCheck,
   Zap,
   AlertTriangle,
-  Clock
+  Clock,
+  ClipboardCheck,
+  Settings2
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn, formatGHS } from '@/lib/utils';
 import ActivityFeed from '@/components/Admin/ActivityFeed';
 import AdminMessenger from '@/components/Admin/AdminMessenger';
 
@@ -39,7 +41,7 @@ export default function SuperAdminDashboard() {
     { label: 'Total Users', value: stats.users, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%' },
     { label: 'Verified Workers', value: stats.workers, icon: ShieldCheck, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+5%' },
     { label: 'Active Bookings', value: stats.bookings, icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50', trend: '+18%' },
-    { label: 'Platform Rev', value: `₵${stats.revenue}`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+24%' },
+    { label: 'Platform Rev', value: formatGHS(stats.revenue), icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+24%' },
   ];
 
   return (
@@ -72,7 +74,13 @@ export default function SuperAdminDashboard() {
                 <Wallet size={20} /> Financial Ledger
             </Link>
             <Link href="/dashboard/admin/reports" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
-                <ShieldAlert size={20} /> Security & Reports
+                <ShieldAlert size={20} /> Security &amp; Reports
+            </Link>
+            <Link href="/dashboard/admin/inspections" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
+                <ClipboardCheck size={20} /> Inspections
+            </Link>
+            <Link href="/dashboard/admin/settings" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
+                <Settings2 size={20} /> System Settings
             </Link>
         </nav>
 

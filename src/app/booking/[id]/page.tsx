@@ -8,6 +8,7 @@ import { Calendar, Clock, MapPin, CreditCard, ChevronRight, Loader2, CheckCircle
 import { usePaystackPayment } from 'react-paystack';
 import { supabase } from '@/lib/supabase';
 import { createJob } from '@/app/actions/booking';
+import { formatGHS } from '@/lib/utils';
 
 export default function BookingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: workerId } = use(params);
@@ -218,15 +219,15 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
             <div className="bg-primary/5 p-6 rounded-2xl mb-8 border border-primary/10">
               <div className="flex justify-between items-center mb-4">
                 <span className="font-bold text-gray-600">Service Fee</span>
-                <span className="font-black text-gray-900 text-xl">₵{serviceFee.toFixed(2)}</span>
+                <span className="font-black text-gray-900 text-xl">{formatGHS(serviceFee)}</span>
               </div>
               <div className="flex justify-between items-center text-sm text-gray-500">
                 <span>Platform Commission (5%)</span>
-                <span>₵{platformCommission.toFixed(2)}</span>
+                <span>{formatGHS(platformCommission)}</span>
               </div>
               <div className="mt-4 pt-4 border-t border-primary/10 flex justify-between items-center">
                 <span className="font-black text-primary">Total to Pay</span>
-                <span className="font-black text-primary text-2xl">₵{totalToPay.toFixed(2)}</span>
+                <span className="font-black text-primary text-2xl">{formatGHS(totalToPay)}</span>
               </div>
             </div>
 

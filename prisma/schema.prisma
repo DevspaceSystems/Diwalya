@@ -11,6 +11,7 @@ enum Role {
   CLIENT
   WORKER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum VerificationStatus {
@@ -28,6 +29,11 @@ enum JobStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+enum JobType {
+  REGULAR
+  INSPECTION
 }
 
 model User {
@@ -93,7 +99,15 @@ model Job {
   location    String
   scheduledAt DateTime
   status      JobStatus @default(PENDING)
+  type        JobType   @default(REGULAR)
   priceAmount Float?
+  assignedTeamMember String? // Optional Diwalya staff to accompany
+  inspectionWorkerAmount Float? // Amount worker gets from inspection fee
+  inspectionAdminAmount  Float? // Amount platform keeps
+  isInspectionVerified   Boolean @default(false)
+  inspectionNotes        String?
+  workerConfirmedAt      DateTime?
+  adminVerifiedAt        DateTime?
   paymentId   String?  @unique
   payment     Payment? @relation(fields: [paymentId], references: [id])
   createdAt   DateTime @default(now())
@@ -147,6 +161,7 @@ enum TransactionPurpose {
   WITHDRAWAL
   PLATFORM_FEE
   REFUND
+  INSPECTION_FEE
 }
 
 model Transaction {
@@ -246,6 +261,7 @@ enum ActivityType {
   VERIFICATION_REQUEST
   VERIFICATION_APPROVED
   SYSTEM_ALERT
+  ADMIN_ACTION
 }
 
 model ActivityLog {
@@ -257,4 +273,11 @@ model ActivityLog {
   createdAt DateTime     @default(now())
 
   user User? @relation(fields: [userId], references: [id])
+}
+
+model SystemSettings {
+  id                    String   @id @default("default")
+  inspectionFee         Float    @default(100.0)
+  inspectionWorkerShare Float    @default(60.0)
+  updatedAt             DateTime @updatedAt
 }

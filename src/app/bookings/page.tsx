@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Briefcase, Calendar, MapPin, Clock, ChevronRight, Filter, AlertCircle, CheckCircle2, XCircle, ShieldAlert, Flag, Send, Loader2 } from 'lucide-react';
 import { createReport } from '@/app/actions/report';
-import { cn } from '@/lib/utils';
+import { cn, formatGHS } from '@/lib/utils';
 import ChatWindow from '@/components/Chat/ChatWindow';
 
 // Enhanced Mock bookings data with all requested statuses
@@ -192,7 +192,7 @@ export default function BookingsPage() {
 
                 <div className="flex flex-col justify-between items-end border-t md:border-t-0 pt-6 md:pt-0 border-gray-50">
                   <div className="text-right mb-6 md:mb-0">
-                    <p className="text-3xl font-black text-gray-900 leading-none">₵{booking.price}</p>
+                    <p className="text-3xl font-black text-gray-900 leading-none">{formatGHS(booking.price)}</p>
                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Service Fee</p>
                   </div>
                   

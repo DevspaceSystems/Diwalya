@@ -3,7 +3,8 @@
 import React, { use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, MapPin, ShieldCheck, Clock, CheckCircle, Calendar, MessageSquare, ArrowRight, Share2, Heart, Briefcase, X, Send, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, Clock, CheckCircle, Calendar, MessageSquare, ArrowRight, Share2, Heart, Briefcase, X, Send, AlertTriangle, ShieldAlert, ClipboardCheck } from 'lucide-react';
+import { formatGHS } from '@/lib/utils';
 
 
 export default function WorkerProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -181,7 +182,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
               <div className="flex justify-between items-end mb-8 pb-6 border-b border-gray-100">
                 <div>
                   <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Average Rate</p>
-                  <p className="text-4xl font-black text-gray-900">₵{worker.price}</p>
+                  <p className="text-4xl font-black text-gray-900">{formatGHS(worker.price)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-green-600 font-black text-sm uppercase">Available</p>
@@ -212,6 +213,12 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                   className="w-full bg-secondary hover:bg-secondary-light text-white py-4 rounded-2xl font-black text-lg block text-center shadow-lg hover:shadow-orange-500/20 transition-all transform active:scale-[0.98]"
                 >
                   Book Now
+                </Link>
+                <Link
+                  href={`/inspection/${worker.id}`}
+                  className="w-full bg-primary/10 hover:bg-primary/20 text-primary py-4 rounded-2xl font-black text-base block text-center transition-all border border-primary/20 flex items-center justify-center gap-2"
+                >
+                  <ClipboardCheck size={18} /> Request Inspection (₵100)
                 </Link>
                 <button 
                   onClick={() => setShowChat(true)}
