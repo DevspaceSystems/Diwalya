@@ -44,7 +44,14 @@ export default function LoginPage() {
         }
       }
       
-      router.push('/dashboard'); 
+      const userRole = data.user?.user_metadata?.role || 'CLIENT';
+      if (userRole === 'ADMIN') {
+        router.push('/dashboard/admin');
+      } else if (userRole === 'WORKER') {
+        router.push('/dashboard/worker');
+      } else {
+        router.push('/search');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to login. Please check your credentials.');
     } finally {
