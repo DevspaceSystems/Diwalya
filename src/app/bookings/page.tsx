@@ -8,7 +8,8 @@ import {
   Flag, Send, Loader2, FileText, Calculator
 } from 'lucide-react';
 import { createReport } from '@/app/actions/report';
-import { getClientJobs } from '@/app/actions/booking';
+import { getClientJobs, declineEstimate, completeJobAndReleaseFunds } from '@/app/actions/booking';
+import { PaystackButton } from 'react-paystack';
 import { supabase } from '@/lib/supabase';
 import { cn, formatGHS } from '@/lib/utils';
 import ChatWindow from '@/components/Chat/ChatWindow';
@@ -23,6 +24,7 @@ export default function BookingsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [activeChat, setActiveChat] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -64,6 +66,57 @@ export default function BookingsPage() {
       setMessage({ type: 'error', text: 'Failed to submit report. Please try again.' });
     }
     setIsSubmitting(false);
+  };
+
+  const handleDecline = async (jobId: string) => {
+    if (!confirm('Are you sure you want to decline this estimate?')) return;
+    setIsProcessing(jobId);
+    await declineEstimate(jobId);
+    const res = await getClientJobs(user.id);
+    if (res.success && res.data) setBookings(res.data);
+    setIsProcessing(null);
+  };
+
+  const handlePaymentSuccess = async (reference: any, jobId: string, totalAmount: number) => {
+    setIsProcessing(jobId);
+    try {
+      const res = await fetch('/api/paystack/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reference: reference.reference,
+          jobId,
+          workerId: bookings.find(b => b.id === jobId)?.workerId,
+          totalAmount,
+          isEscrow: true
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: 'success', text: 'Payment successful! Escrow funded and work will begin.' });
+        const resJobs = await getClientJobs(user.id);
+        if (resJobs.success && resJobs.data) setBookings(resJobs.data);
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Payment verification failed' });
+      }
+    } catch (e) {
+      setMessage({ type: 'error', text: 'An error occurred during payment verification' });
+    }
+    setIsProcessing(null);
+  };
+
+  const handleCompleteJob = async (jobId: string) => {
+    if (!confirm('Has the worker completed the job to your satisfaction? This will release their payment.')) return;
+    setIsProcessing(jobId);
+    const result = await completeJobAndReleaseFunds(jobId);
+    if (result.success) {
+        setMessage({ type: 'success', text: 'Job marked as completed. Funds have been released to the worker!' });
+        const resJobs = await getClientJobs(user.id);
+        if (resJobs.success && resJobs.data) setBookings(resJobs.data);
+    } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to complete job' });
+    }
+    setIsProcessing(null);
   };
 
   const filteredBookings = bookings.filter(booking => {
@@ -252,12 +305,36 @@ export default function BookingsPage() {
                   )}
 
                   <div className="flex gap-3 mt-4 border-t border-emerald-100/50 pt-4">
-                    <button className="flex-1 py-3 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20">
-                      Proceed to Payment
-                    </button>
-                    <button className="flex-[0.5] py-3 bg-white text-emerald-700 border border-emerald-200 text-xs font-black rounded-xl hover:bg-emerald-50 transition-colors">
-                      Decline
-                    </button>
+                    {booking.status !== 'IN_PROGRESS' && booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED' && (
+                       <>
+                         <PaystackButton
+                           text={isProcessing === booking.id ? "Processing..." : "Proceed to Payment"}
+                           className="flex-1 py-3 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20 disabled:opacity-50 text-center"
+                           reference={(new Date()).getTime().toString() + '_' + booking.id}
+                           email={user?.email || ''}
+                           amount={Math.round(booking.estimate.totalCost * 100)}
+                           publicKey={process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || ''}
+                           onSuccess={(ref: any) => handlePaymentSuccess(ref, booking.id, booking.estimate.totalCost)}
+                           onClose={() => console.log('Closed')}
+                         />
+                         <button 
+                           onClick={() => handleDecline(booking.id)}
+                           disabled={isProcessing === booking.id}
+                           className="flex-[0.5] py-3 bg-white text-emerald-700 border border-emerald-200 text-xs font-black rounded-xl hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                         >
+                           Decline
+                         </button>
+                       </>
+                    )}
+                    {booking.status === 'IN_PROGRESS' && (
+                       <button
+                         onClick={() => handleCompleteJob(booking.id)}
+                         disabled={isProcessing === booking.id}
+                         className="flex-1 py-3 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20 disabled:opacity-50 text-center"
+                       >
+                         {isProcessing === booking.id ? 'Processing...' : 'Mark Job Completed'}
+                       </button>
+                    )}
                   </div>
                 </div>
               )}

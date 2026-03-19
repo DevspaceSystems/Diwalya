@@ -436,7 +436,7 @@ export async function adminReviewEstimate(
     await sendNotification({
       userId: estimate.job.workerId,
       title: approved ? 'Estimate Approved ✅' : 'Estimate Rejected ❌',
-      body: approved 
+      body: approved
         ? `Your estimate for "${estimate.job.serviceType}" has been approved and sent to the client.`
         : `Your estimate for "${estimate.job.serviceType}" was rejected: ${adminNotes}`
     })
@@ -451,7 +451,7 @@ export async function adminReviewEstimate(
 
     revalidatePath('/dashboard/admin/inspections')
     revalidatePath('/bookings')
-    
+
     return { success: true }
   } catch (error: any) {
     console.error('adminReviewEstimate Error:', error)
@@ -469,3 +469,84 @@ export async function getJobEstimate(jobId: string) {
     return { success: false, error: error.message }
   }
 }
+
+export async function declineEstimate(jobId: string) {
+  try {
+    const job = await prisma.job.update({
+      where: { id: jobId },
+      data: { status: 'CANCELLED' },
+      include: { worker: true, client: true }
+    });
+
+    await prisma.jobEstimate.update({
+      where: { jobId },
+      data: { status: 'REJECTED' }
+    });
+
+    await sendNotification({
+      userId: job.workerId,
+      title: 'Estimate Declined',
+      body: `The client declined your estimate for the ${job.serviceType} job.`
+    });
+
+    revalidatePath('/bookings');
+    revalidatePath('/dashboard/worker');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function completeJobAndReleaseFunds(jobId: string) {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: { payment: true, worker: true, client: true }
+    });
+
+    if (!job || job.status !== 'IN_PROGRESS' || !job.payment || job.payment.status !== 'SUCCESS') {
+       return { success: false, error: 'Job cannot be completed or is missing verified payment.' };
+    }
+
+    await prisma.job.update({
+      where: { id: jobId },
+      data: { status: 'COMPLETED' }
+    });
+
+    const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+
+    const totalAmount = job.payment.amount;
+    const platformFee = totalAmount * 0.05;
+    const workerAmount = totalAmount - platformFee;
+
+    const { creditWallet } = await import('@/lib/wallet');
+
+    await prisma.$transaction(async (tx) => {
+       await creditWallet(job.workerId, workerAmount, 'JOB_PAYMENT', job.payment!.reference, tx as any);
+       if (admin) {
+         await creditWallet(admin.id, platformFee, 'PLATFORM_FEE', job.payment!.reference, tx as any);
+       }
+    });
+
+    await sendNotification({
+      userId: job.workerId,
+      title: 'Payment Released 💰',
+      body: `The client has marked the job as complete. GHS ${workerAmount.toFixed(2)} has been added to your wallet.`
+    });
+
+    await logActivity({
+      type: 'PAYMENT_COMPLETED',
+      content: `Escrow payment of GHS ${totalAmount.toFixed(2)} released for job ${jobId}`,
+      userId: job.clientId,
+      metadata: { jobId }
+    });
+
+    revalidatePath('/bookings');
+    revalidatePath('/dashboard/worker');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+

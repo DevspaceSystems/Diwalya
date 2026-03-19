@@ -8,7 +8,7 @@ import { formatGHS } from '@/lib/utils';
 
 export async function POST(req: Request) {
   try {
-    const { reference, jobId, workerId, totalAmount } = await req.json()
+    const { reference, jobId, workerId, totalAmount, isEscrow } = await req.json()
 
     if (!reference || !jobId || !workerId || !totalAmount) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -61,29 +61,28 @@ export async function POST(req: Request) {
         const job = await tx.job.update({
             where: { id: jobId },
             data: {
-                status: 'ACCEPTED',
+                status: isEscrow ? 'IN_PROGRESS' : 'ACCEPTED',
                 paymentId: payment.id
             }
         })
 
-        // 4. Split Commission (5% to Admin, 95% to Worker)
-        
-        // Find an admin to receive the platform fee
-        const admin = await tx.user.findFirst({
-            where: { role: 'ADMIN' }
-        })
+        if (!isEscrow) {
+            // 4. Split Commission (5% to Admin, 95% to Worker)
+            const admin = await tx.user.findFirst({
+                where: { role: 'ADMIN' }
+            })
 
-        if (admin) {
-            await creditWallet(admin.id, platformFee, 'PLATFORM_FEE', reference, tx)
-        } else {
-            console.warn('No admin found to receive platform fee. Reference:', reference)
-            // Optionally: You might want to credit a dedicated system account or log this to a separate table
+            if (admin) {
+                await creditWallet(admin.id, platformFee, 'PLATFORM_FEE', reference, tx)
+            } else {
+                console.warn('No admin found to receive platform fee. Reference:', reference)
+            }
+
+            // Credit Worker Wallet (95%)
+            await creditWallet(workerId, workerAmount, 'JOB_PAYMENT', reference, tx)
         }
 
-        // Credit Worker Wallet (95%)
-        await creditWallet(workerId, workerAmount, 'JOB_PAYMENT', reference, tx)
-
-        return { job, payment, workerAmount, platformFee, adminId: admin?.id }
+        return { job, payment, workerAmount, platformFee }
     })
 
     // 5. Notify Both Parties
@@ -99,8 +98,10 @@ export async function POST(req: Request) {
     // Notify Worker
     await sendNotification({
         userId: job.workerId,
-        title: 'Booking Confirmed',
-        body: `Payment received for ${job.serviceType}. You have been credited ${formatGHS(workerAmount)}. Check your dashboard for details.`
+        title: isEscrow ? 'Escrow Funded & Job Started' : 'Booking Confirmed',
+        body: isEscrow 
+          ? `Client has paid ${formatGHS(totalAmount)} into escrow. The job is now IN PROGRESS. Funds release upon completion.` 
+          : `Payment received for ${job.serviceType}. You have been credited ${formatGHS(result.workerAmount)}. Check your dashboard.`
     })
     // Log Activity
     await logActivity({
