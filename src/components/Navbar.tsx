@@ -85,6 +85,14 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
+            {!isSearchPage && (
+              <>
+                <Link href="/" className={cn("text-gray-600 hover:text-primary font-medium transition-colors", pathname === '/' && "text-primary font-bold")}>Home</Link>
+                <Link href="/search" className={cn("text-gray-600 hover:text-primary font-medium transition-colors flex items-center gap-2", pathname === '/search' && "text-primary font-bold")}>
+                  <Search size={18} /> Search
+                </Link>
+              </>
+            )}
                 {!user ? (
                   <>
                     {!isSearchPage && (
