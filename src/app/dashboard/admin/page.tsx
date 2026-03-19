@@ -9,14 +9,17 @@ import {
   CreditCard, 
   LayoutDashboard, 
   Settings, 
-  Bell, 
   Search, 
   MoreVertical,
   TrendingUp,
   AlertCircle,
   ClipboardList,
   ShieldAlert,
-  ShieldCheck
+  ShieldCheck,
+  Activity,
+  Globe,
+  Zap,
+  Bell
 } from 'lucide-react';
 import { formatGHS } from '@/lib/utils';
 
@@ -41,9 +44,9 @@ export default function AdminDashboard() {
 
   const stats = [
     { label: 'Total Workers', value: platformStats.totalWorkers.toString(), change: '+12%', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Active Bookings', value: platformStats.activeBookings.toString(), change: '+5%', icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Revenue (Total)', value: formatGHS(platformStats.totalRevenue), change: '+18%', icon: CreditCard, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Platform Fees', value: formatGHS(platformStats.commission), change: 'Real-time', icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Active Operations', value: platformStats.activeBookings.toString(), change: '+5%', icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Cumulative Revenue', value: formatGHS(platformStats.totalRevenue), change: '+18%', icon: CreditCard, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Platform Dividends', value: formatGHS(platformStats.commission), change: 'Real-time', icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/5' },
   ];
 
   const pendingWorkers = [
@@ -65,31 +68,28 @@ export default function AdminDashboard() {
         
         <nav className="flex-grow px-4 space-y-1">
           <Link href="/dashboard/admin" className="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-xl font-bold transition-all">
-            <LayoutDashboard size={20} /> Overview
+            <LayoutDashboard size={20} /> Command Center
           </Link>
           <Link href="/dashboard/admin/workers" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <Users size={20} /> Manage Workers
+            <Users size={20} /> Talent Registry
           </Link>
           <Link href="/dashboard/admin/bookings" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <Briefcase size={20} /> Oversight
+            <Briefcase size={20} /> Operations
           </Link>
           <Link href="/dashboard/admin/payments" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <CreditCard size={20} /> Payments
-          </Link>
-          <Link href="/dashboard/admin/bookings" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <Briefcase size={20} /> Booking Oversight
+            <CreditCard size={20} /> Financials
           </Link>
           <Link href="/dashboard/admin/verifications" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <ShieldCheck size={20} /> Identity Verification
+            <ShieldCheck size={20} /> Security Clearances
           </Link>
           <Link href="/dashboard/admin/reports" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <ShieldAlert size={20} /> Reports & Safety
+            <ShieldAlert size={20} /> Threat Assessment
           </Link>
           <Link href="/dashboard/admin/withdrawals" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <TrendingUp size={20} /> Withdrawals
+            <TrendingUp size={20} /> Fund Disbursal
           </Link>
           <Link href="/dashboard/admin/special-requests" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl font-bold transition-all">
-            <ClipboardList size={20} /> Special Requests
+            <ClipboardList size={20} /> Custom Protocols
           </Link>
         </nav>
 
@@ -113,13 +113,15 @@ export default function AdminDashboard() {
               <Bell size={24} />
               <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
-            <div className="flex items-center gap-3 pl-6 border-l">
+            <div className="flex items-center gap-3 pl-6 border-l border-gray-100">
               <div className="text-right">
-                <p className="text-sm font-black text-gray-900">Admin User</p>
-                <p className="text-[10px] font-black text-green-500 uppercase tracking-widest">Super Admin</p>
+                <p className="text-sm font-black text-gray-900">Chief Systems Controller</p>
+                <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center justify-end gap-1">
+                  <ShieldCheck size={12} /> Root Access
+                </p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-black text-slate-500">
-                A
+              <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-slate-900/20">
+                <Globe size={24} className="text-primary" />
               </div>
             </div>
           </div>
@@ -128,8 +130,10 @@ export default function AdminDashboard() {
         <div className="p-8 max-w-7xl mx-auto">
           <div className="mb-10 flex justify-between items-end">
             <div>
-              <h1 className="text-3xl font-black text-gray-900 mb-2">Platform Overview</h1>
-              <p className="text-gray-500">Real-time stats and management tools for Diwalya.</p>
+              <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tighter">Global Command Center</h1>
+              <p className="text-gray-500 font-bold flex items-center gap-2 uppercase tracking-widest text-[10px]">
+                <Activity size={14} className="text-green-500" /> System Vitality: <span className="text-green-500">Optimal</span>
+              </p>
             </div>
             <button className="bg-white px-6 py-3 border border-gray-200 rounded-2xl font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2">
               Generate Report <TrendingUp size={18} />
@@ -161,8 +165,8 @@ export default function AdminDashboard() {
             <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                <div className="p-6 border-b border-gray-50 flex justify-between items-center">
                   <h3 className="font-black text-gray-900 text-lg flex items-center gap-2">
-                    Pending Worker Verifications
-                    <span className="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded-full font-black uppercase">Urgent</span>
+                    Personnel Clearance Queue
+                    <span className="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded-full font-black uppercase tracking-widest">Priority</span>
                   </h3>
                   <button className="text-primary text-sm font-bold hover:underline">See All</button>
                </div>

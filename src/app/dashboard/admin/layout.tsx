@@ -20,18 +20,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       // Verify role via server action (to prevent client-side spoofing)
       try {
-        const { prisma } = await import('@/lib/prisma'); // This won't work in client, use action
-        const { ensureAdmin } = await import('@/app/actions/auth');
+        // Use a dynamic import for the server action to ensure it's not bundled in the client
+        const { checkAdminAccess } = await import('@/app/actions/auth-check');
         
-        // We look up by email or id from the session
         const userEmail = session.user.email;
         if (!userEmail) {
             router.push('/');
             return;
         }
 
-        // We'll use a specific action for client check
-        const { checkAdminAccess } = await import('@/app/actions/auth-check');
         const hasAccess = await checkAdminAccess(userEmail);
         
         if (!hasAccess) {

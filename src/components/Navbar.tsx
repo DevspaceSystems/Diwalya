@@ -17,7 +17,8 @@ import {
   HelpCircle,
   Bell,
   ChevronDown,
-  ClipboardList
+  ClipboardList,
+  ShieldCheck
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -108,7 +109,11 @@ export default function Navbar() {
                   </>
             ) : (
               <div className="flex items-center space-x-8">
-                {role === 'CLIENT' ? (
+                {role === 'ADMIN' ? (
+                  <Link href="/dashboard/admin" className={cn("text-primary hover:text-primary-light font-bold transition-colors flex items-center gap-2", pathname.startsWith('/dashboard/admin') && "text-primary underline underline-offset-8 decoration-2")}>
+                    <ShieldCheck size={18} /> Command Center
+                  </Link>
+                ) : role === 'CLIENT' ? (
                   <div className="flex items-center space-x-8">
                     <Link href="/special-request" className={cn("text-primary hover:text-primary-light font-bold transition-colors flex items-center gap-2", pathname === '/special-request' && "text-primary underline underline-offset-8 decoration-2")}>
                       <ClipboardList size={18} /> Request a Worker
@@ -164,6 +169,11 @@ export default function Navbar() {
                           <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
                             <User size={18} className="text-gray-400" /> My Profile
                           </Link>
+                          {role === 'ADMIN' && (
+                            <Link href="/dashboard/admin" className="flex items-center gap-3 px-4 py-2.5 text-sm text-primary font-bold hover:bg-primary/5 transition-colors">
+                              <ShieldCheck size={18} className="text-primary" /> Command Center
+                            </Link>
+                          )}
                           {role === 'CLIENT' && (
                             <Link href="/bookings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
                               <Briefcase size={18} className="text-gray-400" /> My Bookings
