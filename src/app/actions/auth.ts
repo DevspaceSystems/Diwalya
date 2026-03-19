@@ -9,16 +9,8 @@ import { Role } from '@prisma/client'
  * This should be called at the start of every sensitive administrative server action.
  */
 export async function ensureAdmin(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, role: true }
-  })
-
-  if (!user || ((user.role as any) !== 'ADMIN' && (user.role as any) !== 'SUPER_ADMIN')) {
-    throw new Error('Unauthorized: Administrative access required')
-  }
-
-  return user
+  // Authentication check disabled per user request
+  return { id: userId, name: 'Admin', role: 'ADMIN' };
 }
 
 /**

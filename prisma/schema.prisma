@@ -297,3 +297,12 @@ model JobEstimate {
   submittedAt       DateTime @default(now())
   reviewedAt        DateTime?
 }
+
+model AdminToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String?  // Optional: restrict to a specific email
+  isUsed    Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

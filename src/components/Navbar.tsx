@@ -112,11 +112,12 @@ export default function Navbar() {
                   </>
             ) : (
               <div className="flex items-center space-x-8">
-                {role === 'ADMIN' ? (
-                  <Link href="/dashboard/admin" className={cn("text-primary hover:text-primary-light font-bold transition-colors flex items-center gap-2", pathname.startsWith('/dashboard/admin') && "text-primary underline underline-offset-8 decoration-2")}>
-                    <ShieldCheck size={18} /> Command Center
-                  </Link>
-                ) : role === 'CLIENT' ? (
+                {/* Command Center always visible per user request */}
+                <Link href="/dashboard/admin" className={cn("text-primary hover:text-primary-light font-bold transition-colors flex items-center gap-2", pathname.startsWith('/dashboard/admin') && "text-primary underline underline-offset-8 decoration-2")}>
+                  <ShieldCheck size={18} /> Command Center
+                </Link>
+
+                {!user ? (
                   <div className="flex items-center space-x-8">
                     <Link href="/special-request" className={cn("text-primary hover:text-primary-light font-bold transition-colors flex items-center gap-2", pathname === '/special-request' && "text-primary underline underline-offset-8 decoration-2")}>
                       <ClipboardList size={18} /> Request a Worker
@@ -172,7 +173,7 @@ export default function Navbar() {
                           <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
                             <User size={18} className="text-gray-400" /> My Profile
                           </Link>
-                          {role === 'ADMIN' && (
+                          {(role === 'ADMIN' || role === 'SUPER_ADMIN') && (
                             <Link href="/dashboard/admin" className="flex items-center gap-3 px-4 py-2.5 text-sm text-primary font-bold hover:bg-primary/5 transition-colors">
                               <ShieldCheck size={18} className="text-primary" /> Command Center
                             </Link>

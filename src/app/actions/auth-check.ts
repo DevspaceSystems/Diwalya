@@ -1,16 +1,13 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function checkAdminAccess(email: string) {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: { role: true }
-    });
-    
-    return (user?.role as any) === 'ADMIN' || (user?.role as any) === 'SUPER_ADMIN';
-  } catch (error) {
-    return false;
-  }
+  // Authentication check disabled per user request
+  return true;
 }
