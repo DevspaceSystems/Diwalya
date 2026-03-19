@@ -79,14 +79,17 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center transform hover:scale-105 transition-transform">
+            <Link 
+              href={role === 'ADMIN' ? "/dashboard/admin" : "/"} 
+              className="flex items-center transform hover:scale-105 transition-transform"
+            >
               <Image src="/diwalya-logo.png" alt="Diwalya Logo" width={180} height={45} className="object-contain" priority />
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {!isSearchPage && (
+            {!isSearchPage && role !== 'ADMIN' && (
               <>
                 <Link href="/" className={cn("text-gray-600 hover:text-primary font-medium transition-colors", pathname === '/' && "text-primary font-bold")}>Home</Link>
                 <Link href="/search" className={cn("text-gray-600 hover:text-primary font-medium transition-colors flex items-center gap-2", pathname === '/search' && "text-primary font-bold")}>

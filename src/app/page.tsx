@@ -1,10 +1,25 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { Search, Star, ShieldCheck, MapPin, Wrench, Zap, Briefcase, Camera, Car, Calendar, Menu, ArrowRight } from 'lucide-react';
 import { formatGHS } from '@/lib/utils';
 
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    async function checkAdmin() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.user_metadata?.role === 'ADMIN') {
+        router.push('/dashboard/admin');
+      }
+    }
+    checkAdmin();
+  }, [router]);
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50 text-gray-900">
 
