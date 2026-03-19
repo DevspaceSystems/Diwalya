@@ -17,6 +17,13 @@ export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('Sunyani');
 
+  // Live filter mock workers
+  const filteredWorkers = MOCK_WORKERS.filter(worker => 
+    worker.name.toLowerCase().includes(query.toLowerCase()) ||
+    worker.category.toLowerCase().includes(query.toLowerCase()) ||
+    worker.location.toLowerCase().includes(query.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-4">
       <div className="max-w-7xl mx-auto px-4 pt-6">
@@ -37,14 +44,17 @@ export default function SearchPage() {
           {/* Filters - Sidebar on desktop */}
           <aside className="w-full md:w-64 shrink-0">
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm sticky top-24">
-              <h2 className="font-bold text-lg mb-6 flex items-center gap-2">
+              <h2 className="font-bold text-lg mb-6 flex items-center gap-2 text-slate-800">
                 <Filter size={18} /> Filters
               </h2>
               
               <div className="space-y-6">
                 <div>
-                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Location</label>
-                  <select className="w-full mt-2 p-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary">
+                  <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Location</label>
+                  <select 
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full mt-2 p-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-900 font-medium">
                     <option>Sunyani</option>
                     <option>Accra</option>
                     <option>Kumasi</option>
@@ -52,7 +62,7 @@ export default function SearchPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Categories</label>
+                  <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Categories</label>
                   <div className="mt-4 space-y-4">
                     <div>
                       <p className="text-[10px] font-black text-primary uppercase mb-2">Skilled</p>
@@ -60,7 +70,7 @@ export default function SearchPage() {
                         {['Plumbing', 'Electrical', 'Carpentry', 'Mechanic', 'Photography'].map(cat => (
                           <label key={cat} className="flex items-center gap-2 cursor-pointer group">
                             <input type="checkbox" className="w-4 h-4 rounded text-primary focus:ring-primary border-gray-300" />
-                            <span className="text-gray-600 group-hover:text-primary transition-colors text-sm">{cat}</span>
+                            <span className="text-gray-600 group-hover:text-primary transition-colors text-sm font-medium">{cat}</span>
                           </label>
                         ))}
                       </div>
@@ -71,7 +81,7 @@ export default function SearchPage() {
                         {['Delivery', 'Cleaning', 'Security', 'Gardening', 'Laundry', 'General Labor'].map(cat => (
                           <label key={cat} className="flex items-center gap-2 cursor-pointer group">
                             <input type="checkbox" className="w-4 h-4 rounded text-secondary focus:ring-secondary border-gray-300" />
-                            <span className="text-gray-600 group-hover:text-secondary transition-colors text-sm">{cat}</span>
+                            <span className="text-gray-600 group-hover:text-secondary transition-colors text-sm font-medium">{cat}</span>
                           </label>
                         ))}
                       </div>
@@ -80,9 +90,9 @@ export default function SearchPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">Price Range</label>
+                  <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Price Range</label>
                   <input type="range" className="w-full mt-2 accent-primary" />
-                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <div className="flex justify-between text-xs text-gray-500 mt-1 font-medium">
                     <span>{formatGHS(0)}</span>
                     <span>{formatGHS(500)}+</span>
                   </div>
@@ -95,11 +105,11 @@ export default function SearchPage() {
           <main className="flex-grow">
             <div className="mb-6">
               <h1 className="text-2xl font-black text-gray-900">Available workers in {location}</h1>
-              <p className="text-gray-500">{MOCK_WORKERS.length} professionals found</p>
+              <p className="text-gray-500 font-medium">{filteredWorkers.length} professionals found</p>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
-              {MOCK_WORKERS.map((worker) => {
+              {filteredWorkers.map((worker) => {
                 const slug = worker.name.toLowerCase().replace(/ /g, '-');
                 return (
                   <Link 
