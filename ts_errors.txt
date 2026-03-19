@@ -1,0 +1,7 @@
+src/app/dashboard/admin/reports/page.tsx(43,26): error TS2554: Expected 3-4 arguments, but got 2.
+src/app/dashboard/admin/users/page.tsx(48,19): error TS2554: Expected 2 arguments, but got 1.
+src/app/dashboard/admin/verifications/page.tsx(40,46): error TS2554: Expected 2 arguments, but got 1.
+src/app/dashboard/admin/verifications/page.tsx(40,76): error TS2554: Expected 3 arguments, but got 2.
+src/app/login/page.tsx(32,15): error TS2339: Property 'checkUserStatus' does not exist on type 'typeof import("D:/A1 working/Diwalya/src/app/actions/report")'.
+src/components/Admin/AdminMessenger.tsx(43,43): error TS2304: Cannot find name 'supabase'.
+src/components/Admin/AdminMessenger.tsx(49,30): error TS2304: Cannot find name 'prisma'.

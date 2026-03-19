@@ -1,7 +1,8 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { sendEmail, EMAIL_TEMPLATES, parseTemplate } from '@/lib/email'
+import { sendEmail } from '@/lib/email'
+import { EMAIL_TEMPLATES, parseTemplate } from '@/lib/email-templates'
 import { sendMulticastPush } from '@/lib/notifications'
 import { ensureAdmin, logAdminAction } from './auth'
 

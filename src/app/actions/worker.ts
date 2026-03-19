@@ -63,7 +63,7 @@ export async function createWorkerProfile(userId: string, data: {
   }
 }
 
-export async function rejectWorker(userId: string, reason: string, adminId: string) {
+export async function rejectWorker(userId: string, reason: string, adminId: string = 'admin') {
   try {
     await ensureAdmin(adminId)
     await prisma.workerProfile.update({
@@ -104,7 +104,7 @@ export async function notifyAdminOfRejection(userId: string, reason: string) {
   }
 }
 
-export async function approveWorker(userId: string, adminId: string) {
+export async function approveWorker(userId: string, adminId: string = 'admin') {
   try {
     await ensureAdmin(adminId)
     await prisma.workerProfile.update({

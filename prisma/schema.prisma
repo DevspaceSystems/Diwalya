@@ -113,6 +113,7 @@ model Job {
   createdAt   DateTime @default(now())
   
   review      Review?
+  estimate    JobEstimate?
   messages    ChatMessage[]
 }
 
@@ -280,4 +281,19 @@ model SystemSettings {
   inspectionFee         Float    @default(100.0)
   inspectionWorkerShare Float    @default(60.0)
   updatedAt             DateTime @updatedAt
+}
+
+model JobEstimate {
+  id                String   @id @default(cuid())
+  jobId             String   @unique
+  job               Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  laborCost         Float
+  materialCost      Float
+  totalCost         Float
+  estimatedDuration String   // e.g. "5 days", "2 hours"
+  workerNotes       String?  // Optional notes from worker
+  status            String   @default("PENDING_REVIEW") // PENDING_REVIEW, APPROVED, REJECTED
+  adminNotes        String?
+  submittedAt       DateTime @default(now())
+  reviewedAt        DateTime?
 }

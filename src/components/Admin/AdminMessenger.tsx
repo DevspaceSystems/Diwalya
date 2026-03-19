@@ -16,8 +16,9 @@ import {
 } from 'lucide-react';
 import { sendNotification } from '@/lib/notifications';
 import { sendMassBroadcast } from '@/app/actions/notification';
-import { EMAIL_TEMPLATES, parseTemplate } from '@/lib/email';
+import { EMAIL_TEMPLATES, parseTemplate } from '@/lib/email-templates';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 interface AdminMessengerProps {
   onClose: () => void;
@@ -42,19 +43,12 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
     async function getAdminId() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.id) {
-          // We need the primary key ID from our DB, but for now we'll assume 
-          // either auth ID matches or we look it up. 
-          // Let's look up the user by email to be sure we have the Prisma ID.
-          const { checkAdminAccess } = await import('@/app/actions/auth-check');
-          const user = await prisma.user.findUnique({
-              where: { email: session.user.email },
-              select: { id: true }
-          }) as any;
-          if (user) setAdminId(user.id);
+          setAdminId(session.user.id);
       }
     }
     getAdminId();
   }, []);
+
 
   // Update subject/message when template changes
   useEffect(() => {

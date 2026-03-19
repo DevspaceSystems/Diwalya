@@ -165,6 +165,24 @@ export async function getWorkerJobs(workerId: string) {
     }
 }
 
+export async function getClientJobs(clientId: string) {
+  try {
+    const jobs = await prisma.job.findMany({
+      where: { clientId },
+      include: {
+        worker: {
+          include: { workerProfile: true }
+        },
+        estimate: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return { success: true, data: jobs };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function getGlobalBookings(status?: JobStatus) {
   try {
     const jobs = await prisma.job.findMany({
@@ -332,10 +350,121 @@ export async function getInspections(status?: string) {
   try {
     const jobs = await prisma.job.findMany({
       where: { type: 'INSPECTION', ...(status ? { status: status as JobStatus } : {}) },
-      include: { client: true, worker: { include: { workerProfile: true } } },
+      include: { 
+        client: true, 
+        worker: { include: { workerProfile: true } },
+        estimate: true
+      },
       orderBy: { createdAt: 'desc' }
     })
     return { success: true, data: jobs }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+// ─── ESTIMATE ACTIONS ────────────────────────────────────────────────────────
+
+export async function submitJobEstimate(data: {
+  jobId: string
+  laborCost: number
+  materialCost: number
+  estimatedDuration: string
+  workerNotes?: string
+}) {
+  try {
+    const totalCost = data.laborCost + data.materialCost
+    const estimate = await prisma.jobEstimate.upsert({
+      where: { jobId: data.jobId },
+      update: {
+        ...data,
+        totalCost,
+        status: 'PENDING_REVIEW',
+        submittedAt: new Date(),
+      },
+      create: {
+        ...data,
+        totalCost,
+        status: 'PENDING_REVIEW',
+      }
+    })
+
+    await logActivity({
+      type: 'ADMIN_ACTION',
+      content: `Worker submitted estimate for job ${data.jobId}: ₵${totalCost}`,
+      metadata: { jobId: data.jobId, estimateId: estimate.id, totalCost }
+    })
+
+    revalidatePath('/dashboard/admin/inspections')
+    revalidatePath(`/dashboard/worker/estimate/${data.jobId}`)
+    
+    return { success: true, estimateId: estimate.id }
+  } catch (error: any) {
+    console.error('submitJobEstimate Error:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function adminReviewEstimate(
+  adminId: string,
+  jobId: string,
+  approved: boolean,
+  adminNotes?: string
+) {
+  try {
+    const { ensureAdmin } = await import('./auth')
+    await ensureAdmin(adminId)
+
+    const status = approved ? 'APPROVED' : 'REJECTED'
+    const estimate = await prisma.jobEstimate.update({
+      where: { jobId },
+      data: {
+        status,
+        adminNotes,
+        reviewedAt: new Date()
+      },
+      include: {
+        job: {
+          include: {
+            client: true,
+            worker: true
+          }
+        }
+      }
+    })
+
+    await sendNotification({
+      userId: estimate.job.workerId,
+      title: approved ? 'Estimate Approved ✅' : 'Estimate Rejected ❌',
+      body: approved 
+        ? `Your estimate for "${estimate.job.serviceType}" has been approved and sent to the client.`
+        : `Your estimate for "${estimate.job.serviceType}" was rejected: ${adminNotes}`
+    })
+
+    if (approved) {
+      await sendNotification({
+        userId: estimate.job.clientId,
+        title: 'New Service Estimate ₵',
+        body: `Worker ${estimate.job.worker.name} has submitted a price estimate for your request. View details to proceed.`
+      })
+    }
+
+    revalidatePath('/dashboard/admin/inspections')
+    revalidatePath('/bookings')
+    
+    return { success: true }
+  } catch (error: any) {
+    console.error('adminReviewEstimate Error:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getJobEstimate(jobId: string) {
+  try {
+    const estimate = await prisma.jobEstimate.findUnique({
+      where: { jobId }
+    })
+    return { success: true, data: estimate }
   } catch (error: any) {
     return { success: false, error: error.message }
   }

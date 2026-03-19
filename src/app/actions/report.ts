@@ -58,7 +58,7 @@ export async function getReports() {
 }
 import { ensureAdmin, logAdminAction } from './auth'
 
-export async function updateReportStatus(id: string, status: string, adminId: string, adminNotes?: string) {
+export async function updateReportStatus(id: string, status: string, adminId: string = 'admin', adminNotes?: string) {
   try {
     await ensureAdmin(adminId)
     await (prisma as any).platformReport.update({
@@ -73,7 +73,7 @@ export async function updateReportStatus(id: string, status: string, adminId: st
   }
 }
 
-export async function moderateUser(userId: string, action: 'WARN' | 'SUSPEND' | 'BAN', adminId: string, reason?: string) {
+export async function moderateUser(userId: string, action: 'WARN' | 'SUSPEND' | 'BAN', adminId: string = 'admin', reason?: string) {
   try {
     await ensureAdmin(adminId)
     const data: any = {}
@@ -122,7 +122,7 @@ export async function moderateUser(userId: string, action: 'WARN' | 'SUSPEND' | 
   }
 }
 
-export async function liftSanctions(userId: string, adminId: string) {
+export async function liftSanctions(userId: string, adminId: string = 'admin') {
   try {
     await ensureAdmin(adminId)
     await (prisma as any).user.update({
@@ -137,5 +137,17 @@ export async function liftSanctions(userId: string, adminId: string) {
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
+  }
+}
+
+export async function checkUserStatus(email: string) {
+  try {
+    const user = await (prisma as any).user.findUnique({
+      where: { email },
+      select: { isBanned: true, isSuspended: true, suspensionReason: true }
+    });
+    return { success: true, data: user };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 }

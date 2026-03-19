@@ -1,71 +1,53 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Briefcase, Calendar, MapPin, Clock, ChevronRight, Filter, AlertCircle, CheckCircle2, XCircle, ShieldAlert, Flag, Send, Loader2 } from 'lucide-react';
+import { 
+  Briefcase, Calendar, MapPin, Clock, ChevronRight, 
+  Filter, AlertCircle, CheckCircle2, XCircle, ShieldAlert, 
+  Flag, Send, Loader2, FileText, Calculator
+} from 'lucide-react';
 import { createReport } from '@/app/actions/report';
+import { getClientJobs } from '@/app/actions/booking';
+import { supabase } from '@/lib/supabase';
 import { cn, formatGHS } from '@/lib/utils';
 import ChatWindow from '@/components/Chat/ChatWindow';
 
-// Enhanced Mock bookings data with all requested statuses
-const MOCK_BOOKINGS = [
-  {
-    id: 'BK-9942',
-    workerName: 'Kwame Mensah',
-    service: 'Plumbing Repair',
-    date: 'Oct 28, 2023',
-    time: '10:00 AM',
-    status: 'ACCEPTED',
-    price: 150,
-    address: 'Adum, Kumasi'
-  },
-  {
-    id: 'BK-9950',
-    workerName: 'Amma Serwaa',
-    service: 'Electrical Wiring',
-    date: 'Nov 02, 2023',
-    time: '02:30 PM',
-    status: 'PENDING',
-    price: 450,
-    address: 'East Legon, Accra'
-  },
-  {
-    id: 'BK-7721',
-    workerName: 'Kofi Owusu',
-    service: 'Furniture Assembly',
-    date: 'Oct 12, 2023',
-    time: '09:00 AM',
-    status: 'COMPLETED',
-    price: 300,
-    address: 'Bantama, Kumasi'
-  },
-  {
-    id: 'BK-8801',
-    workerName: 'Sarah Boateng',
-    service: 'Home Cleaning',
-    date: 'Oct 05, 2023',
-    time: '08:00 AM',
-    status: 'CANCELLED',
-    price: 120,
-    address: 'Osu, Accra'
-  }
-];
-
 export default function BookingsPage() {
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [reportingJob, setReportingJob] = useState<any>(null);
   const [reportForm, setReportForm] = useState({ reason: 'CONDUCT', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [activeChat, setActiveChat] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      setUser(user);
+      const res = await getClientJobs(user.id);
+      if (res.success && res.data) {
+        setBookings(res.data);
+      }
+      setLoading(false);
+    }
+    load();
+  }, []);
 
   const handleReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setIsSubmitting(true);
-    // In a real app, we'd get the actual user ID from session
     const result = await createReport({
-      reporterId: 'current-user-id', 
-      targetId: reportingJob.targetId || 'worker-id',
+      reporterId: user.id, 
+      targetId: reportingJob.workerId || 'unknown',
       jobId: reportingJob.id,
       reason: reportForm.reason,
       description: reportForm.description
@@ -84,17 +66,20 @@ export default function BookingsPage() {
     setIsSubmitting(false);
   };
 
-  const filteredBookings = MOCK_BOOKINGS.filter(booking => {
+  const filteredBookings = bookings.filter(booking => {
     if (activeFilter === 'ALL') return true;
-    if (activeFilter === 'ACTIVE') return ['PENDING', 'ACCEPTED'].includes(booking.status);
+    if (activeFilter === 'ACTIVE') return ['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'ADMIN_REVIEW', 'WORKER_REVIEW'].includes(booking.status);
     return booking.status === activeFilter;
   });
 
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'ACCEPTED':
+      case 'IN_PROGRESS':
         return 'bg-green-100 text-green-700 border-green-200';
       case 'PENDING':
+      case 'ADMIN_REVIEW':
+      case 'WORKER_REVIEW':
         return 'bg-blue-100 text-blue-700 border-blue-200 animate-pulse';
       case 'CANCELLED':
         return 'bg-red-100 text-red-700 border-red-200';
@@ -108,17 +93,27 @@ export default function BookingsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'ACCEPTED':
+      case 'IN_PROGRESS':
+      case 'COMPLETED':
         return <CheckCircle2 size={14} />;
       case 'PENDING':
+      case 'ADMIN_REVIEW':
+      case 'WORKER_REVIEW':
         return <AlertCircle size={14} />;
       case 'CANCELLED':
         return <XCircle size={14} />;
-      case 'COMPLETED':
-        return <CheckCircle2 size={14} />;
       default:
-        return null;
+        return <Clock size={14} />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-4">
@@ -159,31 +154,36 @@ export default function BookingsPage() {
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <h3 className="text-xl font-bold text-gray-900">{booking.workerName}</h3>
+                      <h3 className="text-xl font-bold text-gray-900">{booking.worker?.name || 'Unassigned Worker'}</h3>
                       <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusStyle(booking.status)}`}>
                         {getStatusIcon(booking.status)}
-                        {booking.status}
+                        {booking.status.replace('_', ' ')}
                       </div>
+                      {booking.type === 'INSPECTION' && (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-purple-100 text-purple-700 border-purple-200">
+                          Inspection
+                        </div>
+                      )}
                     </div>
-                    <p className="text-primary font-black text-lg mb-4">{booking.service}</p>
+                    <p className="text-primary font-black text-lg mb-4">{booking.serviceType}</p>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-3">
                       <div className="flex items-center gap-2.5 text-sm text-gray-500 font-bold">
                         <Calendar size={18} className="text-gray-400" />
-                        {booking.date}
+                        {new Date(booking.scheduledAt).toLocaleDateString()}
                       </div>
                       <div className="flex items-center gap-2.5 text-sm text-gray-500 font-bold">
                         <Clock size={18} className="text-gray-400" />
-                        {booking.time}
+                        {new Date(booking.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
-                      {booking.status === 'ACCEPTED' ? (
+                      {['ACCEPTED', 'IN_PROGRESS', 'COMPLETED'].includes(booking.status) ? (
                         <div className="flex items-center gap-2.5 text-sm text-gray-500 font-bold col-span-full">
                           <MapPin size={18} className="text-gray-400" />
-                          {booking.address}
+                          {booking.location}
                         </div>
                       ) : (
                         <div className="flex items-center gap-2.5 text-[10px] text-orange-600 font-black uppercase tracking-widest col-span-full bg-orange-50 px-3 py-1 rounded-lg border border-orange-100 italic">
-                          <ShieldAlert size={14} /> Contact details hidden until payment
+                          <ShieldAlert size={14} /> Contact details hidden until accepted
                         </div>
                       )}
                     </div>
@@ -192,8 +192,10 @@ export default function BookingsPage() {
 
                 <div className="flex flex-col justify-between items-end border-t md:border-t-0 pt-6 md:pt-0 border-gray-50">
                   <div className="text-right mb-6 md:mb-0">
-                    <p className="text-3xl font-black text-gray-900 leading-none">{formatGHS(booking.price)}</p>
-                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">Service Fee</p>
+                    <p className="text-3xl font-black text-gray-900 leading-none">{formatGHS(booking.priceAmount || 0)}</p>
+                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
+                      {booking.type === 'INSPECTION' ? 'Inspection Fee' : 'Service Fee'}
+                    </p>
                   </div>
                   
                   <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto mt-6 md:mt-0">
@@ -203,24 +205,71 @@ export default function BookingsPage() {
                     >
                       <Flag size={14} /> Report
                     </button>
-                    <button 
-                      onClick={() => setActiveChat(booking)}
-                      className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-2xl font-bold transition-all group/btn"
-                    >
-                      Chat & Details <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                    </button>
+                    {booking.worker && (
+                      <button 
+                        onClick={() => setActiveChat(booking)}
+                        className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-2xl font-bold transition-all group/btn"
+                      >
+                        Chat & Details <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* Estimate Details */}
+              {booking.estimate && booking.estimate.status === 'APPROVED' && (
+                <div className="mt-6 p-5 bg-emerald-50 rounded-2xl border border-emerald-100 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+                  <h4 className="text-sm font-black text-emerald-800 mb-4 flex items-center gap-2">
+                    <Calculator size={16} className="text-emerald-600" />
+                    Approved Project Quote
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-4">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/70 mb-1">Labor</p>
+                      <p className="text-sm font-black text-emerald-900">{formatGHS(booking.estimate.laborCost)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/70 mb-1">Materials</p>
+                      <p className="text-sm font-black text-emerald-900">{formatGHS(booking.estimate.materialCost)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/70 mb-1">Duration</p>
+                      <p className="text-sm font-black text-emerald-900">{booking.estimate.estimatedDuration}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/70 mb-1">Total Cost</p>
+                      <p className="text-lg font-black text-emerald-700">{formatGHS(booking.estimate.totalCost)}</p>
+                    </div>
+                  </div>
+
+                  {booking.estimate.workerNotes && (
+                    <div className="mb-5 p-3 bg-white/60 rounded-xl">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/70 mb-1">Worker Notes</p>
+                      <p className="text-xs text-emerald-800 italic">"{booking.estimate.workerNotes}"</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 mt-4 border-t border-emerald-100/50 pt-4">
+                    <button className="flex-1 py-3 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20">
+                      Proceed to Payment
+                    </button>
+                    <button className="flex-[0.5] py-3 bg-white text-emerald-700 border border-emerald-200 text-xs font-black rounded-xl hover:bg-emerald-50 transition-colors">
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Status helper text */}
-              {booking.status === 'PENDING' && (
+              {(booking.status === 'PENDING' || booking.status === 'ADMIN_REVIEW' || booking.status === 'WORKER_REVIEW') && (
                 <div className="mt-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50 flex items-center gap-3 text-sm text-blue-700 font-bold">
                    <AlertCircle size={18} />
                    Awaiting worker confirmation. You'll be notified once accepted.
                 </div>
               )}
-              {booking.status === 'ACCEPTED' && (
+              {booking.status === 'ACCEPTED' && !booking.estimate && (
                 <div className="mt-6 p-4 bg-green-50/50 rounded-2xl border border-green-100/50 flex items-center gap-3 text-sm text-green-700 font-bold">
                    <CheckCircle2 size={18} />
                    Worker has accepted! They will arrive at the scheduled time.
@@ -231,7 +280,7 @@ export default function BookingsPage() {
         </div>
 
         {filteredBookings.length === 0 && (
-          <div className="text-center py-24 bg-white rounded-[3rem] border border-dashed border-gray-200 shadow-inner">
+          <div className="text-center py-24 bg-white rounded-[3rem] border border-dashed border-gray-200 shadow-inner mt-6">
             <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8">
               <Briefcase size={48} className="text-gray-200" />
             </div>
@@ -318,11 +367,11 @@ export default function BookingsPage() {
       )}
 
       {/* Chat Window */}
-      {activeChat && (
+      {activeChat && user && (
         <ChatWindow 
           jobId={activeChat.id}
-          senderId="current-user-id" // In real app, from auth
-          recipientName={activeChat.workerName}
+          senderId={user.id} 
+          recipientName={activeChat.worker?.name || 'Worker'}
           onClose={() => setActiveChat(null)}
         />
       )}
