@@ -21,7 +21,6 @@ export async function getUsers(query?: string, role?: string) {
     const { data: users, error } = await queryBuilder;
     if (error) throw error;
     
-    // Transform data to match Prisma's output (single object for 1-to-1)
     const transformedUsers = users?.map(u => ({
       ...u,
       workerProfile: Array.isArray(u.workerProfile) ? u.workerProfile[0] : u.workerProfile,
@@ -36,24 +35,33 @@ export async function getUsers(query?: string, role?: string) {
 
 export async function getWorkers() {
   try {
+    console.log('[getWorkers] Querying Users with role WORKER...');
     const { data: workers, error } = await supabaseAdmin
       .from('User')
       .select('*, workerProfile(*)')
       .eq('role', 'WORKER')
       .order('name', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+       console.error('[getWorkers] Supabase Error:', error);
+       throw error;
+    }
+
+    console.log(`[getWorkers] Retrieved ${workers?.length || 0} users with role WORKER.`);
 
     const transformedWorkers = workers?.map(u => ({
       ...u,
       workerProfile: Array.isArray(u.workerProfile) ? u.workerProfile[0] : u.workerProfile
-    }));
+    })) || [];
 
+    console.log(`[getWorkers] Successfully transformed ${transformedWorkers.length} workers.`);
     return { success: true, data: transformedWorkers };
   } catch (error: any) {
+    console.error('[getWorkers] Fatal Error:', error);
     return { success: false, error: error.message };
   }
 }
+
 export async function updateUser(userId: string, data: any) {
   try {
     const { data: user, error } = await supabaseAdmin
@@ -75,37 +83,39 @@ export async function updateUserProfile(userId: string, data: {
   name: string;
   phone?: string;
   role: string;
+  profilePicture?: string;
   workerData?: {
-    category: string;
-    bio?: string;
+    businessName: string;
     location: string;
+    category: string;
+    bio: string;
     experienceYears: number;
     hourlyRate?: number;
   }
 }) {
   try {
-    // 1. Update basic User info
+    // 1. Update User table
     const { error: userError } = await supabaseAdmin
       .from('User')
       .update({
         name: data.name,
-        ...(data.phone ? { phone: data.phone } : {})
+        profilePicture: data.profilePicture
       })
       .eq('id', userId);
 
     if (userError) throw userError;
 
-    // 2. Update WorkerProfile if role is WORKER
-    if (data.role === 'WORKER' && data.workerData) {
+    // 2. Update WorkerProfile if data exists
+    if (data.workerData) {
       const workerProfileData = {
+        businessName: data.workerData.businessName,
+        location: data.workerData.location,
         category: data.workerData.category,
         bio: data.workerData.bio,
-        location: data.workerData.location,
         experienceYears: data.workerData.experienceYears,
         hourlyRate: data.workerData.hourlyRate
       };
 
-      // Check if profile exists
       const { data: existing } = await supabaseAdmin
         .from('WorkerProfile')
         .select('id')
@@ -129,7 +139,9 @@ export async function updateUserProfile(userId: string, data: {
     // 3. Keep Supabase auth metadata in sync
     await supabaseAdmin.auth.admin.updateUserById(userId, {
       user_metadata: {
-        full_name: data.name
+        full_name: data.name,
+        profilePicture: data.profilePicture,
+        role: data.role
       }
     });
 
@@ -150,7 +162,7 @@ export async function getUserProfile(userId: string) {
       .single();
 
     if (error) throw error;
-
+    
     const transformedUser = {
       ...user,
       workerProfile: Array.isArray(user.workerProfile) ? user.workerProfile[0] : user.workerProfile
@@ -158,6 +170,7 @@ export async function getUserProfile(userId: string) {
 
     return { success: true, data: transformedUser };
   } catch (error: any) {
+    console.error('Get User Profile Error:', error);
     return { success: false, error: error.message };
   }
 }

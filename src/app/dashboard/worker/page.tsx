@@ -70,8 +70,8 @@ export default function WorkerDashboard() {
     <div className="p-8 max-w-7xl mx-auto space-y-10 pb-20">
       <div className="flex justify-between items-end mb-4">
           <div>
-            <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Command Center</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Overview & Real-time Insights</p>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Command Center</h2>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Overview & Real-time Insights</p>
           </div>
       </div>
 
@@ -83,8 +83,8 @@ export default function WorkerDashboard() {
                 <stat.icon size={24} />
             </div>
             <div>
-               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
-               <p className="text-3xl font-black text-gray-900 tracking-tight">{stat.value}</p>
+               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
+               <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.value}</p>
             </div>
           </div>
         ))}
@@ -94,7 +94,7 @@ export default function WorkerDashboard() {
         {/* New Job Requests */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-black text-gray-900">Job Requests</h3>
+            <h3 className="text-2xl font-black text-slate-900">Job Requests</h3>
             {jobs.filter(j => j.status === 'WORKER_REVIEW').length > 0 && (
               <span className="px-3 py-1 bg-red-100 text-red-600 text-[10px] font-black rounded-full animate-pulse uppercase tracking-widest">
                 {jobs.filter(j => j.status === 'WORKER_REVIEW').length} Urgent
@@ -106,12 +106,12 @@ export default function WorkerDashboard() {
              {loading ? (
                <div className="py-20 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed border-gray-200">
                  <Loader2 className="animate-spin text-secondary mb-4" />
-                 <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading jobs...</p>
+                 <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Loading jobs...</p>
                </div>
              ) : jobs.length === 0 ? (
                 <div className="py-20 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed border-gray-200">
                   <Briefcase size={40} className="text-gray-200 mb-4" />
-                  <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No jobs yet</p>
+                  <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No jobs yet</p>
                 </div>
              ) : (
               jobs.map((job) => {
@@ -126,10 +126,10 @@ export default function WorkerDashboard() {
 
                         <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-black text-lg text-gray-900">
+                              <h4 className="font-black text-lg text-slate-900">
                                 {isMasked ? 'Client Identity Protected' : job.client.name}
                               </h4>
-                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
                                 {new Date(job.createdAt).toLocaleDateString()}
                               </span>
                             </div>
@@ -152,7 +152,7 @@ export default function WorkerDashboard() {
                       </div>
                       
                       <div className="flex md:flex-col justify-between items-end gap-4 min-w-[120px]">
-                        <p className="text-2xl font-black text-gray-900">{formatGHS(job.priceAmount)}</p>
+                        <p className="text-2xl font-black text-slate-900">{formatGHS(job.priceAmount)}</p>
                         {isMasked ? (
                           <div className="flex gap-2 w-full md:w-auto">
                             <button 
@@ -171,7 +171,7 @@ export default function WorkerDashboard() {
                                 await workerRespondToJob(job.id, 'REJECT');
                                 window.location.reload();
                               }}
-                              className="px-4 py-3 bg-gray-50 text-gray-400 font-black rounded-xl hover:bg-red-50 hover:text-red-500 transition-all text-xs"
+                              className="px-4 py-3 bg-gray-50 text-slate-500 font-black rounded-xl hover:bg-red-50 hover:text-red-500 transition-all text-xs"
                             >
                               Decline
                             </button>
@@ -179,7 +179,7 @@ export default function WorkerDashboard() {
                         ) : (
                            <span className={cn(
                              "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border",
-                             job.status === 'ACCEPTED' ? "border-green-200 text-green-600 bg-green-50" : "border-gray-100 text-gray-400 bg-gray-50"
+                             job.status === 'ACCEPTED' ? "border-green-200 text-green-600 bg-green-50" : "border-gray-100 text-slate-500 bg-gray-50"
                            )}>
                              {job.status}
                            </span>
@@ -212,9 +212,9 @@ export default function WorkerDashboard() {
         {/* Quick Insights */}
         <div className="space-y-6">
            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm text-center">
-              <h3 className="font-black text-gray-900 text-lg mb-6 text-left">Wallet Balance</h3>
+              <h3 className="font-black text-slate-900 text-lg mb-6 text-left">Wallet Balance</h3>
               <div className="mb-8">
-                 <p className="text-5xl font-black text-gray-900 mb-2">{formatGHS(wallet?.balance || 0)}</p>
+                 <p className="text-5xl font-black text-slate-900 mb-2">{formatGHS(wallet?.balance || 0)}</p>
                  <p className="text-green-500 font-bold text-sm flex items-center justify-center gap-1">
                    <TrendingUp size={14} /> +12% this week
                  </p>

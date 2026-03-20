@@ -18,10 +18,15 @@ export default function WorkerLayout({ children }: { children: React.ReactNode }
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setUser(session.user);
-        const { getWorkerProfile } = await import('@/app/actions/worker');
+        const { getWorkerProfile, getWorkerById } = await import('@/app/actions/worker');
         const profileRes = await getWorkerProfile(session.user.id);
         if (profileRes.success) {
           setWorkerProfile(profileRes.data);
+        }
+        // Fetch full user record for profile picture
+        const userRes = await getWorkerById(session.user.id);
+        if (userRes.success) {
+          setUser(userRes.data);
         }
       }
       setLoading(false);
@@ -73,10 +78,10 @@ export default function WorkerLayout({ children }: { children: React.ReactNode }
                <div className="w-4 h-0.5 bg-current" />
             </button>
             <div>
-              <h1 className="text-xl font-black text-gray-900 tracking-tight leading-none">Professional Portal</h1>
+              <h1 className="text-xl font-black text-slate-800 tracking-tight leading-none">Professional Portal</h1>
               <div className="flex items-center gap-2 mt-1">
                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Active Session</p>
+                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active Session</p>
               </div>
             </div>
           </div>
@@ -85,7 +90,7 @@ export default function WorkerLayout({ children }: { children: React.ReactNode }
             <NotificationBell />
             <div className="flex items-center gap-3 pl-6 border-l border-gray-100">
               <div className="text-right hidden md:block">
-                <p className="text-sm font-black text-gray-900 leading-none">{user?.user_metadata?.full_name || 'Worker'}</p>
+                <p className="text-sm font-black text-slate-800 leading-none">{user?.name || user?.user_metadata?.full_name || 'Worker'}</p>
                 <p className={cn(
                   "text-[10px] font-bold uppercase tracking-widest flex items-center justify-end gap-1 mt-1.5",
                   workerProfile?.isVerified ? "text-emerald-500" : "text-amber-500"
@@ -98,10 +103,10 @@ export default function WorkerLayout({ children }: { children: React.ReactNode }
                 </p>
               </div>
               <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center font-black text-lg border border-gray-200 overflow-hidden shadow-sm">
-                {workerProfile?.profilePicture ? (
-                  <img src={workerProfile.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                {(user?.profilePicture || workerProfile?.profilePicture) ? (
+                  <img src={user?.profilePicture || workerProfile.profilePicture} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  user?.user_metadata?.full_name?.charAt(0) || 'W'
+                  (user?.name || user?.user_metadata?.full_name)?.charAt(0) || 'W'
                 )}
               </div>
             </div>
