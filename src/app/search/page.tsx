@@ -9,7 +9,7 @@ import { getWorkers } from '@/app/actions/user';
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
-  const [location, setLocation] = useState('Sunyani');
+  const [location, setLocation] = useState('All Locations');
   const [workers, setWorkers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,9 +31,13 @@ export default function SearchPage() {
     const category = worker.workerProfile?.category || '';
     const loc = worker.workerProfile?.location || '';
     
-    return name.toLowerCase().includes(query.toLowerCase()) ||
-           category.toLowerCase().includes(query.toLowerCase()) ||
-           loc.toLowerCase().includes(query.toLowerCase());
+    const matchesQuery = name.toLowerCase().includes(query.toLowerCase()) ||
+                         category.toLowerCase().includes(query.toLowerCase()) ||
+                         loc.toLowerCase().includes(query.toLowerCase());
+    
+    const matchesLocation = location === 'All Locations' || loc.toLowerCase() === location.toLowerCase();
+
+    return matchesQuery && matchesLocation;
   });
 
   return (
@@ -67,6 +71,7 @@ export default function SearchPage() {
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="w-full mt-2 p-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-900 font-medium">
+                    <option>All Locations</option>
                     <option>Sunyani</option>
                     <option>Accra</option>
                     <option>Kumasi</option>

@@ -10,7 +10,18 @@ import { formatGHS } from '@/lib/utils';
 import { getWorkers } from './actions/user';
 
 export default function Home() {
+  const router = useRouter();
   const [featuredWorkers, setFeaturedWorkers] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function checkWorker() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.user_metadata?.role === 'WORKER') {
+        router.push('/dashboard/worker');
+      }
+    }
+    checkWorker();
+  }, [router]);
 
   useEffect(() => {
     async function fetchFeatured() {

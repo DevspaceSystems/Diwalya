@@ -31,6 +31,14 @@ export async function createWorkerProfile(userId: string, data: {
         updatedAt: new Date().toISOString()
       }, { onConflict: 'id' });
 
+    // 1b. Sync to Auth Metadata to ensure Navbar and other client-side components see it
+    await supabaseAdmin.auth.admin.updateUserById(userId, {
+      user_metadata: {
+        profilePicture: data.profilePicture,
+        role: 'WORKER'
+      }
+    });
+
     // 2. Create or update worker profile
     const { data: profile, error } = await supabaseAdmin
       .from('WorkerProfile')

@@ -30,6 +30,7 @@ export default function Navbar() {
   const [role, setRole] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [dbUser, setDbUser] = useState<any>(null);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -47,13 +48,36 @@ export default function Navbar() {
 
     checkUser();
 
+    // Fetch full profile from DB for real-time picture/updates
+    const fetchDbProfile = async (uid: string) => {
+      try {
+        const { getUserProfile } = await import('@/app/actions/user');
+        const res = await getUserProfile(uid);
+        if (res.success) {
+          setDbUser(res.data);
+        }
+      } catch (err) {
+        console.error('Error fetching DB profile:', err);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         setUser(session.user);
-        setRole(session.user.user_metadata?.role || 'CLIENT');
+        const userRole = session.user.user_metadata?.role || 'CLIENT';
+        setRole(userRole);
+        fetchDbProfile(session.user.id);
       } else {
         setUser(null);
         setRole(null);
+        setDbUser(null);
+      }
+    });
+
+    // Initial fetch if user exists
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchDbProfile(session.user.id);
       }
     });
 
@@ -84,7 +108,7 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link 
-              href={role === 'ADMIN' ? "/dashboard/admin" : "/"} 
+              href={role === 'ADMIN' ? "/dashboard/admin" : role === 'WORKER' ? "/dashboard/worker" : "/"} 
               className="flex items-center transform hover:scale-105 transition-transform"
             >
               <Image src="/diwalya-logo.png" alt="Diwalya Logo" width={180} height={45} className="object-contain" priority />
@@ -166,10 +190,16 @@ export default function Navbar() {
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{role}</p>
                       </div>
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden border-2 border-transparent hover:border-primary/20 transition-all">
-                        {user.user_metadata?.profilePicture ? (
-                          <Image src={user.user_metadata.profilePicture} alt="Profile" width={40} height={40} className="object-cover" />
+                        {(dbUser?.profilePicture || user.user_metadata?.profilePicture) ? (
+                          <Image 
+                            src={dbUser?.profilePicture || user.user_metadata.profilePicture} 
+                            alt="Profile" 
+                            width={40} 
+                            height={40} 
+                            className="object-cover w-full h-full" 
+                          />
                         ) : (
-                          <span className="text-lg">{user.user_metadata?.full_name?.charAt(0) || <User size={20} />}</span>
+                          <span className="text-lg">{dbUser?.name?.charAt(0) || user.user_metadata?.full_name?.charAt(0) || <User size={20} />}</span>
                         )}
                       </div>
                       <ChevronDown size={16} className={cn("text-gray-400 transition-transform duration-200", isProfileOpen && "rotate-180")} />
