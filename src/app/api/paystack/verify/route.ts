@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { creditWallet } from '@/lib/wallet'
-import { Prisma } from '@prisma/client'
 import { sendNotification } from '@/lib/notifications';
 import { logActivity } from '@/app/actions/activity';
 import { formatGHS } from '@/lib/utils';
@@ -32,7 +31,7 @@ export async function POST(req: Request) {
       }, { status: 400 })
     }
 
-    const verifiedAmount = paystackData.data.amount / 100 // Paystack uses subunit (pesewas/kobo)
+    const verifiedAmount = paystackData.data.amount / 100 // Paystack uses subunit (pesewas)
 
     // Check if the verified amount matches (allow for small float diffs if any)
     if (verifiedAmount < (totalAmount - 0.01)) {
@@ -43,51 +42,71 @@ export async function POST(req: Request) {
     const platformFee = totalAmount * 0.05
     const workerAmount = totalAmount - platformFee
 
-    // 3. Update Database and Wallets
-    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-        // Find or Create Payment record
-        const payment = await tx.payment.upsert({
-            where: { reference },
-            update: { status: 'SUCCESS' },
-            create: {
+    // 3. Update Database using Supabase Admin
+
+    // Find or Create Payment record
+    const { data: existingPayment } = await supabaseAdmin
+        .from('Payment')
+        .select('id')
+        .eq('reference', reference)
+        .single();
+        
+    let paymentId = existingPayment?.id;
+    
+    if (!paymentId) {
+        const { data: newPayment, error: paymentError } = await supabaseAdmin
+            .from('Payment')
+            .insert({
+                id: `PAY-${Date.now()}`,
                 amount: totalAmount,
                 reference,
                 status: 'SUCCESS',
                 currency: 'GHS'
-            }
-        })
-
-        // Update Job status
-        const job = await tx.job.update({
-            where: { id: jobId },
-            data: {
-                status: isEscrow ? 'IN_PROGRESS' : 'ACCEPTED',
-                paymentId: payment.id
-            }
-        })
-
-        if (!isEscrow) {
-            // 4. Split Commission (5% to Admin, 95% to Worker)
-            const admin = await tx.user.findFirst({
-                where: { role: 'ADMIN' }
             })
+            .select()
+            .single();
+            
+        if (paymentError) throw paymentError;
+        paymentId = newPayment.id;
+    } else {
+        await supabaseAdmin
+            .from('Payment')
+            .update({ status: 'SUCCESS' })
+            .eq('id', paymentId);
+    }
 
-            if (admin) {
-                await creditWallet(admin.id, platformFee, 'PLATFORM_FEE', reference, tx)
-            } else {
-                console.warn('No admin found to receive platform fee. Reference:', reference)
-            }
+    // Update Job status
+    const { data: job, error: jobError } = await supabaseAdmin
+        .from('Job')
+        .update({
+            status: isEscrow ? 'IN_PROGRESS' : 'ACCEPTED',
+            paymentId
+        })
+        .eq('id', jobId)
+        .select()
+        .single();
 
-            // Credit Worker Wallet (95%)
-            await creditWallet(workerId, workerAmount, 'JOB_PAYMENT', reference, tx)
+    if (jobError) throw jobError;
+
+    if (!isEscrow) {
+        // 4. Split Commission (5% to Admin, 95% to Worker) directly
+        const { data: adminUser } = await supabaseAdmin
+            .from('User')
+            .select('id')
+            .eq('role', 'SUPER_ADMIN')
+            .single();
+
+        if (adminUser) {
+            await creditWallet(adminUser.id, platformFee, 'PLATFORM_FEE', reference)
+        } else {
+            console.warn('No SUPER_ADMIN found to receive platform fee. Reference:', reference)
         }
 
-        return { job, payment, workerAmount, platformFee }
-    })
+        // Credit Worker Wallet (95%)
+        await creditWallet(workerId, workerAmount, 'JOB_PAYMENT', reference)
+    }
 
     // 5. Notify Both Parties
-    const { job } = result;
-
     // Notify Client
     await sendNotification({
         userId: job.clientId,
@@ -101,8 +120,9 @@ export async function POST(req: Request) {
         title: isEscrow ? 'Escrow Funded & Job Started' : 'Booking Confirmed',
         body: isEscrow 
           ? `Client has paid ${formatGHS(totalAmount)} into escrow. The job is now IN PROGRESS. Funds release upon completion.` 
-          : `Payment received for ${job.serviceType}. You have been credited ${formatGHS(result.workerAmount)}. Check your dashboard.`
+          : `Payment received for ${job.serviceType}. You have been credited ${formatGHS(workerAmount)}. Check your dashboard.`
     })
+    
     // Log Activity
     await logActivity({
       type: 'PAYMENT_COMPLETED',

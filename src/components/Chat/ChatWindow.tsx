@@ -6,13 +6,14 @@ import { sendMessage, getChatMessages } from '@/app/actions/chat';
 import { cn } from '@/lib/utils';
 
 interface ChatWindowProps {
-  jobId: string;
+  jobId?: string;
   senderId: string;
+  recipientId?: string;
   recipientName: string;
   onClose: () => void;
 }
 
-export default function ChatWindow({ jobId, senderId, recipientName, onClose }: ChatWindowProps) {
+export default function ChatWindow({ jobId, senderId, recipientId, recipientName, onClose }: ChatWindowProps) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,16 +23,28 @@ export default function ChatWindow({ jobId, senderId, recipientName, onClose }: 
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const res = await getChatMessages(jobId);
-      if (res.success) {
-        setMessages(res.data);
+      let data: any[] = [];
+      if (jobId) {
+        const res = await getChatMessages(jobId);
+        if (res.success && res.data) {
+          data = res.data;
+        }
+      } else if (recipientId) {
+        // Fetch direct messages
+        const { supabase } = await import('@/lib/supabase');
+        const { data: directMsgs } = await supabase
+          .from('ChatMessage')
+          .select('*, sender:User(name, role, profilePicture)')
+          .or(`and(senderId.eq.${senderId},recipientId.eq.${recipientId}),and(senderId.eq.${recipientId},recipientId.eq.${senderId})`)
+          .is('jobId', null)
+          .order('createdAt', { ascending: true });
+        if (directMsgs) data = directMsgs;
       }
+      setMessages(data || []);
       setLoading(false);
     };
     fetchMessages();
-    
-    // In a real app, use Supabase Realtime here
-  }, [jobId]);
+  }, [jobId, recipientId, senderId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -46,6 +59,7 @@ export default function ChatWindow({ jobId, senderId, recipientName, onClose }: 
     const res = await sendMessage({
       jobId,
       senderId,
+      recipientId,
       content: message
     });
 
@@ -55,7 +69,6 @@ export default function ChatWindow({ jobId, senderId, recipientName, onClose }: 
       setWarning(false);
     } else {
       setWarning(true);
-      // Optional: you could show the specific error from res.error
     }
     setSending(false);
   };

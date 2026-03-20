@@ -7,8 +7,20 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Search, Star, ShieldCheck, MapPin, Wrench, Zap, Briefcase, Camera, Car, Calendar, Menu, ArrowRight } from 'lucide-react';
 import { formatGHS } from '@/lib/utils';
+import { getWorkers } from './actions/user';
 
 export default function Home() {
+  const [featuredWorkers, setFeaturedWorkers] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchFeatured() {
+      const res = await getWorkers();
+      if (res.success && res.data) {
+        setFeaturedWorkers(res.data.slice(0, 3));
+      }
+    }
+    fetchFeatured();
+  }, []);
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50 text-gray-900">
 
@@ -145,42 +157,60 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((worker) => (
-                <div key={worker} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group">
-                  <div className="relative h-48 bg-gray-200 overflow-hidden">
-                    {/* Placeholder for worker background/portfolio image */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
-                    <div className="w-full h-full bg-slate-300 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                      {/* Background imagery would go here */}
-                    </div>
-                    <div className="absolute bottom-4 left-4 z-20 flex items-center gap-3">
-                      <div className="w-16 h-16 rounded-full border-2 border-white bg-white overflow-hidden shadow-lg">
-                        {/* Avatar */}
-                        <div className="w-full h-full bg-blue-100 flex items-center justify-center text-primary font-bold text-xl">W</div>
+              {featuredWorkers.map((worker) => {
+                const profile = worker.workerProfile;
+                const name = worker.name || 'Worker';
+                const category = profile?.category || 'Service Provider';
+                const price = profile?.hourlyRate || 0;
+                const rating = 5.0;
+                const jobs = 0;
+                const slug = name.toLowerCase().replace(/ /g, '-');
+
+                return (
+                  <div key={worker.id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group">
+                    <div className="relative h-48 bg-gray-200 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+                      <div className="w-full h-full bg-slate-100 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+                        {worker.profilePicture && (
+                          <img src={worker.profilePicture} alt={name} className="w-full h-full object-cover" />
+                        )}
                       </div>
-                      <div>
-                        <h3 className="font-bold text-white text-lg flex items-center gap-1 pb-1">Kwame Mensah <ShieldCheck size={16} className="text-blue-400 fill-white" /></h3>
-                        <div className="flex items-center text-yellow-400 text-sm font-semibold bg-black/30 px-2 py-0.5 rounded-full backdrop-blur-sm w-fit">
-                          <Star size={14} className="fill-yellow-400 mr-1" /> 4.9 <span className="text-gray-200 font-normal ml-1">(124 jobs)</span>
+                      <div className="absolute bottom-4 left-4 z-20 flex items-center gap-3">
+                        <div className="w-16 h-16 rounded-full border-2 border-white bg-white overflow-hidden shadow-lg">
+                          {worker.profilePicture ? (
+                            <img src={worker.profilePicture} alt={name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-blue-100 flex items-center justify-center text-primary font-bold text-xl">{name.charAt(0)}</div>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-lg flex items-center gap-1 pb-1">{name} {profile?.isVerified && <ShieldCheck size={16} className="text-blue-400 fill-white" />}</h3>
+                          <div className="flex items-center text-yellow-400 text-sm font-semibold bg-black/30 px-2 py-0.5 rounded-full backdrop-blur-sm w-fit">
+                            <Star size={14} className="fill-yellow-400 mr-1" /> {rating} <span className="text-gray-200 font-normal ml-1">({jobs} jobs)</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <p className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">Expert Plumber</p>
+                    <div className="p-5">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">{category}</p>
+                        </div>
+                        <p className="font-bold text-gray-900">{formatGHS(price)} <span className="text-sm font-normal text-gray-500">/ job avg</span></p>
                       </div>
-                      <p className="font-bold text-gray-900">{formatGHS(150)} <span className="text-sm font-normal text-gray-500">/ job avg</span></p>
+                      <p className="text-gray-600 text-sm line-clamp-2 mb-6">{profile?.bio || 'No bio available yet.'}</p>
+                      <Link href={`/worker/${slug}`} className="w-full py-3 bg-gray-50 hover:bg-primary hover:text-white text-primary font-bold rounded-xl transition-colors border border-gray-200 hover:border-primary block text-center">
+                        View Profile & Book
+                      </Link>
                     </div>
-                    <p className="text-gray-600 text-sm line-clamp-2 mb-6">Experienced plumber specializing in residential and commercial pipe installations, leak repairs, and water heater maintenance.</p>
-                    <Link href="/worker/1" className="w-full py-3 bg-gray-50 hover:bg-primary hover:text-white text-primary font-bold rounded-xl transition-colors border border-gray-200 hover:border-primary block text-center">
-                      View Profile & Book
-                    </Link>
-
                   </div>
+                );
+              })}
+              {featuredWorkers.length === 0 && (
+                <div className="col-span-full py-12 text-center text-gray-500 font-medium">
+                  Loading featured workers...
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </section>

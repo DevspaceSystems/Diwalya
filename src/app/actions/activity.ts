@@ -1,7 +1,7 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
-// import { ActivityType } from '@prisma/client'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
 export async function logActivity(data: {
   type: any
   content: string
@@ -9,43 +9,33 @@ export async function logActivity(data: {
   metadata?: any
 }) {
   try {
-    const admin = typeof window === 'undefined' ? eval('require')('firebase-admin') : null;
-    if (!admin) return { success: false, error: 'Internal Server Error' };
-
-    // Initialize Firebase Admin if not already
-    if (!admin.apps.length) {
-      try {
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-          }),
-          databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com`
-        });
-      } catch (error: any) {
-        console.error('Firebase admin initialization error', error.stack);
-      }
-    }
-
-    // 1. Save to Prisma
-    const log = await (prisma as any).activityLog.create({
-      data: {
+    // 1. Save to Supabase
+    const { data: log, error } = await supabaseAdmin
+      .from('ActivityLog')
+      .insert({
+        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: data.type,
         content: data.content,
         userId: data.userId,
         metadata: data.metadata
-      }
-    });
+      })
+      .select()
+      .single();
 
-    // 2. Push to Firebase Realtime Database for "Live Feed"
+    if (error) throw error;
+
+    // 2. Push to Firebase Realtime Database for "Live Feed" (Optional/Legacy support)
+    // We'll keep this as a best effort if the credentials exist
     try {
-      const db = admin.database();
-      const ref = db.ref('activities');
-      await ref.push({
-        ...log,
-        timestamp: admin.database.ServerValue.TIMESTAMP
-      });
+        const admin = typeof window === 'undefined' ? eval('require')('firebase-admin') : null;
+        if (admin && admin.apps.length) {
+            const db = admin.database();
+            const ref = db.ref('activities');
+            await ref.push({
+                ...log,
+                timestamp: admin.database.ServerValue.TIMESTAMP
+            });
+        }
     } catch (firebaseError: any) {
       console.error('Firebase Realtime Logging Error:', firebaseError.message);
     }
@@ -59,17 +49,17 @@ export async function logActivity(data: {
 
 export async function getRecentActivities(limit = 20) {
   try {
-    const activities = await (prisma as any).activityLog.findMany({
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: { name: true, role: true, profilePicture: true }
-        }
-      }
-    });
-    return { success: true, data: activities };
+    const { data, error } = await supabaseAdmin
+      .from('ActivityLog')
+      .select('*, user:User(name, role, profilePicture)')
+      .order('createdAt', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    
+    return { success: true, data };
   } catch (error: any) {
+    console.error('Get Recent Activities Error:', error);
     return { success: false, error: error.message };
   }
 }

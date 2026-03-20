@@ -1,6 +1,6 @@
 'use server'
 
-import { prisma } from './prisma';
+import { supabaseAdmin } from './supabase-admin';
 import { sendEmail } from './email';
 
 /**
@@ -44,12 +44,15 @@ export async function sendNotification({
 }) {
   try {
     const admin = await getFirebaseAdmin();
-    const user: any = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true, fcmToken: true, name: true } as any
-    });
+    
+    // Fetch user details using Supabase Admin
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('User')
+      .select('email, fcmToken, name')
+      .eq('id', userId)
+      .single();
 
-    if (!user) {
+    if (userError || !user) {
       console.warn(`[Notification] User ${userId} not found.`);
       return { success: false, error: 'User not found' };
     }
@@ -57,7 +60,7 @@ export async function sendNotification({
     const results: any = {};
 
     // 1. Email Channel
-    if (channels.includes('email')) {
+    if (channels.includes('email') && user.email) {
       results.email = await sendEmail({ to: user.email, subject: title, body });
     }
 
@@ -77,6 +80,20 @@ export async function sendNotification({
       } else {
         results.push = { success: true, mock: true, note: 'Token missing or admin uninitialized' };
       }
+    }
+
+    // Attempt to log notification in the database if there's a Notification table
+    try {
+       await supabaseAdmin.from('Notification').insert({
+         id: `NOTIF-${Date.now()}`,
+         userId,
+         title,
+         message: body,
+         type: 'SYSTEM_ALERT',
+         isRead: false
+       });
+    } catch (e) {
+       // Silent fail if table doesn't exist or other error
     }
 
     return { success: true, results };

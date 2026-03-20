@@ -41,7 +41,7 @@ export default function FinancialLedgerPage() {
   const { stats, transactions, wallets } = data;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8 space-y-10">
+    <div className="p-8 space-y-10">
       <div className="max-w-7xl mx-auto space-y-10">
         <div className="flex justify-between items-end">
           <div>

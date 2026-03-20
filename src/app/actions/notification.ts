@@ -1,6 +1,6 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendEmail } from '@/lib/email'
 import { EMAIL_TEMPLATES, parseTemplate } from '@/lib/email-templates'
 import { sendMulticastPush } from '@/lib/notifications'
@@ -19,30 +19,22 @@ export async function sendMassBroadcast(data: {
 }) {
   try {
     await ensureAdmin(data.adminId)
+    
     // 1. Fetch recipients
-    let users: { id: string, name: string, email: string, fcmToken: string | null }[] = [];
-    const selection = { id: true, name: true, email: true, fcmToken: true };
+    let query = supabaseAdmin.from('User').select('id, name, email, fcmToken');
 
-    if (data.target === 'ALL') {
-      users = await prisma.user.findMany({ select: selection as any }) as any;
-    } else if (data.target === 'WORKERS') {
-      users = await prisma.user.findMany({ 
-        where: { role: 'WORKER' },
-        select: selection as any
-      }) as any;
+    if (data.target === 'WORKERS') {
+      query = query.eq('role', 'WORKER');
     } else if (data.target === 'CLIENTS') {
-      users = await prisma.user.findMany({ 
-        where: { role: 'CLIENT' },
-        select: selection as any
-      }) as any;
+      query = query.eq('role', 'CLIENT');
     } else if (data.target === 'SELECTED' && data.userIds) {
-      users = await prisma.user.findMany({ 
-        where: { id: { in: data.userIds } },
-        select: selection as any
-      }) as any;
+      query = query.in('id', data.userIds);
     }
 
-    if (users.length === 0) return { success: false, error: 'No recipients found' };
+    const { data: users, error: usersError } = await query;
+
+    if (usersError) throw usersError;
+    if (!users || users.length === 0) return { success: false, error: 'No recipients found' };
 
     const template = EMAIL_TEMPLATES[data.templateKey];
     const subject = data.customSubject || template.subject;
@@ -92,6 +84,24 @@ export async function sendMassBroadcast(data: {
 
   } catch (error: any) {
     console.error('[BROADCAST ERROR]', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getUserNotifications(userId: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('ActivityLog')
+      .select('*')
+      .eq('userId', userId)
+      .order('createdAt', { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+    
+    return { success: true, data: data };
+  } catch (error: any) {
+    console.error('Get User Notifications Error:', error);
     return { success: false, error: error.message };
   }
 }

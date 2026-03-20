@@ -1,6 +1,6 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { revalidatePath } from 'next/cache'
 import { sendNotification } from '@/lib/notifications'
 import { logActivity } from './activity'
@@ -16,25 +16,26 @@ export async function createWorkerProfile(userId: string, data: {
   ghanaCardUrl: string
 }) {
   try {
-    // 1. Update user with profile picture
-    await prisma.user.update({
-      where: { id: userId },
-      data: { profilePicture: data.profilePicture }
-    })
+    // 1. Ensure User record exists (upsert instead of update)
+    // This prevents foreign key constraint errors if the sync failed at signup
+    const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
+    
+    await supabaseAdmin
+      .from('User')
+      .upsert({ 
+        id: userId,
+        profilePicture: data.profilePicture,
+        name: userData?.user?.user_metadata?.full_name || 'Worker',
+        email: userData?.user?.email || 'worker@diwalya.com',
+        role: 'WORKER',
+        updatedAt: new Date().toISOString()
+      }, { onConflict: 'id' });
 
     // 2. Create or update worker profile
-    const profile = await prisma.workerProfile.upsert({
-      where: { userId },
-      update: {
-        businessName: data.businessName,
-        location: data.location,
-        experienceYears: data.experienceYears,
-        bio: data.bio,
-        category: data.category,
-        ghanaCardUrl: data.ghanaCardUrl,
-        verificationStatus: 'PENDING'
-      },
-      create: {
+    const { data: profile, error } = await supabaseAdmin
+      .from('WorkerProfile')
+      .upsert({
+        id: `WP-${userId}`,
         userId,
         businessName: data.businessName,
         location: data.location,
@@ -43,8 +44,11 @@ export async function createWorkerProfile(userId: string, data: {
         category: data.category,
         ghanaCardUrl: data.ghanaCardUrl,
         verificationStatus: 'PENDING'
-      }
-    })
+      }, { onConflict: 'userId' })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     revalidatePath('/dashboard/worker')
 
@@ -66,13 +70,15 @@ export async function createWorkerProfile(userId: string, data: {
 export async function rejectWorker(userId: string, reason: string, adminId: string = 'admin') {
   try {
     await ensureAdmin(adminId)
-    await prisma.workerProfile.update({
-      where: { userId },
-      data: {
+    const { error } = await supabaseAdmin
+      .from('WorkerProfile')
+      .update({
         verificationStatus: 'REJECTED',
         rejectionReason: reason
-      }
-    })
+      })
+      .eq('userId', userId);
+
+    if (error) throw error;
     
     // Notify Worker
     await sendNotification({
@@ -81,8 +87,6 @@ export async function rejectWorker(userId: string, reason: string, adminId: stri
         body: `Your worker verification request was rejected. Reason: ${reason}. Please update your profile and try again.`
     })
     
-    // In a real app, send email/notification here
-    
     await logAdminAction(adminId, `Rejected worker ${userId} verification`, { targetId: userId, reason });
     return { success: true }
   } catch (error: any) {
@@ -90,36 +94,23 @@ export async function rejectWorker(userId: string, reason: string, adminId: stri
   }
 }
 
-export async function notifyAdminOfRejection(userId: string, reason: string) {
-  try {
-    // In a real system, this would insert into a 'Notifications' table or send an email.
-    // For now, we ensure the profile is marked and a log is created.
-    console.log(`ADMIN NOTIFICATION: Worker ${userId} rejected. Reason: ${reason}`);
-    
-    // We can also create a specific record if there was a Notifications model, 
-    // but we'll stick to updating the profile with the rejection reason.
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
-
 export async function approveWorker(userId: string, adminId: string = 'admin') {
   try {
     await ensureAdmin(adminId)
-    await prisma.workerProfile.update({
-      where: { userId },
-      data: {
+    const { error } = await supabaseAdmin
+      .from('WorkerProfile')
+      .update({
         verificationStatus: 'APPROVED',
         isVerified: true
-      }
-    })
+      })
+      .eq('userId', userId);
+
+    if (error) throw error;
     
     revalidatePath('/dashboard/admin/verifications')
     revalidatePath(`/worker/${userId}`)
     revalidatePath('/search')
     
-    // Notify Worker
     await sendNotification({
         userId,
         title: 'Verification Approved!',
@@ -135,13 +126,13 @@ export async function approveWorker(userId: string, adminId: string = 'admin') {
 
 export async function getPendingVerifications() {
   try {
-    const profiles = await prisma.workerProfile.findMany({
-      where: { verificationStatus: 'PENDING' },
-      include: {
-        user: true
-      }
-    })
-    return { success: true, data: profiles }
+    const { data, error } = await supabaseAdmin
+      .from('WorkerProfile')
+      .select('*, user:User(*)')
+      .eq('verificationStatus', 'PENDING');
+
+    if (error) throw error;
+    return { success: true, data }
   } catch (error: any) {
     return { success: false, error: error.message }
   }
@@ -149,12 +140,12 @@ export async function getPendingVerifications() {
 
 export async function requestVerification(userId: string) {
   try {
-    await prisma.workerProfile.update({
-      where: { userId },
-      data: {
-        verificationStatus: 'PENDING'
-      }
-    })
+    const { error } = await supabaseAdmin
+      .from('WorkerProfile')
+      .update({ verificationStatus: 'PENDING' })
+      .eq('userId', userId);
+
+    if (error) throw error;
     revalidatePath('/dashboard/worker')
 
     // Log Activity
@@ -173,11 +164,49 @@ export async function requestVerification(userId: string) {
 
 export async function getWorkerProfile(userId: string) {
   try {
-    const profile = await prisma.workerProfile.findUnique({
-      where: { userId }
-    });
-    return { success: true, data: profile };
+    const { data, error } = await supabaseAdmin
+      .from('WorkerProfile')
+      .select('*')
+      .eq('userId', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return { success: true, data };
   } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getWorkerById(id: string) {
+  try {
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('User')
+      .select('*, workerProfile:WorkerProfile(*)')
+      .eq('id', id)
+      .single();
+
+    if (userError) throw userError;
+    return { success: true, data: user };
+  } catch (error: any) {
+    console.error('Get Worker By ID Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+export async function notifyAdminOfRejection(userId: string, reason: string) {
+  try {
+    // Log the rejection as a system alert or admin action
+    await logActivity({
+      type: 'SYSTEM_ALERT',
+      content: `Automatic rejection for user ${userId}: ${reason}`,
+      userId,
+      metadata: { reason, autoRejected: true }
+    });
+
+    console.log(`[ADMIN ALERT] User ${userId} auto-rejected: ${reason}`);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Notify Admin Error:', error);
     return { success: false, error: error.message };
   }
 }

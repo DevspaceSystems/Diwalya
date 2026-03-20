@@ -54,7 +54,8 @@ export default function BottomNav() {
 
     // Hide BottomNav on auth pages for a cleaner app feel
     const isAuthPage = pathname === '/login' || pathname === '/signup';
-    if (isAuthPage) return null;
+    const isDashboardPage = pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin-portal');
+    if (isAuthPage || isDashboardPage) return null;
 
     return (
         <div className="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white border-t border-gray-200 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>

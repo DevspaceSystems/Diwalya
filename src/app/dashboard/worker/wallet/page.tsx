@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   ArrowLeft, 
   Wallet, 
@@ -13,11 +14,18 @@ import {
   AlertCircle,
   Loader2,
   Smartphone,
-  Building2
+  Building2,
+  LayoutDashboard,
+  Briefcase,
+  Settings,
+  Image as ImageIcon,
+  ChevronLeft,
+  DollarSign
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getWalletData, requestWithdrawal } from '@/app/actions/wallet';
 import { formatGHS } from '@/lib/utils';
+import WorkerSidebar from '@/components/WorkerSidebar';
 
 export default function WorkerWalletPage() {
   const [loading, setLoading] = useState(true);
@@ -85,74 +93,72 @@ export default function WorkerWalletPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 font-sans">
-      <header className="bg-white border-b h-20 flex items-center px-8 sticky top-0 z-40">
-        <Link href="/dashboard/worker" className="p-2 hover:bg-gray-100 rounded-full transition-all mr-4">
-          <ArrowLeft size={24} />
-        </Link>
-        <h1 className="text-2xl font-black text-gray-900">Wallet & Earnings</h1>
-      </header>
+    <div className="p-8 max-w-5xl mx-auto pb-20">
+      <div className="flex justify-between items-end mb-8">
+          <div>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Earnings & Wallet</h2>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Manage your payouts & transactions</p>
+          </div>
+      </div>
 
-      <div className="p-8 max-w-4xl mx-auto">
-        {/* Balance Card */}
-        <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-blue-900/20 mb-10 relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-           
-           <div className="relative z-10">
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-sm mb-2">Available Balance</p>
-              <h2 className="text-6xl font-black mb-10">{formatGHS(data?.balance)}</h2>
-              
-              <div className="flex flex-wrap gap-4">
-                 <button 
-                   onClick={() => setShowWithdraw(true)}
-                   className="px-8 py-4 bg-secondary text-white font-black rounded-2xl shadow-lg shadow-orange-500/30 hover:scale-105 transition-all text-lg"
-                 >
-                   Withdraw Funds
-                 </button>
-                 <div className="px-6 py-4 bg-white/10 rounded-2xl border border-white/10 flex items-center gap-3">
-                    <TrendingUp className="text-green-400" size={20} />
-                    <span className="font-bold">+₵0.00 this week</span>
-                 </div>
-              </div>
-           </div>
-        </div>
+      {/* Balance Card */}
+      <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-blue-900/20 mb-10 relative overflow-hidden">
+         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
 
-        {/* Transactions List */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-           <div className="p-6 border-b border-gray-50 flex justify-between items-center">
-              <h3 className="font-black text-gray-900 text-lg">Recent Transactions</h3>
-              <Clock className="text-gray-300" size={20} />
-           </div>
-           
-           <div className="divide-y divide-gray-50">
-              {data?.transactions?.length > 0 ? (
-                data.transactions.map((tx: any) => (
-                  <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                     <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                          tx.type === 'CREDIT' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                        }`}>
-                           {tx.type === 'CREDIT' ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
-                        </div>
-                        <div>
-                           <h4 className="font-bold text-gray-900">{tx.purpose.replace('_', ' ')}</h4>
-                           <p className="text-xs text-gray-400 font-bold">{new Date(tx.createdAt).toLocaleDateString()}</p>
-                        </div>
-                     </div>
-                     <p className={`text-lg font-black ${
-                       tx.type === 'CREDIT' ? 'text-green-600' : 'text-gray-900'
-                     }`}>
-                       {tx.type === 'CREDIT' ? '+' : '-'}{formatGHS(tx.amount)}
-                     </p>
-                  </div>
-                ))
-              ) : (
-                <div className="p-12 text-center text-gray-400 italic font-medium">
-                   No transactions recorded yet. Your earnings will appear here.
+         <div className="relative z-10">
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-sm mb-2">Available Balance</p>
+            <h2 className="text-6xl font-black mb-10">{formatGHS(data?.balance)}</h2>
+            
+            <div className="flex flex-wrap gap-4">
+               <button 
+                 onClick={() => setShowWithdraw(true)}
+                 className="px-8 py-4 bg-secondary text-white font-black rounded-2xl shadow-lg shadow-orange-500/30 hover:scale-105 transition-all text-lg"
+               >
+                 Withdraw Funds
+               </button>
+               <div className="px-6 py-4 bg-white/10 rounded-2xl border border-white/10 flex items-center gap-3">
+                  <TrendingUp className="text-green-400" size={20} />
+                  <span className="font-bold">+₵0.00 this week</span>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      {/* Transactions List */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+         <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+            <h3 className="font-black text-gray-900 text-lg">Recent Transactions</h3>
+            <Clock className="text-gray-300" size={20} />
+         </div>
+         
+         <div className="divide-y divide-gray-50">
+            {data?.transactions?.length > 0 ? (
+              data.transactions.map((tx: any) => (
+                <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                   <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                        tx.type === 'CREDIT' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                      }`}>
+                         {tx.type === 'CREDIT' ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
+                      </div>
+                      <div>
+                         <h4 className="font-bold text-gray-900">{tx.purpose.replace('_', ' ')}</h4>
+                         <p className="text-xs text-gray-400 font-bold">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                      </div>
+                   </div>
+                   <p className={`text-lg font-black ${
+                     tx.type === 'CREDIT' ? 'text-green-600' : 'text-gray-900'
+                   }`}>
+                     {tx.type === 'CREDIT' ? '+' : '-'}{formatGHS(tx.amount)}
+                   </p>
                 </div>
-              )}
-           </div>
-        </div>
+              ))
+            ) : (
+              <div className="p-12 text-center text-gray-400 italic font-medium">
+                 No transactions recorded yet. Your earnings will appear here.
+              </div>
+            )}
+         </div>
       </div>
 
       {/* Withdrawal Modal */}

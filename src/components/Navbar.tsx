@@ -23,10 +23,13 @@ import {
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
+import NotificationBox from './NotificationBox';
+
 export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -70,8 +73,9 @@ export default function Navbar() {
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
   const isSearchPage = pathname === '/search';
+  const isDashboardPage = pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin-portal');
   
-  if (isAuthPage) return null;
+  if (isAuthPage || isDashboardPage) return null;
 
   return (
     <nav className="bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100">
@@ -89,7 +93,7 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {!isSearchPage && role !== 'ADMIN' && (
+            {!isSearchPage && role !== 'ADMIN' && role !== 'WORKER' && (
               <>
                 <Link href="/" className={cn("text-gray-600 hover:text-primary font-medium transition-colors", pathname === '/' && "text-primary font-bold")}>Home</Link>
                 <Link href="/search" className={cn("text-gray-600 hover:text-primary font-medium transition-colors flex items-center gap-2", pathname === '/search' && "text-primary font-bold")}>
@@ -112,12 +116,22 @@ export default function Navbar() {
                   </>
             ) : (
               <div className="flex items-center space-x-8">
-                {/* Command Center always visible per user request */}
-                <Link href="/dashboard/admin" className={cn("text-primary hover:text-primary-light font-bold transition-colors flex items-center gap-2", pathname.startsWith('/dashboard/admin') && "text-primary underline underline-offset-8 decoration-2")}>
-                  <ShieldCheck size={18} /> Command Center
-                </Link>
+                {/* Admin Links */}
+                {(role === 'ADMIN' || role === 'SUPER_ADMIN') && (
+                  <Link href="/dashboard/admin" className={cn("text-primary hover:text-primary-light font-bold transition-colors flex items-center gap-2", pathname.startsWith('/dashboard/admin') && "text-primary underline underline-offset-8 decoration-2")}>
+                    <ShieldCheck size={18} /> Admin Dashboard
+                  </Link>
+                )}
 
-                {!user ? (
+                {/* Worker Links - Hiding Dashboard and Wallet as per request */}
+                {role === 'WORKER' && (
+                  <>
+                    {/* Intentionally left empty to remove links per user request */}
+                  </>
+                )}
+
+                {/* Client Links */}
+                {role === 'CLIENT' && (
                   <div className="flex items-center space-x-8">
                     <Link href="/special-request" className={cn("text-primary hover:text-primary-light font-bold transition-colors flex items-center gap-2", pathname === '/special-request' && "text-primary underline underline-offset-8 decoration-2")}>
                       <ClipboardList size={18} /> Request a Worker
@@ -126,22 +140,21 @@ export default function Navbar() {
                       <Briefcase size={18} /> My Bookings
                     </Link>
                   </div>
-                ) : (
-                  <>
-                    <Link href="/dashboard/worker" className={cn("text-gray-600 hover:text-primary font-medium transition-colors flex items-center gap-2", pathname === '/dashboard/worker' && "text-primary font-bold")}>
-                      <LayoutDashboard size={18} /> Dashboard
-                    </Link>
-                    <Link href="/dashboard/worker/wallet" className={cn("text-gray-600 hover:text-primary font-medium transition-colors flex items-center gap-2", pathname === '/dashboard/worker/wallet' && "text-primary font-bold")}>
-                      <Wallet size={18} /> Wallet
-                    </Link>
-                  </>
                 )}
 
                 <div className="flex items-center space-x-6 ml-4 border-l border-gray-100 pl-8">
-                  <button className="relative p-2 text-gray-400 hover:text-primary transition-colors group">
-                    <Bell size={22} />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white group-hover:animate-ping"></span>
-                  </button>
+                  <div className="relative">
+                    <button 
+                      onClick={() => setShowNotifications(!showNotifications)}
+                      className="relative p-2 text-gray-400 hover:text-primary transition-colors group"
+                    >
+                      <Bell size={22} />
+                      <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white group-hover:animate-ping"></span>
+                    </button>
+                    {showNotifications && user && (
+                      <NotificationBox userId={user.id} onClose={() => setShowNotifications(false)} />
+                    )}
+                  </div>
 
                   <div className="relative">
                     <button 

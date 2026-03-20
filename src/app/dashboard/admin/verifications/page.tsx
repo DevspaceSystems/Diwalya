@@ -49,7 +49,7 @@ export default function VerificationCenterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Verification Center</h1>

@@ -5,24 +5,36 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Search, MapPin, Filter, Star, ShieldCheck, ArrowRight, XCircle } from 'lucide-react';
 import { formatGHS } from '@/lib/utils';
-
-// Mock data for initial scaffolding
-const MOCK_WORKERS = [
-  { id: '1', name: 'Kwame Mensah', category: 'Plumber', location: 'Sunyani', rating: 4.9, jobs: 124, price: 150, verified: true },
-  { id: '2', name: 'Amma Serwaa', category: 'Electrician', location: 'Sunyani', rating: 4.8, jobs: 86, price: 120, verified: true },
-  { id: '3', name: 'Kofi Owusu', category: 'Carpentry', location: 'Sunyani', rating: 4.7, jobs: 52, price: 200, verified: false },
-];
+import { getWorkers } from '@/app/actions/user';
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('Sunyani');
+  const [workers, setWorkers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Live filter mock workers
-  const filteredWorkers = MOCK_WORKERS.filter(worker => 
-    worker.name.toLowerCase().includes(query.toLowerCase()) ||
-    worker.category.toLowerCase().includes(query.toLowerCase()) ||
-    worker.location.toLowerCase().includes(query.toLowerCase())
-  );
+  React.useEffect(() => {
+    async function fetchWorkers() {
+      setIsLoading(true);
+      const res = await getWorkers();
+      if (res.success && res.data) {
+        setWorkers(res.data);
+      }
+      setIsLoading(false);
+    }
+    fetchWorkers();
+  }, []);
+
+  // Live filter real workers
+  const filteredWorkers = workers.filter(worker => {
+    const name = worker.name || '';
+    const category = worker.workerProfile?.category || '';
+    const loc = worker.workerProfile?.location || '';
+    
+    return name.toLowerCase().includes(query.toLowerCase()) ||
+           category.toLowerCase().includes(query.toLowerCase()) ||
+           loc.toLowerCase().includes(query.toLowerCase());
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-4">
@@ -109,70 +121,87 @@ export default function SearchPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6">
-              {filteredWorkers.map((worker) => {
-                const slug = worker.name.toLowerCase().replace(/ /g, '-');
-                return (
-                  <Link 
-                    href={`/worker/${slug}`} 
-                    key={worker.id}
-                    className="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row gap-6 group"
-                  >
-                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gray-100 overflow-hidden shrink-0">
-                    <div className="w-full h-full bg-blue-50 flex items-center justify-center text-primary font-black text-3xl">
-                      {worker.name.charAt(0)}
-                    </div>
-                  </div>
-
-                  <div className="flex-grow">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                          {worker.name}
-                          {worker.verified ? (
-                            <div className="flex items-center gap-1 text-blue-500 font-black text-[10px] uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded">
-                               <ShieldCheck size={14} className="fill-blue-50" /> Verified
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 text-gray-400 font-black text-[10px] uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded">
-                               <XCircle size={14} /> Unverified
-                            </div>
-                          )}
-                        </h3>
-                        <p className="text-primary font-bold">{worker.category}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-black text-gray-900">{formatGHS(worker.price)}</p>
-                        <p className="text-xs text-gray-400">avg job</p>
-                      </div>
+              {isLoading ? (
+                <div className="py-20 text-center text-gray-500 font-bold">Loading workers...</div>
+              ) : (
+                filteredWorkers.map((worker) => {
+                  const profile = worker.workerProfile;
+                  const name = worker.name || 'Worker';
+                  const category = profile?.category || 'Service Provider';
+                  const loc = profile?.location || 'Ghana';
+                  const price = profile?.hourlyRate || 0;
+                  const isVerified = profile?.isVerified || false;
+                  const rating = 5.0; 
+                  const jobs = 0;
+                  const slug = name.toLowerCase().replace(/ /g, '-');
+                  
+                  return (
+                    <Link 
+                      href={`/worker/${slug}`} 
+                      key={worker.id}
+                      className="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row gap-6 group"
+                    >
+                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gray-100 overflow-hidden shrink-0">
+                      {worker.profilePicture ? (
+                        <Image src={worker.profilePicture} alt={name} width={128} height={128} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full bg-blue-50 flex items-center justify-center text-primary font-black text-3xl">
+                          {name.charAt(0)}
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                      <div className="flex items-center gap-1 text-yellow-500 font-bold">
-                        <Star size={16} className="fill-yellow-500" /> {worker.rating}
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            {name}
+                            {isVerified ? (
+                              <div className="flex items-center gap-1 text-blue-500 font-black text-[10px] uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded">
+                                 <ShieldCheck size={14} className="fill-blue-50" /> Verified
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 text-gray-400 font-black text-[10px] uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded">
+                                 <XCircle size={14} /> Unverified
+                              </div>
+                            )}
+                          </h3>
+                          <p className="text-primary font-bold">{category}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-black text-gray-900">{formatGHS(price)}</p>
+                          <p className="text-xs text-gray-400">avg job</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin size={16} /> {worker.location}
+
+                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <div className="flex items-center gap-1 text-yellow-500 font-bold">
+                          <Star size={16} className="fill-yellow-500" /> {rating}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin size={16} /> {loc}
+                        </div>
+                        <div>{jobs} jobs completed</div>
                       </div>
-                      <div>{worker.jobs} jobs completed</div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full">Available Today</span>
+                        <span className="px-3 py-1 bg-gray-50 text-gray-600 text-xs font-bold rounded-full">Top Rated</span>
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full">Available Today</span>
-                      <span className="px-3 py-1 bg-gray-50 text-gray-600 text-xs font-bold rounded-full">Top Rated</span>
+                    <div className="flex items-end md:items-center">
+                      <div className="w-12 h-12 rounded-full bg-primary/5 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                        <ArrowRight size={24} />
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-end md:items-center">
-                    <div className="w-12 h-12 rounded-full bg-primary/5 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                      <ArrowRight size={24} />
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </main>
-      </div>
+                  </Link>
+                  );
+                })
+              )}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );

@@ -1,9 +1,8 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendEmail } from '@/lib/email'
 import { EMAIL_TEMPLATES, parseTemplate } from '@/lib/email-templates'
-import { Role } from '@prisma/client'
 
 export async function sendMassEmail(data: {
   target: 'ALL' | 'WORKERS' | 'CLIENTS' | 'SELECTED'
@@ -15,23 +14,25 @@ export async function sendMassEmail(data: {
   try {
     // 1. Fetch recipients
     let users: { id: string, name: string, email: string }[] = [];
+    
+    let query = supabaseAdmin.from('User').select('id, name, email');
+
     if (data.target === 'ALL') {
-      users = await prisma.user.findMany({ select: { id: true, name: true, email: true } });
+      const { data: fetched, error } = await query;
+      if (error) throw error;
+      users = fetched || [];
     } else if (data.target === 'WORKERS') {
-      users = await prisma.user.findMany({ 
-        where: { role: 'WORKER' },
-        select: { id: true, name: true, email: true } 
-      });
+      const { data: fetched, error } = await query.eq('role', 'WORKER');
+      if (error) throw error;
+      users = fetched || [];
     } else if (data.target === 'CLIENTS') {
-      users = await prisma.user.findMany({ 
-        where: { role: 'CLIENT' },
-        select: { id: true, name: true, email: true } 
-      });
+      const { data: fetched, error } = await query.eq('role', 'CLIENT');
+      if (error) throw error;
+      users = fetched || [];
     } else if (data.target === 'SELECTED' && data.userIds) {
-      users = await prisma.user.findMany({ 
-        where: { id: { in: data.userIds } },
-        select: { id: true, name: true, email: true } 
-      });
+      const { data: fetched, error } = await query.in('id', data.userIds);
+      if (error) throw error;
+      users = fetched || [];
     }
 
     if (users.length === 0) return { success: false, error: 'No recipients found' };
@@ -59,6 +60,7 @@ export async function sendMassEmail(data: {
     return { success: true, count: successCount, total: users.length };
 
   } catch (error: any) {
+    console.error('sendMassEmail Error:', error);
     return { success: false, error: error.message };
   }
 }

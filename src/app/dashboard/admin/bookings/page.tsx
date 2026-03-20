@@ -13,15 +13,37 @@ import {
   Calendar,
   CreditCard,
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  Coins,
+  Loader2,
+  X
 } from 'lucide-react';
-import { getGlobalBookings } from '@/app/actions/booking';
+import { getAdminBookings, adminReleasePartialFunds } from '@/app/actions/booking';
 import { cn, formatGHS } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 export default function GlobalBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
+  
+  // Partial Payout State
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [payoutAmount, setPayoutAmount] = useState<string>('');
+  const [payoutReason, setPayoutReason] = useState<string>('');
+  const [processing, setProcessing] = useState(false);
+  const [adminId, setAdminId] = useState<string>('');
+
+  useEffect(() => {
+    async function init() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setAdminId(session.user.id);
+      }
+    }
+    init();
+  }, []);
 
   useEffect(() => {
     fetchBookings();
@@ -29,9 +51,40 @@ export default function GlobalBookingsPage() {
 
   const fetchBookings = async () => {
     setLoading(true);
-    const res = await getGlobalBookings(statusFilter as any);
+    const res = await getAdminBookings(statusFilter as any);
     if (res.success) setBookings(res.data || []);
     setLoading(false);
+  };
+
+  const handlePartialPayout = async (e: React.FormEvent) => {
+     e.preventDefault();
+     if (!selectedJob || !adminId) return;
+     const amount = parseFloat(payoutAmount);
+     if (isNaN(amount) || amount <= 0) return alert('Invalid amount');
+
+     setProcessing(true);
+     try {
+       const res = await adminReleasePartialFunds({
+         jobId: selectedJob.id,
+         adminId,
+         amount,
+         reason: payoutReason
+       });
+
+       if (res.success) {
+         alert('Funds released successfully!');
+         setShowPayoutModal(false);
+         setPayoutAmount('');
+         setPayoutReason('');
+         fetchBookings(); // Refresh data
+       } else {
+         alert(res.error || 'Failed to release funds');
+       }
+     } catch (err: any) {
+       alert('An error occurred.');
+     } finally {
+       setProcessing(false);
+     }
   };
 
   const statusColors: Record<string, string> = {
@@ -45,7 +98,7 @@ export default function GlobalBookingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex justify-between items-end">
           <div>
@@ -133,6 +186,18 @@ export default function GlobalBookingsPage() {
               </div>
 
               <div className="mt-8 pt-6 border-t border-slate-100 flex gap-2">
+                 {(job.status === 'IN_PROGRESS' || job.status === 'ACCEPTED') && job.paymentId && (
+                   <button 
+                     onClick={() => {
+                        setSelectedJob(job);
+                        setShowPayoutModal(true);
+                     }}
+                     className="px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all flex items-center justify-center shadow-sm"
+                     title="Release Partial Escrow Funds"
+                   >
+                      <Coins size={18} />
+                   </button>
+                 )}
                  <button className="flex-grow py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
                     View Details
                  </button>
@@ -144,6 +209,68 @@ export default function GlobalBookingsPage() {
           ))}
         </div>
       </div>
+
+      {/* Partial Payout Modal */}
+      {showPayoutModal && selectedJob && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden p-8 scale-in-center">
+             <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                     <Coins className="text-emerald-500" /> Early Payout
+                  </h3>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Ref: {selectedJob.id}</p>
+                </div>
+                <button onClick={() => setShowPayoutModal(false)} className="w-10 h-10 bg-slate-50 text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors">
+                  <X size={20} />
+                </button>
+             </div>
+
+             <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl mb-6">
+                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Total Job Budget</p>
+                <p className="text-2xl font-black text-emerald-800">{formatGHS(selectedJob.payment?.amount || 0)}</p>
+                <p className="text-[10px] font-bold text-emerald-700 mt-1 mt-1 leading-relaxed">
+                   Maximum worker allowance is 95% of the total budget. Releasing funds early reduces the final payout amount at completion.
+                </p>
+             </div>
+
+             <form onSubmit={handlePartialPayout} className="space-y-4">
+                <div>
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Payout Amount (GHS)</label>
+                   <input 
+                     type="number"
+                     step="0.01"
+                     max={(selectedJob.payment?.amount || 0) * 0.95}
+                     value={payoutAmount}
+                     onChange={(e) => setPayoutAmount(e.target.value)}
+                     className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-black text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all text-xl"
+                     placeholder="0.00"
+                     required
+                   />
+                </div>
+                <div>
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Reason for early release</label>
+                   <input 
+                     type="text"
+                     value={payoutReason}
+                     onChange={(e) => setPayoutReason(e.target.value)}
+                     className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                     placeholder="e.g. Transportation, Material upfront cost..."
+                     required
+                   />
+                </div>
+                
+                <button 
+                  type="submit"
+                  disabled={processing}
+                  className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-lg shadow-emerald-600/20 hover:scale-[1.02] active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center"
+                >
+                   {processing ? <Loader2 className="animate-spin" /> : 'Confirm & Releae Funds'}
+                </button>
+             </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

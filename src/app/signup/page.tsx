@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, User, ArrowRight, Loader2, ShieldCheck, Briefcase, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { sendWelcomeNotification } from '@/app/actions/broadcasts';
 
 
 export default function SignupPage() {
@@ -37,9 +38,13 @@ export default function SignupPage() {
 
       if (signupError) throw signupError;
 
-      // Supabase handles user creation. Profile data is in user_metadata.
+      // Send welcome email + in-app notification
+      if (data?.user) {
+        sendWelcomeNotification(data.user.id, name, email, role).catch(console.error);
+      }
+
       // Redirect based on role
-      router.push(role === 'WORKER' ? '/onboarding/worker' : '/search');
+      router.push(role === 'WORKER' ? '/dashboard/worker' : '/dashboard/client');
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {

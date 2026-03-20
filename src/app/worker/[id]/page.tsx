@@ -1,51 +1,65 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, MapPin, ShieldCheck, Clock, CheckCircle, Calendar, MessageSquare, ArrowRight, Share2, Heart, Briefcase, X, Send, AlertTriangle, ShieldAlert, ClipboardCheck } from 'lucide-react';
-import { formatGHS } from '@/lib/utils';
-
+import { 
+  Star, 
+  MapPin, 
+  ShieldCheck, 
+  Clock, 
+  CheckCircle, 
+  Calendar, 
+  MessageSquare, 
+  ArrowRight, 
+  Share2, 
+  Heart, 
+  Briefcase, 
+  X, 
+  Send, 
+  AlertTriangle, 
+  ShieldAlert, 
+  ClipboardCheck,
+  Loader2,
+  Lock
+} from 'lucide-react';
+import { formatGHS, cn } from '@/lib/utils';
+import { getWorkerById } from '@/app/actions/worker';
+import { sendMessage as sendChatMsg } from '@/app/actions/chat';
+import { supabase } from '@/lib/supabase';
 
 export default function WorkerProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   
-  // Mock data for the specific worker
-  const worker = {
-    id: id,
-    name: 'Kwame Mensah',
-    category: 'Expert Plumber',
-    location: 'Sunyani - Airport Residential Area',
-    rating: 4.9,
-    reviewsCount: 124,
-    price: 150,
-    verified: true,
-    bio: 'Professional plumber with over 8 years of experience in residential and commercial plumbing. I specialize in leak detection, bathroom installations, and water heater maintenance. Committed to providing high-quality service and customer satisfaction.',
-    skills: ['Leak Repair', 'Pipe Installation', 'Water Heaters', 'Drain Cleaning'],
-    experience: '8 Years',
-    availability: 'Mon - Sat, 8:00 AM - 6:00 PM',
-  };
+  const [worker, setWorker] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isLoved, setIsLoved] = useState(false);
+  const [lovedCount, setLovedCount] = useState(48);
+  const [showChat, setShowChat] = useState(false);
+  const [message, setMessage] = useState('');
+  const [chatLog, setChatLog] = useState<{ text: string, isUser: boolean }[]>([]);
+  const [showWarning, setShowWarning] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  const [isLoved, setIsLoved] = React.useState(false);
-  const [lovedCount, setLovedCount] = React.useState(48);
-  const [showChat, setShowChat] = React.useState(false);
-  const [message, setMessage] = React.useState('');
-  const [chatLog, setChatLog] = React.useState<{ text: string, isUser: boolean }[]>([]);
-  const [showWarning, setShowWarning] = React.useState(false);
-
-  const predefinedQuestions = [
-    "Are you available for work today?",
-    "What is your base fee for a site visit?",
-    "Do you offer emergency services?",
-    "Do you have all the necessary tools for the job?"
-  ];
+  useEffect(() => {
+    async function loadWorker() {
+      const res = await getWorkerById(id);
+      if (res.success) {
+        setWorker(res.data);
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) setUser(session.user);
+      setLoading(false);
+    }
+    loadWorker();
+  }, [id]);
 
   const handleShare = async () => {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `Hire ${worker.name} on Diwalya`,
-          text: `Check out ${worker.name}'s profile on Diwalya - ${worker.category}`,
+          title: `Hire ${worker?.name} on Diwalya`,
+          text: `Check out ${worker?.name}'s profile on Diwalya`,
           url: window.location.href,
         });
       } else {
@@ -53,9 +67,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
         alert('Profile link copied to clipboard!');
       }
     } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.error('Share failed:', err);
-      }
+      if (err.name !== 'AbortError') console.error('Share failed:', err);
     }
   };
 
@@ -64,196 +76,223 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
     setLovedCount(prev => isLoved ? prev - 1 : prev + 1);
   };
 
-  const sendMessage = (text: string) => {
-    const phoneRegex = /(?:\+?233|0)[235][0-9]{8}/;
-    if (phoneRegex.test(text)) {
-      setShowWarning(true);
-      return;
-    }
-
+  const sendMessage = async (text: string) => {
+    if (!user) return alert('Please log in to chat.');
+    
     setChatLog(prev => [...prev, { text, isUser: true }]);
     setMessage('');
-    setShowWarning(false);
+
+    const res = await sendChatMsg({
+        jobId: 'direct_inquiry_' + id, // Simplified for profile chat
+        senderId: user.id,
+        content: text
+    });
+
+    if (!res.success) {
+        setShowWarning(true);
+        // Remove the suspicious message from UI log for better enforcement
+        setChatLog(prev => prev.filter(m => m.text !== text));
+    } else {
+        setShowWarning(false);
+    }
   };
+
+  const maskContact = (val: string) => {
+    if (!val) return 'Not Provided';
+    return val.substring(0, 4) + ' **** ' + val.substring(val.length - 2);
+  };
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Loader2 className="animate-spin text-primary" size={40} />
+    </div>
+  );
+
+  if (!worker) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+      <h2 className="text-2xl font-black text-gray-900 mb-2">Worker Not Found</h2>
+      <Link href="/search" className="px-6 py-3 bg-primary text-white font-black rounded-xl">Back to Search</Link>
+    </div>
+  );
+
+  const profile = worker.workerProfile?.[0] || {};
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/search" className="text-gray-600 hover:text-primary flex items-center gap-2">
+      <nav className="bg-white shadow-sm border-b sticky top-0 z-50 h-16 flex items-center">
+        <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between">
+          <Link href="/search" className="text-gray-600 hover:text-primary flex items-center gap-2 font-bold">
             <ArrowRight size={18} className="rotate-180" /> Back to Search
           </Link>
           <div className="flex items-center gap-4">
-            <button 
-              onClick={handleShare}
-              className="p-2 text-gray-400 hover:text-primary hover:bg-gray-50 rounded-full transition-all"
-            >
+            <button onClick={handleShare} className="p-2 text-gray-400 hover:text-primary rounded-full transition-all">
               <Share2 size={20} />
             </button>
-            <button 
-              onClick={toggleLove}
-              className={`p-2 rounded-full transition-all ${
-                isLoved ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
-              }`}
-            >
-              <Heart size={20} className={isLoved ? 'fill-red-500' : ''} />
+            <button onClick={toggleLove} className={cn("p-2 rounded-full transition-all", isLoved ? "text-red-500 bg-red-50" : "text-gray-400 hover:bg-red-50")}>
+              <Heart size={20} className={isLoved ? "fill-red-500 text-red-500" : ""} />
             </button>
           </div>
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-8">
-            {/* Header Info */}
-            <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-8 items-start">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-blue-50 flex items-center justify-center text-primary font-black text-5xl shrink-0">
-                {worker.name.charAt(0)}
-              </div>
-              <div className="flex-grow">
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-black text-gray-900">{worker.name}</h1>
-                  {worker.verified ? (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-xl border border-blue-100">
-                      <ShieldCheck size={14} className="fill-blue-50" /> Verified Worker
+            {/* Main Header */}
+            <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row gap-8 items-start relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-12 translate-x-12 blur-2xl"></div>
+               <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] bg-gray-100 flex items-center justify-center text-primary shrink-0 overflow-hidden border-4 border-white shadow-lg">
+                {worker.profilePicture ? (
+                  <img src={worker.profilePicture} alt={worker.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-5xl font-black">{worker.name.charAt(0)}</span>
+                )}
+               </div>
+               <div className="flex-grow">
+                 <div className="flex flex-wrap items-center gap-3 mb-4">
+                   <h1 className="text-4xl font-black text-gray-900 tracking-tight">{worker.name}</h1>
+                   {profile.isVerified && (
+                     <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100">
+                       <ShieldCheck size={14} className="fill-blue-50" /> Verified Pro
+                     </div>
+                   )}
+                 </div>
+                 <p className="text-xl font-bold text-primary mb-6">{profile.category || 'General Contractor'}</p>
+                 
+                 <div className="flex flex-wrap items-center gap-8">
+                    <div className="text-center md:text-left">
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Rating</p>
+                       <div className="flex items-center gap-1.5 font-black text-gray-900">
+                          <Star size={18} className="fill-yellow-500 text-yellow-500" />
+                          <span>4.9</span>
+                          <span className="text-gray-400 font-bold ml-1 text-xs">(124)</span>
+                       </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-wider rounded-xl border border-gray-100">
-                      <X size={14} /> Unverified Worker
+                    <div className="text-center md:text-left">
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Loves</p>
+                       <div className="flex items-center gap-1.5 font-black text-red-500">
+                          <Heart size={18} className="fill-red-500" />
+                          <span>{lovedCount}</span>
+                       </div>
                     </div>
-                  )}
-                </div>
-                <p className="text-xl font-bold text-primary mb-4">{worker.category}</p>
-                
-                <div className="flex flex-wrap items-center gap-6 text-gray-600">
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <Star size={18} className="fill-yellow-500 text-yellow-500" />
-                    <span>{worker.rating}</span>
-                    <span className="text-gray-400 font-normal ml-1">({worker.reviewsCount} reviews)</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 font-bold text-red-500">
-                    <Heart size={18} className="fill-red-500" />
-                    <span>{lovedCount}</span>
-                    <span className="text-gray-400 font-normal ml-1">Loves</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Image src="/diwalya-logo.png" alt="Diwalya Logo" width={140} height={35} className="object-contain" />
-                    <span>{worker.location}</span>
-                  </div>
-                </div>
-              </div>
+                    <div className="text-center md:text-left">
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Location</p>
+                       <div className="flex items-center gap-1.5 font-black text-gray-900">
+                          <MapPin size={18} className="text-primary" />
+                          <span>{profile.location || 'Ghana'}</span>
+                       </div>
+                    </div>
+                 </div>
+               </div>
             </div>
 
-            {/* About & Skills */}
-            <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
-              <h2 className="text-2xl font-black text-gray-900 mb-4">About Me</h2>
-              <p className="text-gray-600 leading-relaxed mb-8">{worker.bio}</p>
-              
-              <h3 className="text-lg font-black text-gray-900 mb-4">Skills & Services</h3>
-              <div className="flex flex-wrap gap-2">
-                {worker.skills.map((skill) => (
-                  <span key={skill} className="px-4 py-2 bg-gray-50 text-gray-700 font-bold rounded-xl border border-gray-100">
-                    <CheckCircle size={14} className="inline mr-2 text-green-500" /> {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Portfolio Mockup */}
-            <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
-              <h2 className="text-2xl font-black text-gray-900 mb-6">Recent Work</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="aspect-square bg-gray-100 rounded-2xl overflow-hidden hover:opacity-90 transition-opacity cursor-pointer border border-gray-100 flex items-center justify-center">
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      <Briefcase size={48} className="opacity-20" />
-                    </div>
+            {/* Content Sections */}
+            <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-12">
+               <section>
+                  <h2 className="text-2xl font-black text-gray-900 mb-6 tracking-tight">Biography</h2>
+                  <p className="text-gray-600 font-medium leading-relaxed">{profile.bio || 'This worker has not provided a biography yet.'}</p>
+               </section>
+               
+               <section>
+                  <h3 className="text-xl font-black text-gray-900 mb-6 tracking-tight">Technical Proficiency</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {['Professionalism', 'Timing', 'Fair Pricing', 'Cleanliness'].map((skill) => (
+                      <span key={skill} className="px-5 py-2.5 bg-gray-50 text-gray-700 font-bold rounded-2xl border border-gray-100 text-sm">
+                        <CheckCircle size={16} className="inline mr-2 text-emerald-500" /> {skill}
+                      </span>
+                    ))}
                   </div>
-                ))}
-              </div>
+               </section>
+            </div>
+            
+            <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+               <h2 className="text-2xl font-black text-gray-900 mb-6 tracking-tight">Verified Work Proof</h2>
+               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                 {[1, 2, 3].map((i) => (
+                   <div key={i} className="aspect-square bg-gray-100 rounded-3xl overflow-hidden hover:opacity-90 transition-all cursor-pointer border-2 border-white shadow-md flex items-center justify-center relative group">
+                     <Briefcase size={32} className="text-gray-200 group-hover:scale-110 transition-transform" />
+                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                   </div>
+                 ))}
+               </div>
             </div>
           </div>
 
-          {/* Sidebar - Booking Card */}
           <aside className="lg:col-span-1">
-            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl sticky top-24">
-              <div className="flex justify-between items-end mb-8 pb-6 border-b border-gray-100">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-2xl sticky top-24 space-y-8">
+              <div className="flex justify-between items-start pb-6 border-b border-gray-100">
                 <div>
-                  <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Average Rate</p>
-                  <p className="text-4xl font-black text-gray-900">{formatGHS(worker.price)}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Base Inspection</p>
+                  <p className="text-4xl font-black text-gray-900">{formatGHS(100)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-green-600 font-black text-sm uppercase">Available</p>
-                  <p className="text-gray-400 text-xs">Today</p>
+                  <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100">Now Active</span>
                 </div>
               </div>
 
-              <div className="space-y-6 mb-8">
-                <div className="flex items-start gap-4">
-                  <Clock className="text-primary mt-1" size={20} />
-                  <div>
-                    <h4 className="font-bold text-gray-900">Working Hours</h4>
-                    <p className="text-sm text-gray-600">{worker.availability}</p>
-                  </div>
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                   <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-primary">
+                      <Clock size={20} />
+                   </div>
+                   <div>
+                      <h4 className="font-black text-gray-900 text-sm">Response Time</h4>
+                      <p className="text-xs text-gray-500 font-bold">Fast • within 30 mins</p>
+                   </div>
                 </div>
-                <div className="flex items-start gap-4">
-                  <Calendar className="text-primary mt-1" size={20} />
-                  <div>
-                    <h4 className="font-bold text-gray-900">Fast Response</h4>
-                    <p className="text-sm text-gray-600">Usually replies within 30 mins</p>
-                  </div>
+                
+                <div className="p-5 bg-slate-900 rounded-3xl text-white relative overflow-hidden">
+                   <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <Lock size={12} className="text-emerald-400" /> Anti-Bypass Security
+                   </p>
+                   <div className="space-y-3">
+                      <div className="flex justify-between items-center text-xs font-bold">
+                         <span className="text-slate-400">Phone:</span>
+                         <span>{maskContact(worker.phone)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs font-bold">
+                         <span className="text-slate-400">Email:</span>
+                         <span>{maskContact(worker.email)}</span>
+                      </div>
+                   </div>
+                   <p className="text-[9px] text-slate-500 italic mt-4 leading-tight">Full details revealed after first payment release.</p>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3 pt-4">
                 <Link 
                   href={`/booking/${worker.id}`}
-                  className="w-full bg-secondary hover:bg-secondary-light text-white py-4 rounded-2xl font-black text-lg block text-center shadow-lg hover:shadow-orange-500/20 transition-all transform active:scale-[0.98]"
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white py-5 rounded-2xl font-black text-lg block text-center shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 transition-all"
                 >
-                  Book Now
-                </Link>
-                <Link
-                  href={`/inspection/${worker.id}`}
-                  className="w-full bg-primary/10 hover:bg-primary/20 text-primary py-4 rounded-2xl font-black text-base block text-center transition-all border border-primary/20 flex items-center justify-center gap-2"
-                >
-                  <ClipboardCheck size={18} /> Request Inspection (₵100)
+                  Confirm Booking
                 </Link>
                 <button 
                   onClick={() => setShowChat(true)}
-                  className="w-full bg-gray-50 hover:bg-gray-100 text-gray-800 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all"
+                  className="w-full bg-white text-slate-900 py-5 rounded-2xl font-black text-base flex items-center justify-center gap-2 border-2 border-slate-100 hover:bg-slate-50 transition-all"
                 >
-                  <MessageSquare size={20} /> Chat with {worker.name.split(' ')[0]}
+                  <MessageSquare size={20} /> Inquiry Chat
                 </button>
               </div>
 
-              <div className="mt-6 p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50">
-                <div className="flex items-center gap-2 text-orange-700 font-black text-[10px] uppercase tracking-widest mb-1">
-                  <ShieldAlert size={14} /> Platform Protected
-                </div>
-                <p className="text-[10px] text-gray-400 font-medium leading-tight">
-                  Contact details are strictly hidden until booking is confirmed and payment is completed through Diwalya.
-                </p>
-              </div>
-
-              <p className="text-center text-xs text-gray-400 mt-6 font-medium">
-                Shielded by Diwalya Guarantee 🛡️
+              <p className="text-center text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                Shielded by Diwalya Escrow 🛡️
               </p>
             </div>
           </aside>
         </div>
       </div>
-      {/* Chat Modal */}
+
+      {/* Chat UI Modal */}
       {showChat && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white w-full max-w-lg md:rounded-3xl shadow-2xl flex flex-col h-[80vh] md:h-[600px] animate-in slide-in-from-bottom-4">
-            <div className="p-6 border-b flex justify-between items-center bg-primary text-white md:rounded-t-3xl">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold">K</div>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-end md:items-center justify-center p-0 md:p-6 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-lg md:rounded-[3rem] shadow-2xl flex flex-col h-full md:h-[650px] overflow-hidden scale-in-center">
+            <div className="p-8 border-b flex justify-between items-center bg-slate-900 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center font-black text-lg">{worker.name.charAt(0)}</div>
                 <div>
-                  <h3 className="font-bold">Chat with {worker.name}</h3>
-                  <p className="text-xs opacity-80">Professional Plumber</p>
+                  <h3 className="font-black text-lg tracking-tight">Direct Inquiry</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Professional Channel</p>
                 </div>
               </div>
               <button onClick={() => setShowChat(false)} className="hover:bg-white/10 p-2 rounded-full transition-all">
@@ -261,57 +300,47 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
               </button>
             </div>
 
-            <div className="flex-grow p-6 overflow-y-auto space-y-4">
-              <div className="bg-blue-50 p-4 rounded-2xl text-blue-800 text-sm border border-blue-100">
-                👋 Hello! How can I help you regarding your plumbing needs today?
+            <div className="flex-grow p-8 overflow-y-auto space-y-6 bg-gray-50/50">
+              <div className="bg-white p-6 rounded-2xl text-gray-700 text-sm font-bold border border-gray-100 shadow-sm inline-block max-w-[90%]">
+                👋 Hello! This is **{worker.name}**. I'm currently active. How can I assist you with your project?
               </div>
               
               {chatLog.map((chat, idx) => (
-                <div key={idx} className={`flex ${chat.isUser ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] p-4 rounded-2xl text-sm ${
-                    chat.isUser ? 'bg-primary text-white rounded-tr-none' : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                  }`}>
+                <div key={idx} className={cn("flex", chat.isUser ? "justify-end" : "justify-start")}>
+                  <div className={cn(
+                    "max-w-[85%] p-5 rounded-2xl text-sm font-bold shadow-sm",
+                    chat.isUser ? "bg-primary text-white rounded-tr-none" : "bg-white text-gray-800 rounded-tl-none border border-gray-100"
+                  )}>
                     {chat.text}
                   </div>
                 </div>
               ))}
 
               {showWarning && (
-                <div className="flex items-start gap-2 p-4 bg-orange-50 border border-orange-200 rounded-2xl text-orange-800 text-sm animate-in shake-1 overflow-hidden">
-                  <AlertTriangle className="shrink-0 mt-0.5" size={16} />
-                  <p>Sharing contact numbers is against Diwalya policy to ensure your payments and work are protected. Please keep communication here.</p>
+                <div className="p-6 bg-red-50 border border-red-200 rounded-3xl text-red-900 space-y-3 animate-in shake-1">
+                   <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-widest text-red-600">
+                      <ShieldAlert size={16} /> Security Interception
+                   </div>
+                   <p className="text-xs font-bold leading-relaxed">
+                     **Contact sharing detected.** For your security, all payments and deals must happen through Diwalya. This message was blocked and a warning has been logged.
+                   </p>
                 </div>
               )}
             </div>
 
-            <div className="p-6 border-t bg-gray-50">
-              <div className="mb-4">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Common Questions</p>
-                <div className="flex flex-wrap gap-2">
-                  {predefinedQuestions.map(q => (
-                    <button 
-                      key={q} 
-                      onClick={() => sendMessage(q)}
-                      className="text-xs bg-white border border-gray-200 hover:border-primary hover:text-primary px-3 py-2 rounded-full font-bold transition-all shadow-sm"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
+            <div className="p-8 border-t bg-white">
+              <div className="flex gap-3">
                 <input 
                   type="text" 
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && message.trim() && sendMessage(message)}
-                  placeholder="Type a professional message..." 
-                  className="flex-grow p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all text-sm text-gray-900" 
+                  placeholder="Ask a professional question..." 
+                  className="flex-grow p-5 bg-gray-50 border border-gray-100 rounded-2xl font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all text-sm text-gray-900" 
                 />
                 <button 
                   onClick={() => message.trim() && sendMessage(message)}
-                  className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-primary-light transition-all shadow-lg shadow-blue-500/20"
+                  className="w-16 h-16 bg-primary text-white rounded-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl shadow-blue-500/20"
                 >
                   <Send size={24} />
                 </button>
@@ -320,6 +349,21 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       )}
+      
+      <style jsx global>{`
+        @keyframes scale-in-center {
+          0% { transform: scale(0.95); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .scale-in-center { animation: scale-in-center 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+        
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
+        }
+        .shake-1 { animation: shake 0.2s ease-in-out infinite; animation-iteration-count: 2; }
+      `}</style>
     </div>
   );
 }

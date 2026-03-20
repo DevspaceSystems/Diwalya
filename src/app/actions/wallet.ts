@@ -1,16 +1,45 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
-import { ensureWallet } from '@/lib/wallet'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+// Utility to ensure a user has a wallet
+async function ensureWallet(userId: string) {
+    const { data: wallet, error } = await supabaseAdmin
+        .from('Wallet')
+        .select('*')
+        .eq('userId', userId)
+        .single();
+        
+    if (wallet) return wallet;
+    if (error && error.code !== 'PGRST116') throw error;
+
+    // Create wallet if it doesn't exist
+    const { data: newWallet, error: createErr } = await supabaseAdmin
+        .from('Wallet')
+        .insert({
+            id: `WAL-${Date.now()}`,
+            userId,
+            balance: 0.0
+        })
+        .select()
+        .single();
+        
+    if (createErr) throw createErr;
+    return newWallet;
+}
 
 export async function getWalletData(userId: string) {
   try {
     const wallet = await ensureWallet(userId)
-    const transactions = await prisma.transaction.findMany({
-      where: { walletId: wallet.id },
-      orderBy: { createdAt: 'desc' },
-      take: 20
-    })
+    
+    const { data: transactions, error: txnError } = await supabaseAdmin
+      .from('Transaction')
+      .select('*')
+      .eq('walletId', wallet.id)
+      .order('createdAt', { ascending: false })
+      .limit(20);
+
+    if (txnError) throw txnError;
 
     return { success: true, balance: wallet.balance, transactions }
   } catch (error: any) {
@@ -27,48 +56,55 @@ export async function requestWithdrawal(userId: string, data: {
     bankName?: string
 }) {
     try {
-        const wallet = await prisma.wallet.findUnique({ where: { userId } })
-        if (!wallet || wallet.balance < data.amount) {
+        const wallet = await ensureWallet(userId);
+        
+        if (wallet.balance < data.amount) {
             return { success: false, error: 'Insufficient balance' }
         }
 
-        const result = await prisma.$transaction(async (tx) => {
-            // 1. Deduct from wallet
-            await tx.wallet.update({
-                where: { id: wallet.id },
-                data: { balance: { decrement: data.amount } }
+        // 1. Deduct from wallet
+        const newBalance = wallet.balance - data.amount;
+        const { error: walletErr } = await supabaseAdmin
+            .from('Wallet')
+            .update({ balance: newBalance })
+            .eq('id', wallet.id);
+            
+        if (walletErr) throw walletErr;
+
+        // 2. Create withdrawal request
+        const { data: request, error: reqErr } = await supabaseAdmin
+            .from('WithdrawalRequest')
+            .insert({
+                id: `WREQ-${Date.now()}`,
+                userId,
+                amount: data.amount,
+                method: data.method,
+                accountName: data.accountName,
+                accountNumber: data.accountNumber,
+                bankName: data.bankName,
+                status: 'PENDING'
             })
+            .select()
+            .single();
+            
+        if (reqErr) throw reqErr;
 
-            // 2. Create withdrawal request
-            // Note: WithdrawalMethod is an enum in Prisma. Ensure strings match case.
-            const request = await tx.withdrawalRequest.create({
-                data: {
-                    userId,
-                    amount: data.amount,
-                    method: data.method === 'MOMO' ? 'MOMO' : 'BANK',
-                    accountName: data.accountName,
-                    accountNumber: data.accountNumber,
-                    bankName: data.bankName,
-                    status: 'PENDING'
-                }
-            })
+        // 3. Create transaction record
+        const { error: txnErr } = await supabaseAdmin
+            .from('Transaction')
+            .insert({
+                id: `TXN-DBT-${Date.now()}`,
+                walletId: wallet.id,
+                amount: data.amount,
+                type: 'DEBIT',
+                purpose: 'WITHDRAWAL',
+                reference: request.id,
+                status: 'SUCCESS'
+            });
+            
+        if (txnErr) throw txnErr;
 
-            // 3. Create transaction record
-            await tx.transaction.create({
-                data: {
-                    walletId: wallet.id,
-                    amount: data.amount,
-                    type: 'DEBIT',
-                    purpose: 'WITHDRAWAL',
-                    reference: request.id,
-                    status: 'SUCCESS'
-                }
-            })
-
-            return request
-        })
-
-        return { success: true, data: result }
+        return { success: true, data: request }
     } catch (error: any) {
         console.error('Request Withdrawal Error:', error)
         return { success: false, error: error.message }

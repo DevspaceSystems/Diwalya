@@ -24,111 +24,57 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn, formatGHS } from '@/lib/utils';
-import ActivityFeed from '@/components/Admin/ActivityFeed';
-import AdminMessenger from '@/components/Admin/AdminMessenger';
+import ActivityFeed from '@/components/admin/ActivityFeed';
+import AdminMessenger from '@/components/admin/AdminMessenger';
+
+import { getUsers, getWorkers } from '@/app/actions/user';
+import { getAdminBookings } from '@/app/actions/booking';
+import { getFinancialData } from '@/app/actions/finance';
+import { getReports } from '@/app/actions/report';
 
 export default function SuperAdminDashboard() {
   const [showMessenger, setShowMessenger] = useState(false);
   const [stats, setStats] = useState({
-    users: 124,
-    workers: 45,
-    bookings: 89,
-    revenue: 4520,
-    activeAlerts: 3
+    users: 0,
+    workers: 0,
+    bookings: 0,
+    revenue: 0,
+    activeAlerts: 0
   });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadStats() {
+      setLoading(true);
+      const [uRes, wRes, bRes, fRes, rRes] = await Promise.all([
+        getUsers(),
+        getWorkers(),
+        getAdminBookings(),
+        getFinancialData(),
+        getReports()
+      ]);
+
+      setStats({
+        users: uRes.success ? (uRes.data?.length || 0) : 0,
+        workers: wRes.success ? (wRes.data?.length || 0) : 0,
+        bookings: bRes.success ? (bRes.data?.length || 0) : 0,
+        revenue: fRes.success ? (fRes.data?.stats.totalVolume || 0) : 0,
+        activeAlerts: rRes.success ? (rRes.data?.filter((r: any) => r.status === 'PENDING').length || 0) : 0
+      });
+      setLoading(false);
+    }
+    loadStats();
+  }, []);
 
   const cards = [
-    { label: 'Total Users', value: stats.users, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%' },
-    { label: 'Verified Workers', value: stats.workers, icon: ShieldCheck, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+5%' },
-    { label: 'Active Bookings', value: stats.bookings, icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50', trend: '+18%' },
-    { label: 'Platform Rev', value: formatGHS(stats.revenue), icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+24%' },
+    { label: 'Total Platform Users', value: stats.users, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50', trend: 'Live' },
+    { label: 'Verified Professionals', value: stats.workers, icon: ShieldCheck, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: 'Live' },
+    { label: 'Active Service Bookings', value: stats.bookings, icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50', trend: 'Live' },
+    { label: 'Cumulative Volume', value: formatGHS(stats.revenue), icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: 'Live' },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex">
-      {/* Sidebar Overlay for Mobile */}
-      <aside className="w-80 bg-[#0F172A] p-8 hidden lg:flex flex-col text-slate-400">
-        <div className="mb-12">
-            <Link href="/">
-              <div className="bg-white p-2 rounded-xl inline-block">
-                <Image src="/diwalya-logo.png" alt="Diwalya" width={140} height={35} />
-              </div>
-            </Link>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-4 px-1">Super Admin Console v2</p>
-        </div>
-
-        <nav className="flex-grow space-y-2">
-            <Link href="/dashboard/admin/super" className="flex items-center gap-3 px-5 py-4 bg-primary text-white rounded-2xl font-black transition-all shadow-lg shadow-blue-500/20">
-                <Zap size={20} /> Live Monitoring
-            </Link>
-            <Link href="/dashboard/admin/users" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
-                <Users size={20} /> User Management
-            </Link>
-            <Link href="/dashboard/admin/bookings" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
-                <Briefcase size={20} /> Global Bookings
-            </Link>
-            <Link href="/dashboard/admin/verifications" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
-                <ShieldCheck size={20} /> Verification Center
-            </Link>
-            <Link href="/dashboard/admin/payments" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
-                <Wallet size={20} /> Financial Ledger
-            </Link>
-            <Link href="/dashboard/admin/reports" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
-                <ShieldAlert size={20} /> Security &amp; Reports
-            </Link>
-            <Link href="/dashboard/admin/inspections" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
-                <ClipboardCheck size={20} /> Inspections
-            </Link>
-            <Link href="/dashboard/admin/settings" className="flex items-center gap-3 px-5 py-4 hover:bg-white/5 rounded-2xl font-bold transition-all">
-                <Settings2 size={20} /> System Settings
-            </Link>
-        </nav>
-
-        <div className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50">
-            <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">System Online</span>
-            </div>
-            <p className="text-xs font-medium text-slate-400 leading-relaxed mb-4">You have full super-admin access to all platform systems.</p>
-            <button 
-              onClick={() => setShowMessenger(true)}
-              className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all"
-            >
-                Launch Broadcast
-            </button>
-        </div>
-      </aside>
-
-      <main className="flex-grow">
-        <header className="h-24 bg-white/80 backdrop-blur-md border-b border-slate-200 px-10 flex items-center justify-between sticky top-0 z-40">
-            <div className="flex items-center gap-4">
-                <div className="lg:hidden p-2 bg-slate-900 text-white rounded-lg">
-                    <Activity size={20} />
-                </div>
-                <div>
-                   <h1 className="text-2xl font-black text-slate-900 tracking-tight">System Monitor</h1>
-                   <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest mt-1">
-                      <Zap size={12} fill="currentColor" /> Real-time activity active
-                   </div>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-6">
-                <div className="relative hidden md:block">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input type="text" placeholder="Global search..." className="pl-12 pr-6 py-3 bg-slate-100/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all w-80 font-bold text-sm" />
-                </div>
-                <button className="w-12 h-12 bg-white border border-slate-200 rounded-2xl flex items-center justify-center text-slate-400 hover:text-primary transition-all relative">
-                    <Bell size={24} />
-                    <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
-                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/20">
-                    A
-                </div>
-            </div>
-        </header>
-
-        <div className="p-10 max-w-[1600px] mx-auto space-y-10">
+    <div className="p-10 max-w-[1600px] mx-auto space-y-10">
             {/* Metric Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
                 {cards.map((card) => (
@@ -217,12 +163,10 @@ export default function SuperAdminDashboard() {
                     </div>
                 </div>
             </div>
-        </div>
-      </main>
 
-      {showMessenger && (
-        <AdminMessenger onClose={() => setShowMessenger(false)} />
-      )}
+            {showMessenger && (
+              <AdminMessenger onClose={() => setShowMessenger(false)} />
+            )}
     </div>
   );
 }

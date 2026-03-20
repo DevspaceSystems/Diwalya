@@ -21,6 +21,9 @@ import {
 } from 'lucide-react';
 import * as faceapi from 'face-api.js';
 import Image from 'next/image';
+import Tesseract from 'tesseract.js';
+import { getUserProfile } from '@/app/actions/user';
+import { compressImage } from '@/lib/image-utils';
 
 const loadImage = (url: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
@@ -38,6 +41,7 @@ export default function WorkerOnboarding() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [dbUser, setDbUser] = useState<any>(null);
   const [error, setError] = useState('');
 
   // Form State
@@ -47,6 +51,7 @@ export default function WorkerOnboarding() {
     experienceYears: 0,
     bio: '',
     category: 'Electrician',
+    customCategory: '',
   });
 
   const [profilePic, setProfilePic] = useState<File | null>(null);
@@ -62,18 +67,33 @@ export default function WorkerOnboarding() {
         return;
       }
       setUser(session.user);
+
+      // Fetch name from public.User
+      const res = await getUserProfile(session.user.id);
+      if (res.success) setDbUser(res.data);
     };
     checkUser();
   }, [router]);
 
-  const handleFileUpload = async (file: File, bucket: string) => {
+  const handleFileUpload = async (file: File, bucket: string, folder: string) => {
+    let uploadFile = file;
+    
+    // Auto-compress if image
+    if (file.type.startsWith('image/')) {
+      try {
+        uploadFile = await compressImage(file, 0.9);
+      } catch (err) {
+        console.error('Compression failed, trying original:', err);
+      }
+    }
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const filePath = `${folder}/${fileName}`;
 
     const { error: uploadError, data } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file);
+      .upload(filePath, uploadFile);
 
     if (uploadError) throw uploadError;
 
@@ -84,50 +104,123 @@ export default function WorkerOnboarding() {
     return publicUrl;
   };
 
-  const handleNext = () => setStep(step + 1);
-  const handleBack = () => setStep(step - 1);
+  const handleNext = () => {
+    setError('');
+    if (step === 1) {
+      if (!formData.businessName || !formData.location || formData.experienceYears < 0) {
+        setError('Please fill in all the business details correctly.');
+        return;
+      }
+    }
+    if (step === 2) {
+      if (!profilePic || !formData.bio) {
+        setError('Please provide a profile picture and a bio.');
+        return;
+      }
+    }
+    setStep(step + 1);
+  };
+  const handleBack = () => {
+    setError('');
+    setStep(step - 1);
+  };
 
   const handleSubmit = async () => {
     setIsLoading(true);
     setError('');
     
     try {
+      if (!formData.businessName || !formData.location || !formData.bio || !formData.category) {
+        throw new Error('All profile sections are mandatory. Please fill everything.');
+      }
       if (!profilePic || !ghanaCard) {
         throw new Error('Both profile picture and Ghana Card are mandatory for verification.');
       }
 
-      // 1. Upload Files
-      // Note: Assuming 'profiles' and 'verifications' buckets exist in Supabase
-      const pUrl = await handleFileUpload(profilePic, 'profiles');
-      const gUrl = await handleFileUpload(ghanaCard, 'verifications');
+      // 1. Initialise Checks
+      let faceMatched = false;
+      let nameMatched = false;
+      let faceError = '';
+      let nameError = '';
 
-      // 2. Algorithm Check (Face Identity)
-      const pImg = await loadImage(pUrl);
-      const gImg = await loadImage(gUrl);
+      // --- STEP 1: Face Matching ---
+      try {
+        setError('Analyzing faces...');
+        const pImg = await loadImage(profilePicUrl);
+        const gImg = await loadImage(ghanaCardUrl);
 
-      // Load Models
-      await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-      await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-      await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+        await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+        await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
 
-      const pDesc = await faceapi.detectSingleFace(pImg).withFaceLandmarks().withFaceDescriptor();
-      const gDesc = await faceapi.detectSingleFace(gImg).withFaceLandmarks().withFaceDescriptor();
+        const pDesc = await faceapi.detectSingleFace(pImg).withFaceLandmarks().withFaceDescriptor();
+        const gDesc = await faceapi.detectSingleFace(gImg).withFaceLandmarks().withFaceDescriptor();
 
-      if (!pDesc || !gDesc) {
-        throw new Error('Face matching failed. Could not detect a clear face in one of the images. Please ensure faces are visible.');
+        if (pDesc && gDesc) {
+          const faceMatcher = new faceapi.FaceMatcher(pDesc);
+          const bestMatch = faceMatcher.findBestMatch(gDesc.descriptor);
+          if (bestMatch.distance <= 0.6) {
+            faceMatched = true;
+            console.log('✅ Face Match Succeeded:', bestMatch.distance);
+          } else {
+            faceError = `Face mismatch (Distance: ${bestMatch.distance.toFixed(2)}).`;
+          }
+        } else {
+          faceError = 'Could not detect clear faces in both images.';
+        }
+      } catch (err: any) {
+        console.error('Face Match Error:', err);
+        faceError = 'AI face detection failed to run.';
       }
 
-      const faceMatcher = new faceapi.FaceMatcher(pDesc);
-      const bestMatch = faceMatcher.findBestMatch(gDesc.descriptor);
-
-      if (bestMatch.distance > 0.6) {
-        await notifyAdminOfRejection(user.id, `Face matching failed. Similarity distance: ${bestMatch.distance}`);
-        throw new Error('Identity verification failed. Your Ghana Card photo does not match your profile picture. Our admin team has been notified for manual review.');
+      // --- STEP 2: Name Matching ---
+      try {
+        setError('Verifying name on card...');
+        const { data: { text } } = await Tesseract.recognize(ghanaCardUrl, 'eng');
+        const cardText = text.toLowerCase();
+        
+        // Fallback names: dbUser > metadata > email prefix
+        const registeredName = dbUser?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || '';
+        const normalizedName = registeredName.toLowerCase();
+        
+        const nameParts = normalizedName.split(/[\s,]+/).filter((p: string) => p.length > 2);
+        if (nameParts.length > 0) {
+          const matchedParts = nameParts.filter((part: string) => cardText.includes(part));
+          // If we found at least 2 parts (or 1 part if the name is short), we consider it a match
+          if (matchedParts.length === nameParts.length || (nameParts.length > 1 && matchedParts.length >= 2)) {
+            nameMatched = true;
+            console.log('✅ Name Match Succeeded:', matchedParts);
+          } else {
+            nameError = `Name mismatch. Card text didn't contain enough parts of "${registeredName}".`;
+          }
+        } else {
+          nameError = 'No valid registered name found to compare against card.';
+        }
+      } catch (err: any) {
+        console.error('OCR Error:', err);
+        nameError = 'OCR name recognition failed.';
       }
 
-      // 3. Create Profile
+      // --- STEP 3: Final Decision (Face OR Name) ---
+      if (!faceMatched && !nameMatched) {
+        const fullErrorReport = `${faceError} ${nameError}`.trim();
+        await notifyAdminOfRejection(user.id, `Total Verification Failure. ${fullErrorReport}`);
+        throw new Error(`Identity verification failed. ${fullErrorReport} Please ensure both photos are very clear.`);
+      }
+
+      console.log('🎉 Verification Passed!', { faceMatched, nameMatched });
+
+      // 3. Upload Files - Only if verification passes
+      setError('Finalizing upload...');
+      const pUrl = await handleFileUpload(profilePic, 'diwalya-media', 'profiles');
+      const gUrl = await handleFileUpload(ghanaCard, 'diwalya-media', 'verifications');
+
+      // 4. Create Profile
+      const finalCategory = formData.category === 'Other' ? formData.customCategory : formData.category;
+      
       const result = await createWorkerProfile(user.id, {
         ...formData,
+        category: finalCategory,
         profilePicture: pUrl,
         ghanaCardUrl: gUrl
       });
@@ -139,10 +232,26 @@ export default function WorkerOnboarding() {
       }
 
     } catch (err: any) {
-      setError(err.message || 'Something went wrong. Please try again.');
+      console.error('Onboarding Error:', err);
+      setError(err.message || 'Something went wrong. Please check your internet and try again.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const generateAIBio = () => {
+    const { businessName, location, experienceYears, category, customCategory } = formData;
+    const finalCategory = category === 'Other' ? customCategory : category;
+    
+    const templates = [
+      `Professional ${finalCategory} with ${experienceYears} years of hands-on experience based in ${location}. ${businessName ? `Working under ${businessName}, I` : 'I'} specialize in delivering high-quality, reliable results for every client. Dedicated to excellence and customer satisfaction.`,
+      `With over ${experienceYears} years of expertise as a ${finalCategory} in ${location}, I provide top-tier services tailored to your needs. ${businessName ? `Representing ${businessName}, our` : 'My'} mission is to ensure quality craftmanship and efficient service in every project.`,
+      `Reliable and skilled ${finalCategory} located in ${location}. I have ${experienceYears} years of experience in the industry${businessName ? ` running ${businessName}` : ''}. I pride myself on professionalism, punctuality, and great attention to detail.`,
+      `Looking for a ${finalCategory} in ${location}? I bring ${experienceYears} years of professional experience to the table. ${businessName ? `At ${businessName}, we focus` : 'I focus'} on providing affordable and expert solutions for all your ${finalCategory} needs.`
+    ];
+
+    const randomBio = templates[Math.floor(Math.random() * templates.length)];
+    setFormData({ ...formData, bio: randomBio });
   };
 
   if (!user) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -184,15 +293,16 @@ export default function WorkerOnboarding() {
               </div>
               
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Business Name (Optional)</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Business or Full Name</label>
                 <div className="relative">
                   <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
                     type="text"
+                    required
                     value={formData.businessName}
                     onChange={(e) => setFormData({...formData, businessName: e.target.value})}
                     placeholder="e.g. Mensah Electricals"
-                    className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                    className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 font-bold placeholder:text-slate-300"
                   />
                 </div>
               </div>
@@ -208,7 +318,7 @@ export default function WorkerOnboarding() {
                       value={formData.location}
                       onChange={(e) => setFormData({...formData, location: e.target.value})}
                       placeholder="e.g. Accra, Greater Accra"
-                      className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 font-bold placeholder:text-slate-300"
                     />
                   </div>
                 </div>
@@ -221,7 +331,7 @@ export default function WorkerOnboarding() {
                       required
                       value={formData.experienceYears}
                       onChange={(e) => setFormData({...formData, experienceYears: parseInt(e.target.value)})}
-                      className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 font-bold"
                     />
                   </div>
                 </div>
@@ -232,16 +342,53 @@ export default function WorkerOnboarding() {
                 <select 
                    value={formData.category}
                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                   className="w-full px-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none bg-gray-50"
+                   className="w-full px-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none bg-gray-50 text-slate-900 font-bold"
                 >
-                  <option>Electrician</option>
-                  <option>Plumber</option>
-                  <option>Carpenter</option>
-                  <option>Cleaner</option>
-                  <option>Mechanic</option>
-                  <option>Delivery Rider</option>
+                  <optgroup label="Skilled Trades">
+                    <option>Electrician</option>
+                    <option>Plumber</option>
+                    <option>Carpenter</option>
+                    <option>Mechanic</option>
+                    <option>Mason / Bricklayer</option>
+                    <option>Welder</option>
+                    <option>Painter</option>
+                    <option>Tiler</option>
+                    <option>AC Technician</option>
+                    <option>CCTV Installer</option>
+                  </optgroup>
+                  <optgroup label="Service & General">
+                    <option>Cleaner (Residential/Office)</option>
+                    <option>Laundry & Dry Cleaning</option>
+                    <option>Delivery Rider</option>
+                    <option>Security Guard</option>
+                    <option>Gardener / Landscaper</option>
+                    <option>Construction Laborer</option>
+                    <option>Event Usher / Staff</option>
+                    <option>Sales Representative</option>
+                  </optgroup>
+                  <optgroup label="Digital & Professional">
+                    <option>Graphic Designer</option>
+                    <option>Data Entry Specialist</option>
+                    <option>Software Developer</option>
+                    <option>Virtual Assistant</option>
+                  </optgroup>
+                  <option value="Other">Other (Type below...)</option>
                 </select>
               </div>
+
+              {formData.category === 'Other' && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Specify Your Category</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.customCategory}
+                    onChange={(e) => setFormData({...formData, customCategory: e.target.value})}
+                    placeholder="e.g. Fashion Designer, Barber, etc."
+                    className="w-full px-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 font-bold placeholder:text-slate-300"
+                  />
+                </div>
+              )}
 
               <button 
                 onClick={handleNext}
@@ -287,17 +434,24 @@ export default function WorkerOnboarding() {
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Profile Picture (Mandatory)</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Professional Bio</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-bold text-gray-700">Professional Bio</label>
+                  <button 
+                    type="button"
+                    onClick={generateAIBio}
+                    className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-all border border-primary/20"
+                  >
+                    <span className="text-sm">✨</span> Generate with AI
+                  </button>
+                </div>
                 <textarea
                   rows={4}
                   required
                   value={formData.bio}
                   onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                  className="w-full px-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  className="w-full px-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 font-medium placeholder:text-slate-300"
                   placeholder="Tell clients about your skills and why they should hire you..."
                 />
-              </div>
 
               <div className="flex gap-4">
                 <button 

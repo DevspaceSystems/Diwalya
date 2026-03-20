@@ -1,6 +1,6 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { revalidatePath } from 'next/cache'
 import { sendNotification } from '@/lib/notifications'
 import { logActivity } from './activity'
@@ -14,11 +14,16 @@ export async function createReport(data: {
   evidenceUrls?: string[]
 }) {
   try {
-    const report = await (prisma as any).platformReport.create({
-      data: {
+    const { data: report, error } = await supabaseAdmin
+      .from('PlatformReport')
+      .insert({
         ...data,
-      }
-    })
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
     revalidatePath('/dashboard/admin/reports')
 
     // Log Activity
@@ -30,7 +35,6 @@ export async function createReport(data: {
     });
 
     // Notify Admin (optional, but helpful for oversight)
-    // In a real app, you'd find an admin user ID to notify
     console.log(`[ADMIN NOTIFICATION] New report submitted: ${report.id}`)
 
     return { success: true, reportId: report.id }
@@ -42,16 +46,23 @@ export async function createReport(data: {
 
 export async function getReports() {
   try {
-    const reports = await (prisma as any).platformReport.findMany({
-      include: {
-        reporter: true,
-        target: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
-    return { success: true, data: reports }
+    const { data: reports, error } = await supabaseAdmin
+      .from('PlatformReport')
+      .select('*, reporter:User!PlatformReport_reporterId_fkey(*), target:User!PlatformReport_targetId_fkey(*)')
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
+
+    // Transform to match Prisma's output (single object for 1-to-1 relations if necessary)
+    // Supabase returns objects for single foreign keys by default if the relation is unique or 1-to-1,
+    // but here we used aliases.
+    const transformedTable = reports?.map(r => ({
+      ...r,
+      reporter: Array.isArray(r.reporter) ? r.reporter[0] : r.reporter,
+      target: Array.isArray(r.target) ? r.target[0] : r.target
+    }));
+
+    return { success: true, data: transformedTable }
   } catch (error: any) {
     return { success: false, error: error.message }
   }
@@ -61,10 +72,13 @@ import { ensureAdmin, logAdminAction } from './auth'
 export async function updateReportStatus(id: string, status: string, adminId: string = 'admin', adminNotes?: string) {
   try {
     await ensureAdmin(adminId)
-    await (prisma as any).platformReport.update({
-      where: { id },
-      data: { status, adminNotes }
-    })
+    const { error } = await supabaseAdmin
+      .from('PlatformReport')
+      .update({ status, adminNotes })
+      .eq('id', id);
+
+    if (error) throw error;
+
     revalidatePath('/dashboard/admin/reports')
     await logAdminAction(adminId, `Updated report ${id} status to ${status}`, { reportId: id, status });
     return { success: true }
@@ -76,20 +90,30 @@ export async function updateReportStatus(id: string, status: string, adminId: st
 export async function moderateUser(userId: string, action: 'WARN' | 'SUSPEND' | 'BAN', adminId: string = 'admin', reason?: string) {
   try {
     await ensureAdmin(adminId)
-    const data: any = {}
+    const updateData: any = {}
+    
     if (action === 'WARN') {
-      data.warningCount = { increment: 1 }
+      // Fetch current warning count
+      const { data: user } = await supabaseAdmin
+        .from('User')
+        .select('warningCount')
+        .eq('id', userId)
+        .single();
+      
+      updateData.warningCount = (user?.warningCount || 0) + 1;
     } else if (action === 'SUSPEND') {
-      data.isSuspended = true
-      data.suspensionReason = reason
+      updateData.isSuspended = true
+      updateData.suspensionReason = reason
     } else if (action === 'BAN') {
-      data.isBanned = true
+      updateData.isBanned = true
     }
 
-    await (prisma as any).user.update({
-      where: { id: userId },
-      data
-    })
+    const { error } = await supabaseAdmin
+      .from('User')
+      .update(updateData)
+      .eq('id', userId);
+
+    if (error) throw error;
     
     // Also revalidate relevant pages
     revalidatePath('/dashboard/admin/reports')
@@ -125,14 +149,17 @@ export async function moderateUser(userId: string, action: 'WARN' | 'SUSPEND' | 
 export async function liftSanctions(userId: string, adminId: string = 'admin') {
   try {
     await ensureAdmin(adminId)
-    await (prisma as any).user.update({
-      where: { id: userId },
-      data: {
+    const { error } = await supabaseAdmin
+      .from('User')
+      .update({
         isSuspended: false,
         isBanned: false,
         suspensionReason: null
-      }
-    })
+      })
+      .eq('id', userId);
+
+    if (error) throw error;
+
     revalidatePath('/dashboard/admin/reports')
     return { success: true }
   } catch (error: any) {
@@ -142,10 +169,14 @@ export async function liftSanctions(userId: string, adminId: string = 'admin') {
 
 export async function checkUserStatus(email: string) {
   try {
-    const user = await (prisma as any).user.findUnique({
-      where: { email },
-      select: { isBanned: true, isSuspended: true, suspensionReason: true }
-    });
+    const { data: user, error } = await supabaseAdmin
+      .from('User')
+      .select('isBanned, isSuspended, suspensionReason')
+      .eq('email', email)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+
     return { success: true, data: user };
   } catch (error: any) {
     return { success: false, error: error.message };

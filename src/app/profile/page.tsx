@@ -16,10 +16,14 @@ import {
   Clock,
   CheckCircle,
   X,
-  Plus
+  Plus,
+  Edit2,
+  Save,
+  Loader2
 } from 'lucide-react';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
+import { getUserProfile, updateUserProfile } from '@/app/actions/user';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -28,6 +32,19 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [portfolio, setPortfolio] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  
+  const [dbUser, setDbUser] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: '',
+    category: '',
+    bio: '',
+    location: '',
+    experienceYears: 0,
+    hourlyRate: 0
+  });
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -38,6 +55,21 @@ export default function ProfilePage() {
       }
       setUser(session.user);
       setRole(session.user.user_metadata?.role || 'CLIENT');
+      
+      const res = await getUserProfile(session.user.id);
+      if (res.success && res.data) {
+        setDbUser(res.data);
+        setEditForm({
+          name: res.data.name || session.user.user_metadata?.full_name || '',
+          phone: res.data.phone || '',
+          category: res.data.workerProfile?.category || '',
+          bio: res.data.workerProfile?.bio || '',
+          location: res.data.workerProfile?.location || '',
+          experienceYears: res.data.workerProfile?.experienceYears || 0,
+          hourlyRate: res.data.workerProfile?.hourlyRate || 0
+        });
+      }
+
       setLoading(false);
       
       // In a real app, fetch portfolio from Prisma or Supabase
@@ -48,6 +80,38 @@ export default function ProfilePage() {
     };
     fetchUser();
   }, [router]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setIsSaving(true);
+    
+    const res = await updateUserProfile(user.id, {
+      name: editForm.name,
+      phone: editForm.phone,
+      role: role || 'CLIENT',
+      ...(role === 'WORKER' ? {
+        workerData: {
+          category: editForm.category,
+          bio: editForm.bio,
+          location: editForm.location,
+          experienceYears: Number(editForm.experienceYears),
+          hourlyRate: Number(editForm.hourlyRate)
+        }
+      } : {})
+    });
+    
+    if (res.success) {
+      setIsEditing(false);
+      const fetchRes = await getUserProfile(user.id);
+      if (fetchRes.success && fetchRes.data) setDbUser(fetchRes.data);
+      // Update local storage display name if possible
+      setUser({ ...user, user_metadata: { ...user.user_metadata, full_name: editForm.name } });
+    } else {
+      alert('Failed to update profile: ' + res.error);
+    }
+    setIsSaving(false);
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -84,8 +148,11 @@ export default function ProfilePage() {
         
         {/* Profile Header Card */}
         <div className="bg-white rounded-[2rem] shadow-2xl shadow-gray-200/50 border border-gray-100 overflow-hidden mb-8">
-          <div className="h-32 bg-gradient-to-r from-primary to-primary-light relative">
-             <button onClick={handleSignOut} className="absolute top-6 right-6 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all">
+          <div className="h-32 bg-gradient-to-r from-primary to-primary-light relative flex justify-end p-6 gap-2">
+             <button onClick={() => setIsEditing(true)} className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all h-fit">
+                <Edit2 size={14} /> Edit Profile
+             </button>
+             <button onClick={handleSignOut} className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all h-fit">
                 <LogOut size={14} /> Sign Out
              </button>
           </div>
@@ -108,7 +175,7 @@ export default function ProfilePage() {
             
             <div className="flex-grow text-center sm:text-left pt-14 sm:pt-12">
                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
-                 <h1 className="text-3xl font-black text-gray-900">{user.user_metadata?.full_name}</h1>
+                 <h1 className="text-3xl font-black text-gray-900">{dbUser?.name || user.user_metadata?.full_name}</h1>
                  {role === 'WORKER' && (
                    <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-green-100">
                      <ShieldCheck size={14} className="fill-green-50" /> Verified Worker
@@ -229,6 +296,108 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+              <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                <Edit2 className="text-primary" size={24} /> Edit Profile
+              </h2>
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto w-full no-scrollbar">
+              <form id="editProfileForm" onSubmit={handleSaveProfile} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Full Name</label>
+                  <input 
+                    type="text" required
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                    value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Phone</label>
+                  <input 
+                    type="tel"
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                    value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                  />
+                </div>
+
+                {role === 'WORKER' && (
+                  <>
+                    <hr className="my-6 border-gray-100 border-dashed" />
+                    <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-4">Professional Details</h3>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Professional Category</label>
+                      <input 
+                        type="text" required
+                        className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                        value={editForm.category} onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                        placeholder="e.g. Electrician, Plumber"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Experience (Years)</label>
+                        <input 
+                          type="number" min="0" required
+                          className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                          value={editForm.experienceYears} onChange={(e) => setEditForm({...editForm, experienceYears: Number(e.target.value)})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Hourly Rate (GHS)</label>
+                        <input 
+                          type="number" min="0"
+                          className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                          value={editForm.hourlyRate} onChange={(e) => setEditForm({...editForm, hourlyRate: Number(e.target.value)})}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Location / Area</label>
+                      <input 
+                        type="text" required
+                        className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                        value={editForm.location} onChange={(e) => setEditForm({...editForm, location: e.target.value})}
+                        placeholder="e.g. East Legon, Accra"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Bio / About Me</label>
+                      <textarea 
+                        rows={3}
+                        className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none resize-none"
+                        value={editForm.bio} onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
+                        placeholder="Summary of your expertise..."
+                      />
+                    </div>
+                  </>
+                )}
+              </form>
+            </div>
+            <div className="p-6 border-t border-gray-100 bg-gray-50 sticky bottom-0">
+               <button 
+                 type="submit" form="editProfileForm"
+                 disabled={isSaving}
+                 className="w-full py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-primary-light active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+               >
+                 {isSaving ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> Save Changes</>}
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

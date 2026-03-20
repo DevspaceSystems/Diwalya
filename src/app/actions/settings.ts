@@ -1,22 +1,33 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { ensureAdmin, logAdminAction } from './auth'
 
 export async function getSettings() {
   try {
-    let settings = await prisma.systemSettings.findUnique({
-      where: { id: 'default' }
-    })
+    let { data: settings, error: fetchError } = await supabaseAdmin
+      .from('SystemSettings')
+      .select('*')
+      .eq('id', 'default')
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      throw fetchError;
+    }
 
     if (!settings) {
-      settings = await prisma.systemSettings.create({
-        data: {
+      const { data: newSettings, error: createError } = await supabaseAdmin
+        .from('SystemSettings')
+        .insert({
           id: 'default',
           inspectionFee: 100.0,
           inspectionWorkerShare: 60.0
-        }
-      })
+        })
+        .select()
+        .single();
+      
+      if (createError) throw createError;
+      settings = newSettings;
     }
 
     return { success: true, data: settings }
@@ -36,10 +47,14 @@ export async function updateSettings(
   try {
     await ensureAdmin(adminId)
 
-    const updated = await prisma.systemSettings.update({
-      where: { id: 'default' },
-      data
-    })
+    const { data: updated, error } = await supabaseAdmin
+      .from('SystemSettings')
+      .update(data)
+      .eq('id', 'default')
+      .select()
+      .single();
+
+    if (error) throw error;
 
     await logAdminAction(adminId, 'Updated system settings', data)
 

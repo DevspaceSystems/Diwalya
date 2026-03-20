@@ -1,19 +1,22 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendNotification } from '@/lib/notifications'
 import { ensureAdmin, logAdminAction } from './auth'
 import { formatGHS } from '@/lib/utils'
 
 export async function getWithdrawalRequests() {
   try {
-    const requests = await prisma.withdrawalRequest.findMany({
-      include: { user: true },
-      orderBy: { createdAt: 'desc' }
-    })
-    return { success: true, requests }
+    const { data, error } = await supabaseAdmin
+      .from('WithdrawalRequest')
+      .select('*, user:User(*)')
+      .order('createdAt', { ascending: false })
+
+    if (error) throw error;
+    
+    return { success: true, requests: data }
   } catch (error: any) {
+    console.error('Get Withdrawals Error:', error);
     return { success: false, error: error.message }
   }
 }
@@ -21,94 +24,169 @@ export async function getWithdrawalRequests() {
 export async function updateWithdrawalStatus(requestId: string, status: 'APPROVED' | 'REJECTED' | 'PROCESSED', adminId: string, adminNotes?: string) {
   try {
     await ensureAdmin(adminId)
-    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const request = await tx.withdrawalRequest.update({
-        where: { id: requestId },
-        data: { 
-          status, 
-          adminNotes,
-          processedAt: status === 'PROCESSED' || status === 'APPROVED' ? new Date() : null
-        }
+    
+    // 1. Get the request first
+    const { data: request, error: fetchReqError } = await supabaseAdmin
+      .from('WithdrawalRequest')
+      .select('*')
+      .eq('id', requestId)
+      .single();
+
+    if (fetchReqError) throw fetchReqError;
+
+    // 2. Update the status
+    const { error: updateError } = await supabaseAdmin
+      .from('WithdrawalRequest')
+      .update({ 
+        status, 
+        adminNotes,
+        processedAt: status === 'PROCESSED' || status === 'APPROVED' ? new Date().toISOString() : null
       })
+      .eq('id', requestId);
 
-      // If REJECTED, refund the worker's wallet
-      if (status === 'REJECTED') {
-        const wallet = await tx.wallet.findUnique({ where: { userId: request.userId } })
-        if (wallet) {
-          await tx.wallet.update({
-            where: { id: wallet.id },
-            data: { balance: { increment: request.amount } }
-          })
+    if (updateError) throw updateError;
 
-          await tx.transaction.create({
-            data: {
-              walletId: wallet.id,
-              amount: request.amount,
-              type: 'CREDIT',
-              purpose: 'REFUND',
-              reference: request.id,
-              status: 'SUCCESS',
-              metadata: 'Withdrawal Rejected'
-            }
-          })
-        }
+    // 3. If REJECTED, refund the worker's wallet
+    if (status === 'REJECTED') {
+      const { data: wallet, error: walletError } = await supabaseAdmin
+        .from('Wallet')
+        .select('*')
+        .eq('userId', request.userId)
+        .single();
+
+      if (walletError && walletError.code !== 'PGRST116') throw walletError; // PGRST116 is no rows found
+
+      if (wallet) {
+        const newBalance = wallet.balance + request.amount;
+        
+        // Update Wallet Balance
+        const { error: walletUpdateErr } = await supabaseAdmin
+          .from('Wallet')
+          .update({ balance: newBalance })
+          .eq('id', wallet.id);
+        
+        if (walletUpdateErr) throw walletUpdateErr;
+
+        // Create Transaction Record
+        const { error: txnError } = await supabaseAdmin
+          .from('Transaction')
+          .insert({
+            id: `TXN-REF-${Date.now()}`, // Simple ID generation for now
+            walletId: wallet.id,
+            amount: request.amount,
+            type: 'CREDIT',
+            purpose: 'REFUND',
+            reference: request.id,
+            status: 'SUCCESS',
+            metadata: 'Withdrawal Rejected'
+          });
+          
+        if (txnError) throw txnError;
       }
-
-      return request
-    })
-
-    // Notify Worker
-    const request = await prisma.withdrawalRequest.findUnique({ where: { id: requestId } })
-    if (request) {
-        await sendNotification({
-            userId: request.userId,
-            title: `Withdrawal ${status.toLowerCase()}`,
-            body: `Your withdrawal request for ${formatGHS(request.amount)} has been ${status.toLowerCase()}. ${adminNotes ? `Note: ${adminNotes}` : ''}`
-        })
     }
 
+    // 4. Notify Worker
+    await sendNotification({
+        userId: request.userId,
+        title: `Withdrawal ${status.toLowerCase()}`,
+        body: `Your withdrawal request for ${formatGHS(request.amount)} has been ${status.toLowerCase()}. ${adminNotes ? `Note: ${adminNotes}` : ''}`
+    });
+
     await logAdminAction(adminId, `Updated withdrawal ${requestId} status to ${status}`, { requestId, status });
-    return { success: true, data: result }
+    return { success: true }
   } catch (error: any) {
+    console.error('Update Withdrawal Status Error:', error);
     return { success: false, error: error.message }
   }
 }
 
 export async function getPlatformStats() {
   try {
-    // 1. Calculate Total Commission (Sum of all PLATFORM_FEE transactions)
-    const commissionStats = await prisma.transaction.aggregate({
-      where: { purpose: 'PLATFORM_FEE', status: 'SUCCESS' },
-      _sum: { amount: true }
-    })
+    // 1. Commission (PLATFORM_FEE)
+    const { data: commissionData, error: commissionError } = await supabaseAdmin
+      .from('Transaction')
+      .select('amount')
+      .eq('purpose', 'PLATFORM_FEE')
+      .eq('status', 'SUCCESS');
 
-    // 2. Calculate Total Processing Revenue (Sum of all successful payments)
-    const totalRevenue = await prisma.payment.aggregate({
-      where: { status: 'SUCCESS' },
-      _sum: { amount: true }
-    })
+    if (commissionError) throw commissionError;
+    const commission = commissionData.reduce((sum, item) => sum + item.amount, 0);
 
-    // 3. Count Active Bookings
-    const activeBookingsCount = await prisma.job.count({
-      where: { status: { in: ['ACCEPTED', 'IN_PROGRESS', 'PENDING'] } }
-    })
+    // 2. Revenue (Successful Payments)
+    const { data: revenueData, error: revenueError } = await supabaseAdmin
+      .from('Payment')
+      .select('amount')
+      .eq('status', 'SUCCESS');
 
-    // 4. Count Total Workers
-    const totalWorkers = await prisma.user.count({
-      where: { role: 'WORKER' }
-    })
+    if (revenueError) throw revenueError;
+    const totalRevenue = revenueData.reduce((sum, item) => sum + item.amount, 0);
+
+    // 3. Active Bookings
+    const { count: activeBookings, error: bookingsError } = await supabaseAdmin
+      .from('Job')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['ACCEPTED', 'IN_PROGRESS', 'PENDING']);
+
+    if (bookingsError) throw bookingsError;
+
+    // 4. Total Workers
+    const { count: totalWorkers, error: workersError } = await supabaseAdmin
+      .from('User')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'WORKER');
+
+    if (workersError) throw workersError;
 
     return {
       success: true,
       stats: {
-        commission: commissionStats._sum.amount || 0,
-        totalRevenue: totalRevenue._sum.amount || 0,
-        activeBookings: activeBookingsCount,
-        totalWorkers: totalWorkers
+        commission,
+        totalRevenue: totalRevenue,
+        activeBookings: activeBookings || 0,
+        totalWorkers: totalWorkers || 0
       }
     }
   } catch (error: any) {
     console.error('Get Platform Stats Error:', error)
     return { success: false, error: error.message }
+  }
+}
+
+export async function getAdminByEmail(email: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('User')
+      .select('id, name, role')
+      .eq('email', email)
+      .single();
+
+    if (error) throw error;
+    return { success: true, user: data }
+  } catch (error: any) {
+    console.error('Get Admin By Email Error:', error);
+    return { success: false, error: error.message }
+  }
+}
+
+export async function generateSystemReport() {
+  try {
+    const stats = await getPlatformStats();
+    if (!stats.success) throw new Error(stats.error);
+
+    // In a real app, this would generate a PDF/CSV
+    // For now, we return the summary data
+    await logAdminAction('admin', 'Generated system report');
+    
+    return { 
+      success: true, 
+      data: {
+        ...stats.stats,
+        generatedAt: new Date().toISOString(),
+        reportId: `REP-${Date.now()}`
+      } 
+    };
+  } catch (error: any) {
+    console.error('Generate Report Error:', error);
+    return { success: false, error: error.message };
   }
 }

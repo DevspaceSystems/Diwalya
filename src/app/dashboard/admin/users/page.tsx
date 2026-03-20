@@ -14,20 +14,25 @@ import {
   Edit2,
   Phone,
   Calendar,
-  Wallet as WalletIcon
+  Wallet as WalletIcon,
+  Eye,
+  X,
+  Copy,
+  Check
 } from 'lucide-react';
 import { getUsers, updateUser } from '@/app/actions/user';
 import { moderateUser, liftSanctions } from '@/app/actions/report';
-import AdminMessenger from '@/components/Admin/AdminMessenger';
+import AdminMessenger from '@/components/admin/AdminMessenger';
 import { cn } from '@/lib/utils';
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('CLIENT');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showMessenger, setShowMessenger] = useState(false);
+  const [viewingUser, setViewingUser] = useState<any>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -59,7 +64,7 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex justify-between items-end">
           <div>
@@ -77,16 +82,21 @@ export default function UserManagementPage() {
                  className="pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all w-80 font-bold text-sm"
                />
              </div>
-             <select 
-               value={roleFilter}
-               onChange={(e) => setRoleFilter(e.target.value)}
-               className="px-6 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all font-bold text-sm appearance-none cursor-pointer"
-             >
-               <option value="">All Roles</option>
-               <option value="CLIENT">Clients</option>
-               <option value="WORKER">Workers</option>
-               <option value="ADMIN">Admins</option>
-             </select>
+             
+             <div className="flex bg-slate-100 p-1 rounded-2xl">
+               {['CLIENT', 'WORKER', 'ADMIN'].map((role) => (
+                 <button
+                   key={role}
+                   onClick={() => setRoleFilter(role)}
+                   className={cn(
+                     "px-6 py-2 rounded-xl text-xs font-black transition-all",
+                     roleFilter === role ? "bg-white text-primary shadow-sm" : "text-slate-400 hover:text-slate-600"
+                   )}
+                 >
+                   {role === 'CLIENT' ? 'Clients' : role === 'WORKER' ? 'Workers' : 'Admins'}
+                 </button>
+               ))}
+             </div>
           </div>
         </div>
 
@@ -145,6 +155,13 @@ export default function UserManagementPage() {
                   <td className="px-8 py-5 text-right">
                     <div className="flex justify-end gap-2">
                       <button 
+                        onClick={() => setViewingUser(user)}
+                        className="p-2 hover:bg-slate-100 text-slate-600 rounded-lg transition-all"
+                        title="View Full Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button 
                         onClick={() => { setSelectedUser(user); setShowMessenger(true); }}
                         className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-all"
                         title="Message"
@@ -185,6 +202,139 @@ export default function UserManagementPage() {
           targetUserName={selectedUser.name} 
         />
       )}
+
+      {/* View Details Modal */}
+      {viewingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+             <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+               <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                 User Details
+               </h2>
+               <button 
+                 onClick={() => setViewingUser(null)}
+                 className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+               >
+                 <X size={20} />
+               </button>
+             </div>
+             
+              <div className="p-8 overflow-y-auto w-full space-y-8">
+                <div className="flex-grow text-center sm:text-left pt-14 sm:pt-12">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
+                    <h3 className="text-3xl font-black text-gray-900">{viewingUser.name}</h3>
+                    <span className={cn(
+                      "px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border",
+                      viewingUser.role === 'WORKER' ? "bg-indigo-50 text-indigo-600 border-indigo-100" : "bg-blue-50 text-blue-600 border-blue-100"
+                    )}>
+                      {viewingUser.role}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-gray-500 font-bold text-sm">
+                    <span className="flex items-center gap-1.5"><Mail size={16} className="text-gray-400" /> {viewingUser.email}</span>
+                    <span className="flex items-center gap-1.5"><Phone size={16} className="text-gray-400" /> {viewingUser.phone || 'No Phone'}</span>
+                  </div>
+                  <div className="mt-4 p-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between w-full sm:w-fit gap-4">
+                     <code className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID: {viewingUser.id}</code>
+                     <button 
+                       onClick={() => {
+                         navigator.clipboard.writeText(viewingUser.id);
+                         alert('User ID copied to clipboard');
+                       }}
+                       className="p-1.5 hover:bg-white rounded-lg text-slate-400 hover:text-primary transition-all shadow-sm"
+                       title="Copy ID"
+                     >
+                       <Copy size={12} />
+                     </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Status</p>
+                    <p className={cn(
+                      "text-sm font-bold",
+                      viewingUser.isBanned ? "text-red-600" : viewingUser.isSuspended ? "text-orange-600" : "text-emerald-600"
+                    )}>
+                      {viewingUser.isBanned ? 'BANNED' : viewingUser.isSuspended ? 'SUSPENDED' : 'ACTIVE'}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Joined Date</p>
+                    <p className="text-sm font-bold text-gray-900">{new Date(viewingUser.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Warnings</p>
+                    <p className="text-sm font-bold text-gray-900">{viewingUser.warningCount || 0}</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Wallet Bal</p>
+                    <p className="text-sm font-bold text-gray-900">GHS {viewingUser.wallet?.balance?.toFixed(2) || '0.00'}</p>
+                  </div>
+                </div>
+
+                {viewingUser.workerProfile && (
+                  <div className="animate-in slide-in-from-bottom-4">
+                    <h4 className="text-sm font-black text-primary uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Professional Worker Profile</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div>
+                         <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Business Name</p>
+                         <p className="text-sm font-bold text-gray-900">{viewingUser.workerProfile.businessName || 'N/A'}</p>
+                      </div>
+                      <div>
+                         <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Category</p>
+                         <p className="text-sm font-bold text-gray-900">{viewingUser.workerProfile.category}</p>
+                      </div>
+                      <div>
+                         <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Location</p>
+                         <p className="text-sm font-bold text-gray-900">{viewingUser.workerProfile.location}</p>
+                      </div>
+                      <div>
+                         <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Verification Status</p>
+                         <div className="flex items-center gap-2">
+                           <span className={cn(
+                             "text-xs font-black uppercase",
+                             viewingUser.workerProfile.verificationStatus === 'APPROVED' ? "text-emerald-600" :
+                             viewingUser.workerProfile.verificationStatus === 'REJECTED' ? "text-red-600" : "text-orange-600"
+                           )}>
+                             {viewingUser.workerProfile.verificationStatus}
+                           </span>
+                           {viewingUser.workerProfile.isVerified && <ShieldCheck size={14} className="text-emerald-500" />}
+                         </div>
+                      </div>
+                      <div>
+                         <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Experience (Years)</p>
+                         <p className="text-sm font-bold text-gray-900">{viewingUser.workerProfile.experienceYears} Years</p>
+                      </div>
+                      <div>
+                         <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Hourly Rate</p>
+                         <p className="text-sm font-bold text-gray-900">{viewingUser.workerProfile.hourlyRate ? `GHS ${viewingUser.workerProfile.hourlyRate}` : 'N/A'}</p>
+                      </div>
+                      <div className="col-span-full">
+                         <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Ghana Card (ID)</p>
+                         {viewingUser.workerProfile.ghanaCardUrl ? (
+                           <a href={viewingUser.workerProfile.ghanaCardUrl} target="_blank" className="mt-2 block w-full sm:w-1/2 aspect-video bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 group relative">
+                              <img src={viewingUser.workerProfile.ghanaCardUrl} className="w-full h-full object-cover group-hover:scale-105 transition-all" />
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                <span className="text-white text-[10px] font-black uppercase tracking-widest bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm">Click to View Full</span>
+                              </div>
+                           </a>
+                         ) : (
+                           <p className="text-sm font-bold text-red-500 italic">No Ghana Card uploaded</p>
+                         )}
+                      </div>
+                      <div className="col-span-full">
+                         <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Bio / About</p>
+                         <p className="text-sm text-gray-600 bg-gray-50 p-4 rounded-2xl leading-relaxed whitespace-pre-wrap">{viewingUser.workerProfile.bio || 'No bio provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
+
