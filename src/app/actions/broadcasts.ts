@@ -138,7 +138,8 @@ export async function sendWelcomeNotification(userId: string, name: string, emai
     // 2. Send welcome email via Hostinger SMTP
     const template = EMAIL_TEMPLATES.find(t => t.id === 'WELCOME');
     if (template && email) {
-      await sendEmail({
+      // Fire and forget email to avoid blocking the signup request
+      sendEmail({
         to: email,
         subject: template.subject,
         body: template.body(name),
@@ -169,7 +170,7 @@ export async function sendWelcomeNotification(userId: string, name: string, emai
             </p>
           </div>
         `
-      });
+      }).catch(err => console.error('[SIGNUP EMAIL ERROR]', err));
     }
 
     return { success: true };

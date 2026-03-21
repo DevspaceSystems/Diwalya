@@ -198,7 +198,7 @@ export default function Navbar() {
                             className="w-full h-full" 
                           />
                         ) : (
-                          <span className="text-lg">{dbUser?.name?.charAt(0) || user.user_metadata?.full_name?.charAt(0) || <User size={20} />}</span>
+                          <User size={20} className="text-primary/60" />
                         )}
                       </div>
                       <ChevronDown size={16} className={cn("text-gray-400 transition-transform duration-200", isProfileOpen && "rotate-180")} />

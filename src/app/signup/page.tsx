@@ -49,6 +49,21 @@ export default function SignupPage() {
 
       if (signupError) throw signupError;
 
+      // Manually ensure user exists in public.User table (in case trigger fails)
+      if (data?.user) {
+        const { error: dbError } = await supabase.from('User').upsert({
+          id: data.user.id,
+          email: email,
+          name: name,
+          role: role,
+        }, { onConflict: 'id' });
+        
+        if (dbError) {
+          console.error('[SIGNUP DB ERROR]', dbError);
+          // Don't throw here, just log, as Auth succeeded.
+        }
+      }
+
       // Send welcome email + in-app notification
       if (data?.user) {
         sendWelcomeNotification(data.user.id, name, email, role).catch(console.error);

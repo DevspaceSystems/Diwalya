@@ -164,8 +164,8 @@ export default function ProfilePage() {
                   {(dbUser?.profilePicture || user.user_metadata?.profilePicture) ? (
                     <Image src={dbUser?.profilePicture || user.user_metadata.profilePicture} alt="Profile" fill className="object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-primary text-4xl font-black">
-                      {(dbUser?.name || user.user_metadata?.full_name)?.charAt(0)}
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <User size={48} strokeWidth={1.5} />
                     </div>
                   )}
                   <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all cursor-pointer">

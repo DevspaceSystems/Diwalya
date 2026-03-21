@@ -166,6 +166,43 @@ export async function updateUserProfile(userId: string, data: {
   }
 }
 
+export async function deleteUser(userId: string) {
+  try {
+    console.log(`[deleteUser] Starting full deletion for user: ${userId}`);
+    
+    // 1. Delete from related logic tables first (manual cascade if DB doesn't have it)
+    await Promise.all([
+      supabaseAdmin.from('WorkerProfile').delete().eq('userId', userId),
+      supabaseAdmin.from('Wallet').delete().eq('userId', userId),
+      supabaseAdmin.from('Notification').delete().eq('userId', userId),
+      supabaseAdmin.from('Booking').delete().eq('clientId', userId),
+      supabaseAdmin.from('Booking').delete().eq('workerId', userId),
+      supabaseAdmin.from('Payout').delete().eq('userId', userId),
+      supabaseAdmin.from('PlatformReport').delete().eq('targetUserId', userId),
+      supabaseAdmin.from('PlatformReport').delete().eq('reporterId', userId),
+    ]);
+
+    // 2. Delete from User table
+    const { error: dbError } = await supabaseAdmin
+      .from('User')
+      .delete()
+      .eq('id', userId);
+    
+    if (dbError) throw dbError;
+
+    // 3. Delete from Supabase Auth
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (authError) throw authError;
+
+    console.log(`[deleteUser] Full deletion successful for ${userId}`);
+    revalidatePath('/dashboard/admin/users');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[deleteUser] Fatal Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function getUserProfile(userId: string) {
   try {
     const { data: user, error: userError } = await supabaseAdmin

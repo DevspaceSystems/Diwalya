@@ -20,16 +20,17 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import { getUsers, updateUser } from '@/app/actions/user';
+import { getUsers, updateUser, deleteUser } from '@/app/actions/user';
 import { moderateUser, liftSanctions } from '@/app/actions/report';
 import AdminMessenger from '@/components/admin/AdminMessenger';
 import { cn } from '@/lib/utils';
+import { Trash2 } from 'lucide-react';
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('CLIENT');
+  const [roleFilter, setRoleFilter] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showMessenger, setShowMessenger] = useState(false);
   const [viewingUser, setViewingUser] = useState<any>(null);
@@ -49,7 +50,9 @@ export default function UserManagementPage() {
     if (!confirm(`Are you sure you want to ${action} this user?`)) return;
     
     let res;
-    if (action === 'LIFT') {
+    if (action === 'DELETE') {
+      res = await deleteUser(userId);
+    } else if (action === 'LIFT') {
       res = await liftSanctions(userId);
     } else {
       res = await (moderateUser as any)(userId, action as any, `Admin manual action: ${action}`);
@@ -185,6 +188,13 @@ export default function UserManagementPage() {
                         disabled={user.isBanned}
                       >
                         <Ban size={18} />
+                      </button>
+                      <button 
+                        onClick={() => handleAction(user.id, 'DELETE')}
+                        className="p-2 hover:bg-red-600 hover:text-white text-red-600 rounded-lg transition-all"
+                        title="Delete User COMPLETELY"
+                      >
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>
