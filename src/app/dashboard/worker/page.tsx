@@ -224,7 +224,7 @@ export default function WorkerDashboard() {
               </Link>
            </div>
 
-           <div className="bg-slate-900 p-8 rounded-3xl text-white">
+           <div className="bg-primary p-8 rounded-3xl text-white shadow-xl shadow-blue-900/20">
               <h3 className="font-black text-lg mb-4">Improve Ranking</h3>
               {workerProfile?.verificationStatus === 'APPROVED' ? (
                 <div className="space-y-4">
@@ -251,9 +251,9 @@ export default function WorkerDashboard() {
                   <p className="text-slate-400 text-sm mb-6 leading-relaxed">
                     Complete your profile verification by requesting an ID check to unlock the <span className="text-blue-400 font-bold">Verified Badge</span> and get 3x more bookings.
                   </p>
-                  <Link 
+                   <Link 
                     href="/dashboard/worker/verification"
-                    className="w-full flex items-center justify-between bg-white/10 p-4 rounded-2xl hover:bg-white/20 transition-all group"
+                    className="w-full flex items-center justify-between bg-white text-primary p-4 rounded-2xl hover:bg-white/90 transition-all group font-black shadow-lg"
                   >
                      <span className="font-bold text-sm">Request Identity Check</span>
                      <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />

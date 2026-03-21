@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import SupabaseImage from './ui/SupabaseImage';
 
 import NotificationBox from './NotificationBox';
 
@@ -191,12 +192,10 @@ export default function Navbar() {
                       </div>
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden border-2 border-transparent hover:border-primary/20 transition-all">
                         {(dbUser?.profilePicture || user.user_metadata?.profilePicture) ? (
-                          <Image 
+                          <SupabaseImage 
                             src={dbUser?.profilePicture || user.user_metadata.profilePicture} 
                             alt="Profile" 
-                            width={40} 
-                            height={40} 
-                            className="object-cover w-full h-full" 
+                            className="w-full h-full" 
                           />
                         ) : (
                           <span className="text-lg">{dbUser?.name?.charAt(0) || user.user_metadata?.full_name?.charAt(0) || <User size={20} />}</span>

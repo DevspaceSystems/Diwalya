@@ -25,6 +25,17 @@ export default function SignupPage() {
     setError('');
 
     try {
+      // Check if user already exists with a different role
+      const { data: existingUser } = await supabase
+        .from('User')
+        .select('role')
+        .eq('email', email)
+        .single();
+      
+      if (existingUser && existingUser.role !== role) {
+        throw new Error(`This email is already registered as a ${existingUser.role === 'WORKER' ? 'Worker' : 'Client'}. Please log in as a ${existingUser.role === 'WORKER' ? 'Worker' : 'Hire Talent'} instead.`);
+      }
+
       const { data, error: signupError } = await supabase.auth.signUp({
         email,
         password,

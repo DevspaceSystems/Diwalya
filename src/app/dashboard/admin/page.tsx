@@ -58,7 +58,7 @@ export default function AdminDashboard() {
     { label: 'Platform Earnings', value: formatGHS(platformStats.commission), change: 'Real-time', icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/5' },
   ];
   return (
-    <div className="p-4 md:p-10 w-full overflow-x-hidden">
+    <div className="p-6 md:p-10 w-full overflow-x-hidden min-h-screen bg-gray-50/50">
       <div className="mb-10 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tighter">Admin Dashboard Overview</h1>

@@ -83,7 +83,8 @@ export default function WorkerSettingsPage() {
       const path = `profiles/${user.id}/avatar.${ext}`;
       await supabase.storage.from('diwalya-media').upload(path, uploadFile, { upsert: true });
       const { data } = supabase.storage.from('diwalya-media').getPublicUrl(path);
-      setProfilePicture(data.publicUrl);
+      const urlWithCacheBust = `${data.publicUrl}?t=${Date.now()}`;
+      setProfilePicture(urlWithCacheBust);
       await saveUserProfilePicture(user.id, data.publicUrl);
     } catch (err: any) {
       alert(err.message || 'Failed to upload profile picture');
@@ -139,7 +140,18 @@ export default function WorkerSettingsPage() {
             <div className="relative">
               <div className="w-24 h-24 rounded-[1.5rem] bg-slate-100 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                 {profilePicture ? (
-                  <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                  <img 
+                    src={profilePicture} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover" 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const parent = (e.target as HTMLImageElement).parentElement;
+                      if (parent) {
+                        parent.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                      }
+                    }}
+                  />
                 ) : (
                   <User size={36} className="text-slate-300" />
                 )}

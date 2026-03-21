@@ -9,9 +9,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="hidden lg:block">
         <AdminSidebar />
       </div>
-      <div className="flex-grow lg:ml-64 flex flex-col min-h-screen">
+      <div className="flex-grow lg:ml-64 flex flex-col min-h-screen w-full">
         <AdminHeader />
-        <main className="flex-grow max-w-[100vw] overflow-x-hidden">
+        <main className="flex-grow">
           {children}
         </main>
       </div>

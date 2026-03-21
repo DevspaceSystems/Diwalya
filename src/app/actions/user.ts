@@ -7,7 +7,7 @@ export async function getUsers(query?: string, role?: string) {
   try {
     let queryBuilder = supabaseAdmin
       .from('User')
-      .select('*, workerProfile(*), wallet(*)')
+      .select('*')
       .order('createdAt', { ascending: false });
 
     if (query) {
@@ -18,43 +18,56 @@ export async function getUsers(query?: string, role?: string) {
       queryBuilder = queryBuilder.eq('role', role);
     }
 
-    const { data: users, error } = await queryBuilder;
-    if (error) throw error;
+    const { data: users, error: userError } = await queryBuilder;
+    if (userError) throw userError;
     
-    const transformedUsers = users?.map(u => ({
-      ...u,
-      workerProfile: Array.isArray(u.workerProfile) ? u.workerProfile[0] : u.workerProfile,
-      wallet: Array.isArray(u.wallet) ? u.wallet[0] : u.wallet
-    }));
+    // Fetch profiles and wallets separately to avoid schema cache relationship errors
+    const { data: profiles } = await supabaseAdmin.from('WorkerProfile').select('*');
+    const { data: wallets } = await supabaseAdmin.from('Wallet').select('*');
+
+    const transformedUsers = users?.map(u => {
+      const profile = profiles?.find(p => p.userId === u.id);
+      const wallet = wallets?.find(w => w.userId === u.id);
+      return {
+        ...u,
+        workerProfile: profile || null,
+        wallet: wallet || null
+      };
+    });
 
     return { success: true, data: transformedUsers };
   } catch (error: any) {
+    console.error('[getUsers] Error:', error);
     return { success: false, error: error.message };
   }
 }
 
 export async function getWorkers() {
   try {
-    console.log('[getWorkers] Querying Users with role WORKER...');
-    const { data: workers, error } = await supabaseAdmin
+    console.log('[getWorkers] Fetching users with role WORKER...');
+    const { data: users, error: userError } = await supabaseAdmin
       .from('User')
-      .select('*, workerProfile(*)')
+      .select('*')
       .eq('role', 'WORKER')
       .order('name', { ascending: true });
 
-    if (error) {
-       console.error('[getWorkers] Supabase Error:', error);
-       throw error;
-    }
+    if (userError) throw userError;
 
-    console.log(`[getWorkers] Retrieved ${workers?.length || 0} users with role WORKER.`);
+    console.log(`[getWorkers] Found ${users?.length || 0} users. Fetching profiles...`);
+    
+    // Manual join for robustness
+    const { data: profiles, error: profileError } = await supabaseAdmin
+      .from('WorkerProfile')
+      .select('*');
 
-    const transformedWorkers = workers?.map(u => ({
+    if (profileError) console.error('[getWorkers] Profile fetch error:', profileError);
+
+    const transformedWorkers = users?.map(u => ({
       ...u,
-      workerProfile: Array.isArray(u.workerProfile) ? u.workerProfile[0] : u.workerProfile
+      workerProfile: profiles?.find(p => p.userId === u.id) || null
     })) || [];
 
-    console.log(`[getWorkers] Successfully transformed ${transformedWorkers.length} workers.`);
+    console.log(`[getWorkers] Successfully joined ${transformedWorkers.length} workers.`);
     return { success: true, data: transformedWorkers };
   } catch (error: any) {
     console.error('[getWorkers] Fatal Error:', error);
@@ -120,7 +133,7 @@ export async function updateUserProfile(userId: string, data: {
         .from('WorkerProfile')
         .select('id')
         .eq('userId', userId)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         const { error: updateError } = await supabaseAdmin
@@ -155,17 +168,24 @@ export async function updateUserProfile(userId: string, data: {
 
 export async function getUserProfile(userId: string) {
   try {
-    const { data: user, error } = await supabaseAdmin
+    const { data: user, error: userError } = await supabaseAdmin
       .from('User')
-      .select('*, workerProfile(*)')
+      .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
-    if (error) throw error;
+    if (userError) throw userError;
+    if (!user) return { success: false, error: 'User not found' };
     
+    const { data: profile } = await supabaseAdmin
+      .from('WorkerProfile')
+      .select('*')
+      .eq('userId', userId)
+      .maybeSingle();
+
     const transformedUser = {
       ...user,
-      workerProfile: Array.isArray(user.workerProfile) ? user.workerProfile[0] : user.workerProfile
+      workerProfile: profile || null
     };
 
     return { success: true, data: transformedUser };

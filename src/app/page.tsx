@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import SupabaseImage from '@/components/ui/SupabaseImage';
 import { Search, Star, ShieldCheck, MapPin, Wrench, Zap, Briefcase, Camera, Car, Calendar, Menu, ArrowRight } from 'lucide-react';
 import { formatGHS } from '@/lib/utils';
 import { getWorkers } from './actions/user';
@@ -182,14 +183,20 @@ export default function Home() {
                     <div className="relative h-48 bg-gray-200 overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
                       <div className="w-full h-full bg-slate-100 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                        {worker.profilePicture && (
-                          <img src={worker.profilePicture} alt={name} className="w-full h-full object-cover" />
-                        )}
+                        <SupabaseImage 
+                          src={worker.profilePicture} 
+                          alt={name} 
+                          className="w-full h-full" 
+                        />
                       </div>
                       <div className="absolute bottom-4 left-4 z-20 flex items-center gap-3">
                         <div className="w-16 h-16 rounded-full border-2 border-white bg-white overflow-hidden shadow-lg">
                           {worker.profilePicture ? (
-                            <img src={worker.profilePicture} alt={name} className="w-full h-full object-cover" />
+                            <SupabaseImage 
+                              src={worker.profilePicture} 
+                              alt={name} 
+                              className="w-full h-full" 
+                            />
                           ) : (
                             <div className="w-full h-full bg-blue-100 flex items-center justify-center text-primary font-bold text-xl">{name.charAt(0)}</div>
                           )}
@@ -207,10 +214,9 @@ export default function Home() {
                         <div>
                           <p className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">{category}</p>
                         </div>
-                        <p className="font-bold text-gray-900">{formatGHS(price)} <span className="text-sm font-normal text-gray-500">/ job avg</span></p>
                       </div>
                       <p className="text-gray-600 text-sm line-clamp-2 mb-6">{profile?.bio || 'No bio available yet.'}</p>
-                      <Link href={`/worker/${slug}`} className="w-full py-3 bg-gray-50 hover:bg-primary hover:text-white text-primary font-bold rounded-xl transition-colors border border-gray-200 hover:border-primary block text-center">
+                      <Link href={`/worker/${worker.id}`} className="w-full py-3 bg-gray-50 hover:bg-primary hover:text-white text-primary font-bold rounded-xl transition-colors border border-gray-200 hover:border-primary block text-center">
                         View Profile & Book
                       </Link>
                     </div>

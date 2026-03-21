@@ -60,15 +60,22 @@ export default function WorkerPortfolioPage() {
         .upsert({ 
           userId: user.id,
           id: profile?.id || `WP-${user.id}`,
+          category: profile?.category || 'General',
+          location: profile?.location || 'Global',
           portfolioImages,
           portfolioVideos,
           updatedAt: new Date().toISOString()
         }, { onConflict: 'userId' });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Portfolio save error:', error);
+        alert(`Save failed: ${error.message}`);
+        return;
+      }
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
+      console.error('Portfolio catch error:', err);
       alert(err.message || 'Save failed');
     } finally {
       setSaving(false);

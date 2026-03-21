@@ -56,7 +56,8 @@ export default function ClientSettingsPage() {
       if (uploadErr) throw uploadErr;
 
       const { data } = supabase.storage.from('diwalya-media').getPublicUrl(path);
-      setProfilePicture(data.publicUrl);
+      const urlWithCacheBust = `${data.publicUrl}?t=${Date.now()}`;
+      setProfilePicture(urlWithCacheBust);
 
       await supabase.from('User').update({ profilePicture: data.publicUrl }).eq('id', user.id);
     } catch (err: any) {

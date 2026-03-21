@@ -4,11 +4,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, ArrowRight, Loader2, Apple, Globe, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Briefcase, ArrowRight, Loader2, Apple, Globe, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-
 export default function LoginPage() {
+  const [role, setRole] = useState<'CLIENT' | 'WORKER'>('CLIENT');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +45,24 @@ export default function LoginPage() {
       }
       
       const userRole = data.user?.user_metadata?.role || 'CLIENT';
+      
+      // Enforce strict persona boundary
+      if (userRole === 'CLIENT' && role === 'WORKER') {
+        await supabase.auth.signOut();
+        throw new Error("This account is registered as a Client (Hire Talent). Please switch to the 'Hire Talent' tab to log in.");
+      }
+      
+      if (userRole === 'WORKER' && role === 'CLIENT') {
+        await supabase.auth.signOut();
+        throw new Error("This account is registered as a Worker (Work & Earn). Please switch to the 'Work & Earn' tab to log in.");
+      }
+
+      // Enforce Role Selection (except for Admins)
+      if (userRole !== role && userRole !== 'ADMIN') {
+        await supabase.auth.signOut();
+        throw new Error(`Role mismatch. This account is registered as a ${userRole === 'WORKER' ? 'Worker' : 'Client'}.`);
+      }
+
       if (userRole === 'ADMIN') {
         // Sync to Prisma to ensure access in AdminLayout
         const { syncUserToPrisma } = await import('@/app/actions/auth');
@@ -87,6 +105,35 @@ export default function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-xl rounded-2xl sm:px-10 border border-gray-100">
+          
+          {/* Role Selection */}
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            <button
+              type="button"
+              onClick={() => setRole('CLIENT')}
+              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                role === 'CLIENT' 
+                ? 'border-primary bg-primary/5 text-primary' 
+                : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
+              }`}
+            >
+              <User className="mb-2" size={24} />
+              <span className="text-sm font-bold uppercase tracking-wide">Hire Talent</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('WORKER')}
+              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                role === 'WORKER' 
+                ? 'border-secondary bg-secondary/5 text-secondary' 
+                : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
+              }`}
+            >
+              <Briefcase className="mb-2" size={24} />
+              <span className="text-sm font-bold uppercase tracking-wide">Work & Earn</span>
+            </button>
+          </div>
+
           <form className="space-y-6" onSubmit={handleLogin}>
             {error && (
               <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded text-sm text-red-700">

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Search, MapPin, Filter, Star, ShieldCheck, ArrowRight, XCircle, Clock } from 'lucide-react';
 import { formatGHS } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import SupabaseImage from '@/components/ui/SupabaseImage';
 import { getWorkers } from '@/app/actions/user';
 
 export default function SearchPage() {
@@ -183,7 +185,11 @@ export default function SearchPage() {
                     >
                     <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gray-100 overflow-hidden shrink-0 border border-gray-50">
                       {worker.profilePicture ? (
-                        <Image src={worker.profilePicture} alt={name} width={128} height={128} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <SupabaseImage 
+                          src={worker.profilePicture} 
+                          alt={name} 
+                          className="w-full h-full" 
+                        />
                       ) : (
                         <div className="w-full h-full bg-blue-50 flex items-center justify-center text-primary font-black text-3xl uppercase">
                           {name.charAt(0)}
@@ -207,10 +213,6 @@ export default function SearchPage() {
                             )}
                           </h3>
                           <p className="text-primary font-bold tracking-tight">{category}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xl font-black text-slate-900">{formatGHS(price)}</p>
-                          <p className="text-[10px] text-gray-400 uppercase font-black">avg job</p>
                         </div>
                       </div>
 

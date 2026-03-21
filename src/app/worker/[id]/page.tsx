@@ -21,8 +21,11 @@ import {
   ShieldAlert, 
   ClipboardCheck,
   Loader2,
-  Lock
+  Lock,
+  Play,
+  Video as VideoIcon
 } from 'lucide-react';
+import SupabaseImage from '@/components/ui/SupabaseImage';
 import { formatGHS, cn } from '@/lib/utils';
 import { getWorkerById } from '@/app/actions/worker';
 import { sendMessage as sendChatMsg } from '@/app/actions/chat';
@@ -40,6 +43,10 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
   const [chatLog, setChatLog] = useState<{ text: string, isUser: boolean }[]>([]);
   const [showWarning, setShowWarning] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
+  
+  const isVideo = (url: string) => 
+    url?.includes('.mp4') || url?.includes('.mov') || url?.includes('.webm') || url?.toLowerCase().includes('video');
 
   useEffect(() => {
     async function loadWorker() {
@@ -138,16 +145,15 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-8">
-            {/* Main Header */}
-            <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row gap-8 items-start relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-12 translate-x-12 blur-2xl"></div>
-               <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] bg-gray-100 flex items-center justify-center text-primary shrink-0 overflow-hidden border-4 border-white shadow-lg">
-                {worker.profilePicture ? (
-                  <img src={worker.profilePicture} alt={worker.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-5xl font-black">{worker.name.charAt(0)}</span>
-                )}
-               </div>
+            <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col md:flex-row gap-6 items-start relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -translate-y-8 translate-x-8 blur-2xl"></div>
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-[1.5rem] bg-gray-100 flex items-center justify-center text-primary shrink-0 overflow-hidden border-4 border-white shadow-lg relative">
+                  <SupabaseImage 
+                    src={worker.profilePicture} 
+                    alt={worker.name} 
+                    className="w-full h-full" 
+                  />
+                </div>
                <div className="flex-grow">
                  <div className="flex flex-wrap items-center gap-3 mb-4">
                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">{worker.name}</h1>
@@ -207,14 +213,44 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
             
             <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
                <h2 className="text-2xl font-black text-gray-900 mb-6 tracking-tight">Verified Work Proof</h2>
-               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                 {[1, 2, 3].map((i) => (
-                   <div key={i} className="aspect-square bg-gray-100 rounded-3xl overflow-hidden hover:opacity-90 transition-all cursor-pointer border-2 border-white shadow-md flex items-center justify-center relative group">
-                     <Briefcase size={32} className="text-gray-200 group-hover:scale-110 transition-transform" />
-                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                   </div>
-                 ))}
-               </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  {profile.portfolioImages && profile.portfolioImages.length > 0 ? (
+                    profile.portfolioImages.map((url: string, i: number) => (
+                      <div 
+                        key={i} 
+                        onClick={() => setSelectedMedia(url)}
+                        className="aspect-square bg-gray-100 rounded-3xl overflow-hidden hover:opacity-90 transition-all cursor-pointer border-2 border-white shadow-md group relative"
+                      >
+                        {isVideo(url) ? (
+                          <div className="w-full h-full relative">
+                            <video src={url} className="w-full h-full object-cover" muted />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                              <VideoIcon size={32} className="text-white drop-shadow-lg" />
+                            </div>
+                          </div>
+                        ) : (
+                          <SupabaseImage 
+                            src={url} 
+                            alt={`Portfolio ${i}`} 
+                            className="w-full h-full" 
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform">
+                              {isVideo(url) ? <Play size={20} className="fill-primary" /> : <Send size={20} className="rotate-45" />}
+                           </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    [1, 2, 3].map((i) => (
+                      <div key={i} className="aspect-square bg-gray-100 rounded-3xl overflow-hidden hover:opacity-90 transition-all cursor-pointer border-2 border-white shadow-md flex items-center justify-center relative group">
+                        <Briefcase size={32} className="text-gray-300 group-hover:scale-110 transition-transform" />
+                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      </div>
+                    ))
+                  )}
+                </div>
             </div>
           </div>
 
@@ -346,6 +382,37 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Media Lightbox Modal */}
+      {selectedMedia && (
+        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[200] flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300">
+          <button 
+            onClick={() => setSelectedMedia(null)}
+            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all z-[210]"
+          >
+            <X size={28} />
+          </button>
+          
+          <div className="relative w-full max-w-5xl max-h-[90vh] flex items-center justify-center scale-in-center overflow-hidden rounded-[2rem]">
+            {selectedMedia && isVideo(selectedMedia) ? (
+              <video 
+                src={selectedMedia} 
+                className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl" 
+                controls 
+                autoPlay 
+              />
+            ) : (
+              selectedMedia && (
+                <SupabaseImage 
+                  src={selectedMedia} 
+                  alt="Enlarged Portfolio" 
+                  className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain w-auto h-auto" 
+                />
+              )
+            )}
           </div>
         </div>
       )}

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutDashboard, Briefcase, Clock, Wallet, Settings, Search, Star, MessageSquare, Loader2, MapPin } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { formatGHS, cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { getClientJobs } from '@/app/actions/booking';
@@ -13,21 +14,13 @@ export default function ClientDashboard() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    async function loadData() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUser(session.user);
-        const res = await getClientJobs(session.user.id);
-        if (res.success && res.data) {
-          setJobs(res.data);
-        }
-      }
-      setLoading(false);
-    }
-    loadData();
-  }, []);
+    // Clients don't have a dashboard anymore, only workers and admins.
+    // Send everyone home.
+    router.replace('/');
+  }, [router]);
 
   const stats = [
     { label: 'Pending Jobs', value: jobs.filter(j => j.status === 'PENDING').length.toString(), color: 'text-orange-500', bg: 'bg-orange-50' },
