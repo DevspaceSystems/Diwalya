@@ -87,7 +87,7 @@ export default function UserManagementPage() {
              </div>
              
              <div className="flex bg-slate-100 p-1 rounded-2xl">
-               {['CLIENT', 'WORKER', 'ADMIN'].map((role) => (
+               {['', 'CLIENT', 'WORKER', 'ADMIN'].map((role) => (
                  <button
                    key={role}
                    onClick={() => setRoleFilter(role)}
@@ -96,7 +96,7 @@ export default function UserManagementPage() {
                      roleFilter === role ? "bg-white text-primary shadow-sm" : "text-slate-400 hover:text-slate-600"
                    )}
                  >
-                   {role === 'CLIENT' ? 'Clients' : role === 'WORKER' ? 'Workers' : 'Admins'}
+                   {role === '' ? 'All Roles' : role === 'CLIENT' ? 'Clients' : role === 'WORKER' ? 'Workers' : 'Admins'}
                  </button>
                ))}
              </div>
