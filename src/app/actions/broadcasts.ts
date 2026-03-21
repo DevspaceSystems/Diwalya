@@ -121,6 +121,28 @@ export async function broadcastPushNotification(data: {
 
 export async function sendWelcomeNotification(userId: string, name: string, email: string, role: string) {
   try {
+    console.log(`[sendWelcomeNotification] Syncing user ${email} (${userId}) to DB...`);
+
+    // 0. Ensure user exists in handle_new_user (Fallback for Trigger)
+    const { error: syncError } = await supabaseAdmin.from('User').upsert({
+      id: userId,
+      email: email,
+      name: name,
+      role: role,
+      updatedAt: new Date().toISOString()
+    }, { onConflict: 'id' });
+
+    if (syncError) {
+      console.error('[sendWelcomeNotification] Sync Error:', syncError);
+    } else {
+      // Also ensure a wallet exists
+      await supabaseAdmin.from('Wallet').upsert({
+        userId: userId,
+        balance: 0,
+        currency: 'GHS'
+      }, { onConflict: 'userId' });
+    }
+
     const roleName = role === 'WORKER' ? 'Professional' : 'Client';
     const title = `Welcome to Diwalya, ${name}! 🎉`;
     const message = `We're excited to have you as a ${roleName}. Start exploring the platform and let's get to work!`;
