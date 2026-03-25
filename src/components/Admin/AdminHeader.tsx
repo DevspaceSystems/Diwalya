@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Bell, ShieldCheck, Globe } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import NotificationBell from '../ui/NotificationBell';
 import { AdminSidebar } from './AdminSidebar';
@@ -9,6 +10,12 @@ import { AdminSidebar } from './AdminSidebar';
 export function AdminHeader() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -26,8 +33,8 @@ export function AdminHeader() {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[100] lg:hidden">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-64 bg-slate-900 shadow-2xl animate-in slide-in-from-left duration-300">
-            <AdminSidebar />
+          <div className="absolute inset-y-0 left-0 w-64 bg-slate-900 shadow-2xl animate-in slide-in-from-left duration-300 pointer-events-auto flex flex-col">
+             <AdminSidebar />
             <button 
               onClick={() => setIsMobileMenuOpen(false)}
               className="absolute top-6 right-[-50px] w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-xl"
@@ -38,15 +45,15 @@ export function AdminHeader() {
         </div>
       )}
 
-      <header className="bg-white/80 backdrop-blur-md border-b h-20 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 w-full shrink-0">
+      <header className="bg-white/80 backdrop-blur-md border-b h-20 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 w-full shrink-0">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsMobileMenuOpen(true)}
             className="lg:hidden p-2 hover:bg-gray-50 rounded-xl text-slate-500"
           >
-             <div className="w-6 h-0.5 bg-current mb-1.5" />
-             <div className="w-6 h-0.5 bg-current mb-1.5" />
-             <div className="w-4 h-0.5 bg-current" />
+             <div className="w-6 h-0.5 bg-slate-600 mb-1" />
+             <div className="w-6 h-0.5 bg-slate-600 mb-1" />
+             <div className="w-6 h-0.5 bg-slate-600" />
           </button>
           <div className="flex items-center gap-4 bg-gray-100/50 px-4 py-2 rounded-2xl border border-gray-100 min-w-[200px] md:min-w-[300px] focus-within:border-primary/30 transition-all">
             <Search className="text-gray-400" size={18} />

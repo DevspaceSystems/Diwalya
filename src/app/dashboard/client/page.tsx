@@ -17,13 +17,20 @@ export default function ClientDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    // Clients don't have a dashboard anymore, only workers and admins.
-    // Send everyone home.
-    router.replace('/');
+    async function load() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return router.replace('/login');
+      setUser(session.user);
+      
+      const res = await getClientJobs(session.user.id);
+      if (res.success) setJobs(res.data || []);
+      setLoading(false);
+    }
+    load();
   }, [router]);
 
   const stats = [
-    { label: 'Pending Jobs', value: jobs.filter(j => j.status === 'PENDING').length.toString(), color: 'text-orange-500', bg: 'bg-orange-50' },
+    { label: 'Quotes & Inspections', value: jobs.filter(j => j.status === 'ESTIMATE_SUBMITTED' || j.status === 'INSPECTION_REQUESTED').length.toString(), color: 'text-primary', bg: 'bg-blue-50' },
     { label: 'Ongoing Jobs', value: jobs.filter(j => j.status === 'IN_PROGRESS' || j.status === 'ACCEPTED').length.toString(), color: 'text-blue-500', bg: 'bg-blue-50' },
     { label: 'Total Done', value: jobs.filter(j => j.status === 'COMPLETED').length.toString(), color: 'text-green-500', bg: 'bg-green-50' },
   ];
@@ -110,6 +117,18 @@ export default function ClientDashboard() {
                 ) : (
                   jobs.map((job) => (
                     <div key={job.id} className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-primary/20 transition-all group relative overflow-hidden">
+                       {job.status === 'ESTIMATE_SUBMITTED' && (
+                         <div className="absolute top-0 right-0 p-4">
+                            <span className="bg-primary text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">Quote Received</span>
+                         </div>
+                       )}
+
+                       {job.status === 'INSPECTION_REQUESTED' && (
+                         <div className="absolute top-0 right-0 p-4">
+                            <span className="bg-amber-500 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">Inspection Proposed</span>
+                         </div>
+                       )}
+                       
                        {job.status === 'COMPLETED' && (
                          <div className="absolute top-0 right-0 p-4">
                             <span className="bg-emerald-500 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">Action Required</span>
@@ -131,14 +150,15 @@ export default function ClientDashboard() {
                                    <span>Pro: {job.worker?.name}</span>
                                    <span className="flex items-center gap-1 font-black"><Clock size={12} /> {new Date(job.createdAt).toLocaleDateString()}</span>
                                 </p>
-                                <div className="flex flex-wrap gap-2">
+                                 <div className="flex flex-wrap gap-2">
                                    <span className={cn(
                                      "text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border",
                                      job.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                     job.status === 'ESTIMATE_SUBMITTED' ? "bg-blue-50 text-blue-600 border-blue-100" :
                                      job.status === 'IN_PROGRESS' ? "bg-blue-50 text-blue-600 border-blue-100" :
                                      "bg-gray-50 text-gray-400 border-gray-100"
                                    )}>
-                                      {job.status}
+                                      {job.status.replace(/_/g, ' ')}
                                    </span>
                                    {job.type === 'INSPECTION' && (
                                      <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-slate-900 text-white border border-slate-900">
@@ -153,13 +173,15 @@ export default function ClientDashboard() {
                              <p className="text-2xl font-black text-gray-900 leading-none">{formatGHS(job.priceAmount || 0)}</p>
                              <div className="flex gap-2 w-full md:w-auto">
                                 <Link 
-                                  href={`/dashboard/client/jobs/${job.id}/track`}
+                                  href={job.status === 'ESTIMATE_SUBMITTED' ? `/dashboard/client/jobs/${job.id}/estimate` : `/dashboard/client/jobs/${job.id}/track`}
                                   className={cn(
                                     "px-6 py-3 font-black rounded-xl text-xs flex-grow md:flex-none text-center shadow-lg transition-all active:scale-95",
+                                    job.status === 'ESTIMATE_SUBMITTED' ? "bg-primary text-white shadow-primary/20" :
                                     job.status === 'COMPLETED' ? "bg-emerald-600 text-white shadow-emerald-600/20" : "bg-slate-900 text-white shadow-slate-900/20"
                                   )}
                                 >
-                                  {job.status === 'COMPLETED' ? 'Confirm & Release' : 'Track Progress'}
+                                  {job.status === 'ESTIMATE_SUBMITTED' ? 'Review Quote' : 
+                                   job.status === 'COMPLETED' ? 'Confirm & Release' : 'Track Progress'}
                                 </Link>
                                 <button className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
                                    <MessageSquare size={18} />

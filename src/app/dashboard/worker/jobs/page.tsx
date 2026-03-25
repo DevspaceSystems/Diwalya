@@ -154,7 +154,7 @@ export default function WorkerJobsPage() {
                                   <p className="text-3xl font-black text-gray-900 tracking-tight">{formatGHS(job.priceAmount)}</p>
                                </div>
                                <Link 
-                                 href={job.status === 'WORKER_REVIEW' ? `/dashboard/worker` : `/dashboard/worker/jobs/${job.id}/progress`}
+                                 href={job.status === 'WORKER_REVIEW' ? `/dashboard/worker/jobs/${job.id}/review` : `/dashboard/worker/jobs/${job.id}/progress`}
                                  className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white font-black rounded-2xl shadow-lg shadow-slate-900/10 hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-widest text-center"
                                >
                                  {job.status === 'WORKER_REVIEW' ? 'Review Offer' : 'Manage Job'}

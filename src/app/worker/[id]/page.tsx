@@ -26,8 +26,9 @@ import {
   Video as VideoIcon
 } from 'lucide-react';
 import SupabaseImage from '@/components/ui/SupabaseImage';
+import MediaLightbox from '@/components/ui/MediaLightbox';
 import { formatGHS, cn } from '@/lib/utils';
-import { getWorkerById } from '@/app/actions/worker';
+import { getWorkerById, toggleLove as toggleLoveAction, getWorkerStats, getWorkerReviews } from '@/app/actions/worker';
 import { sendMessage as sendChatMsg } from '@/app/actions/chat';
 import { supabase } from '@/lib/supabase';
 
@@ -37,7 +38,9 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
   const [worker, setWorker] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isLoved, setIsLoved] = useState(false);
-  const [lovedCount, setLovedCount] = useState(48);
+  const [lovedCount, setLovedCount] = useState(0);
+  const [reviewStats, setReviewStats] = useState({ count: 0, rating: 0 });
+  const [reviews, setReviews] = useState<any[]>([]);
   const [showChat, setShowChat] = useState(false);
   const [message, setMessage] = useState('');
   const [chatLog, setChatLog] = useState<{ text: string, isUser: boolean }[]>([]);
@@ -55,8 +58,73 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
         setWorker(res.data);
       }
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) setUser(session.user);
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+
+      // Fetch stats
+      const statsRes = await getWorkerStats(res.data?.id, currentUser?.id);
+      if (statsRes.success) {
+        setIsLoved(statsRes.isLoved || false);
+        setLovedCount(statsRes.lovedCount || 0);
+        setReviewStats({ 
+          count: statsRes.reviewCount || 0, 
+          rating: statsRes.avgRating || 0 
+        });
+      }
+
+      // Fetch Reviews
+      const reviewsRes = await getWorkerReviews(res.data?.id);
+      if (reviewsRes.success) {
+        setReviews(reviewsRes.data || []);
+      }
+
       setLoading(false);
+
+      // Real-time Subscriptions
+      const loveChannel = supabase
+        .channel('realtime_loves')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'Love', 
+          filter: `targetId=eq.${res.data?.id}` 
+        }, () => {
+           // Re-fetch stats on any love change for accuracy
+           getWorkerStats(res.data?.id, currentUser?.id).then(r => {
+             if (r.success) {
+               setLovedCount(r.lovedCount || 0);
+               // We don't update isLoved here to avoid flickering for the current user
+             }
+           });
+        })
+        .subscribe();
+
+      const reviewChannel = supabase
+        .channel('realtime_reviews')
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'Review', 
+          filter: `targetId=eq.${res.data?.id}` 
+        }, (payload) => {
+           // New review added
+           setReviews(prev => [payload.new, ...prev]);
+           // Re-fetch stats for rating update
+           getWorkerStats(res.data?.id, currentUser?.id).then(r => {
+             if (r.success) {
+               setReviewStats({ 
+                 count: r.reviewCount || 0, 
+                 rating: r.avgRating || 0 
+               });
+             }
+           });
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(loveChannel);
+        supabase.removeChannel(reviewChannel);
+      };
     }
     loadWorker();
   }, [id]);
@@ -78,9 +146,21 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
     }
   };
 
-  const toggleLove = () => {
-    setIsLoved(!isLoved);
-    setLovedCount(prev => isLoved ? prev - 1 : prev + 1);
+  const toggleLove = async () => {
+    if (!user) return alert('Please log in to love a worker!');
+    
+    // Optimistic UI
+    const newIsLoved = !isLoved;
+    setIsLoved(newIsLoved);
+    setLovedCount(prev => newIsLoved ? prev + 1 : prev - 1);
+
+    const res = await toggleLoveAction(worker.id, user.id);
+    if (!res.success) {
+      // Rollback on error
+      setIsLoved(!newIsLoved);
+      setLovedCount(prev => newIsLoved ? prev - 1 : prev + 1);
+      alert('Failed to update love status.');
+    }
   };
 
   const sendMessage = async (text: string) => {
@@ -170,8 +250,8 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Rating</p>
                        <div className="flex items-center gap-1.5 font-black text-gray-900">
                           <Star size={18} className="fill-yellow-500 text-yellow-500" />
-                          <span>4.9</span>
-                          <span className="text-gray-400 font-bold ml-1 text-xs">(124)</span>
+                          <span>{reviewStats.rating > 0 ? reviewStats.rating.toFixed(1) : 'New'}</span>
+                          <span className="text-gray-400 font-bold ml-1 text-xs">({reviewStats.count})</span>
                        </div>
                     </div>
                     <div className="text-center md:text-left">
@@ -252,18 +332,69 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                   )}
                 </div>
             </div>
+
+            {/* Reviews Section */}
+            <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+               <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-2xl font-black text-gray-900 tracking-tight text-slate-800">Customer Feedback</h2>
+                  <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-2">
+                     <Star size={18} className="fill-yellow-500 text-yellow-500" />
+                     <span className="font-black text-slate-900">{reviewStats.rating.toFixed(1)}</span>
+                     <span className="text-slate-400 font-bold text-xs">/ 5.0</span>
+                  </div>
+               </div>
+
+               {reviews.length > 0 ? (
+                 <div className="space-y-6">
+                    {reviews.map((review, i) => (
+                      <div key={review.id || i} className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 flex gap-4 items-start animate-in fade-in duration-500">
+                         <div className="w-12 h-12 rounded-2xl bg-white overflow-hidden shrink-0 border border-slate-100 flex items-center justify-center font-black text-slate-400 uppercase">
+                            {review.author?.profilePicture ? (
+                              <SupabaseImage src={review.author.profilePicture} alt={review.author.name} className="w-full h-full" />
+                            ) : (
+                              review.author?.name ? review.author.name.charAt(0) : 'U'
+                            )}
+                         </div>
+                         <div className="flex-grow">
+                            <div className="flex justify-between items-start mb-2">
+                               <div>
+                                  <h4 className="font-black text-slate-900">{review.author?.name || 'Anonymous client'}</h4>
+                                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                    {new Date(review.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                                  </p>
+                               </div>
+                               <div className="flex gap-0.5">
+                                 {[...Array(5)].map((_, i) => (
+                                   <Star 
+                                      key={i} 
+                                      size={14} 
+                                      className={cn(i < review.rating ? "fill-yellow-500 text-yellow-500" : "text-slate-200")} 
+                                   />
+                                 ))}
+                               </div>
+                            </div>
+                            <p className="text-slate-600 font-medium text-sm leading-relaxed">{review.comment}</p>
+                         </div>
+                      </div>
+                    ))}
+                 </div>
+               ) : (
+                 <div className="text-center py-12 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                    <p className="text-slate-400 font-bold">No reviews yet. Be the first to hire {worker?.name}!</p>
+                 </div>
+               )}
+            </div>
           </div>
 
           <aside className="lg:col-span-1">
             <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-2xl sticky top-24 space-y-8">
-              <div className="flex justify-between items-start pb-6 border-b border-gray-100">
-                <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Base Inspection</p>
-                  <p className="text-4xl font-black text-gray-900">{formatGHS(100)}</p>
+              <div className="pb-6 border-b border-gray-100">
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Pricing Model</p>
+                <div className="flex items-center gap-2 text-slate-900">
+                   <CheckCircle size={18} className="text-emerald-500" />
+                   <p className="text-xl font-black">Job-Based Pricing</p>
                 </div>
-                <div className="text-right">
-                  <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100">Now Active</span>
-                </div>
+                <p className="text-[10px] text-gray-400 font-bold mt-2 leading-tight">Worker provides a custom quote based on your specific job details.</p>
               </div>
 
               <div className="space-y-6">
@@ -301,7 +432,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                   href={`/booking/${worker.id}`}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white py-5 rounded-2xl font-black text-lg block text-center shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 transition-all"
                 >
-                  Confirm Booking
+                  Request Quote / Service
                 </Link>
                 <button 
                   onClick={() => setShowChat(true)}
@@ -386,36 +517,10 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
         </div>
       )}
       
-      {/* Media Lightbox Modal */}
-      {selectedMedia && (
-        <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[200] flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300">
-          <button 
-            onClick={() => setSelectedMedia(null)}
-            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all z-[210]"
-          >
-            <X size={28} />
-          </button>
-          
-          <div className="relative w-full max-w-5xl max-h-[90vh] flex items-center justify-center scale-in-center overflow-hidden rounded-[2rem]">
-            {selectedMedia && isVideo(selectedMedia) ? (
-              <video 
-                src={selectedMedia} 
-                className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl" 
-                controls 
-                autoPlay 
-              />
-            ) : (
-              selectedMedia && (
-                <SupabaseImage 
-                  src={selectedMedia} 
-                  alt="Enlarged Portfolio" 
-                  className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain w-auto h-auto" 
-                />
-              )
-            )}
-          </div>
-        </div>
-      )}
+      <MediaLightbox 
+        url={selectedMedia} 
+        onClose={() => setSelectedMedia(null)} 
+      />
       
       <style jsx global>{`
         @keyframes scale-in-center {

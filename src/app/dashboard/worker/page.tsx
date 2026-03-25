@@ -224,43 +224,6 @@ export default function WorkerDashboard() {
               </Link>
            </div>
 
-           <div className="bg-primary p-8 rounded-3xl text-white shadow-xl shadow-blue-900/20">
-              <h3 className="font-black text-lg mb-4">Improve Ranking</h3>
-              {workerProfile?.verificationStatus === 'APPROVED' ? (
-                <div className="space-y-4">
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    Your account is <span className="text-blue-400 font-bold">Verified</span>. Your profile is prioritized in search results.
-                  </p>
-                  <div className="flex items-center gap-3 bg-white/10 p-4 rounded-2xl border border-blue-500/30">
-                     <ShieldCheck className="text-blue-400" size={24} />
-                     <span className="font-black text-sm uppercase tracking-widest text-blue-400">Verified Pro Badge Active</span>
-                  </div>
-                </div>
-              ) : workerProfile?.verificationStatus === 'PENDING' ? (
-                <div className="space-y-4">
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    Verification request <span className="text-orange-400 font-bold">Under Review</span>. Admins will verify your identity shortly.
-                  </p>
-                  <div className="flex items-center gap-3 bg-white/10 p-4 rounded-2xl border border-orange-500/30">
-                     <Clock className="text-orange-400" size={24} />
-                     <span className="font-black text-sm uppercase tracking-widest text-orange-400">Awaiting Admin Check</span>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                    Complete your profile verification by requesting an ID check to unlock the <span className="text-blue-400 font-bold">Verified Badge</span> and get 3x more bookings.
-                  </p>
-                   <Link 
-                    href="/dashboard/worker/verification"
-                    className="w-full flex items-center justify-between bg-white text-primary p-4 rounded-2xl hover:bg-white/90 transition-all group font-black shadow-lg"
-                  >
-                     <span className="font-bold text-sm">Request Identity Check</span>
-                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </>
-              )}
-           </div>
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://diwalya.com'),
   title: "Diwalya - Ghana's Trusted Skilled & Unskilled Worker Marketplace",
   description: "Connect with verified skilled and unskilled workers in Ghana. Diwalya is where talent meets opportunity for plumbers, electricians, cleaners, and more.",
   icons: {
@@ -19,14 +20,24 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Diwalya - Talent Meets Opportunity",
     description: "Connect with verified skilled and unskilled workers in Ghana.",
+    url: 'https://diwalya.com',
+    siteName: 'Diwalya',
     images: [
       {
         url: '/diwalya-logo.png',
         width: 1200,
         height: 630,
-        alt: 'Diwalya Platform',
+        alt: 'Diwalya Platform Logo',
       },
     ],
+    locale: 'en_GH',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Diwalya - Talent Meets Opportunity",
+    description: "Connect with verified skilled and unskilled workers in Ghana.",
+    images: ['/diwalya-logo.png'],
   },
 };
 

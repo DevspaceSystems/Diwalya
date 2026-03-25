@@ -60,18 +60,49 @@ export default function WorkerOnboarding() {
   const [ghanaCardUrl, setGhanaCardUrl] = useState('');
 
   useEffect(() => {
+    let retryCount = 0;
+    const maxRetries = 3;
+
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('[WorkerOnboarding] Checking session...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('[WorkerOnboarding] Session error:', sessionError);
+        setError('Authentication session error. Please try logging in again.');
+        return;
+      }
+
       if (!session) {
+        console.warn('[WorkerOnboarding] No session found, redirecting to login');
         router.push('/login');
         return;
       }
-      setUser(session.user);
 
-      // Fetch name from public.User
-      const res = await getUserProfile(session.user.id);
-      if (res.success) setDbUser(res.data);
+      setUser(session.user);
+      console.log('[WorkerOnboarding] Session valid for:', session.user.email);
+
+      // Fetch name from public.User with retry logic for sync delay
+      const fetchProfile = async () => {
+        console.log(`[WorkerOnboarding] Fetching DB profile (Attempt ${retryCount + 1})...`);
+        const res = await getUserProfile(session.user.id);
+        
+        if (res.success && res.data) {
+          console.log('[WorkerOnboarding] DB profile synced successfully');
+          setDbUser(res.data);
+        } else if (retryCount < maxRetries) {
+          retryCount++;
+          console.warn(`[WorkerOnboarding] Profile not found yet, retrying in 2s...`);
+          setTimeout(fetchProfile, 2000);
+        } else {
+          console.error('[WorkerOnboarding] Profile sync failed after retries');
+          // We can still proceed as we have session.user, but dbUser might have more info
+        }
+      };
+
+      fetchProfile();
     };
+
     checkUser();
   }, [router]);
 

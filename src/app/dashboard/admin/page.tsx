@@ -27,7 +27,8 @@ export default function AdminDashboard() {
     commission: 0,
     totalRevenue: 0,
     activeBookings: 0,
-    totalWorkers: 0
+    totalWorkers: 0,
+    totalClients: 0
   });
 
   const [pendingWorkers, setPendingWorkers] = React.useState<any[]>([]);
@@ -53,9 +54,9 @@ export default function AdminDashboard() {
 
   const stats = [
     { label: 'Total Workers', value: platformStats.totalWorkers.toString(), change: '+12%', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Total Clients', value: (platformStats as any).totalClients?.toString() || '0', change: '+8%', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Active Bookings', value: platformStats.activeBookings.toString(), change: '+5%', icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Total Revenue', value: formatGHS(platformStats.totalRevenue), change: '+18%', icon: CreditCard, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Platform Earnings', value: formatGHS(platformStats.commission), change: 'Real-time', icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/5' },
   ];
   return (
     <div className="p-6 md:p-10 w-full overflow-x-hidden min-h-screen bg-gray-50/50">

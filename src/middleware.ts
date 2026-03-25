@@ -44,7 +44,11 @@ export async function middleware(request: NextRequest) {
 
   // Protect Worker Dashboard
   if (path.startsWith('/dashboard/worker')) {
-    if (!session || role !== 'WORKER') {
+    const formattedRole = role?.toString().toUpperCase();
+    console.log(`[Middleware Check] Path: ${path}, Session: ${!!session}, Role: ${role}, FormattedRole: ${formattedRole}`);
+    
+    if (!session || formattedRole !== 'WORKER') {
+      console.warn(`[Middleware Redirect] Unauthorized access to ${path}. Redirecting to /login`);
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
@@ -84,7 +88,9 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/admin/:path*',
+    '/dashboard/worker',
     '/dashboard/worker/:path*',
+    '/dashboard/client',
     '/dashboard/client/:path*',
   ],
 };

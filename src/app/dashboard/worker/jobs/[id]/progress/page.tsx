@@ -15,9 +15,11 @@ import {
   Wallet
 } from 'lucide-react';
 import Link from 'next/link';
-import { logJobProgress, completeJobAndReleaseFunds } from '@/app/actions/booking';
+import { logJobProgress, completeJobAndReleaseFunds, completeInspection, getJob } from '@/app/actions/booking';
+import { sendNotification } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 import MediaUpload from '@/components/ui/MediaUpload';
+import MediaLightbox from '@/components/ui/MediaLightbox';
 
 export default function WorkerProgressPage() {
   const params = useParams();
@@ -28,12 +30,30 @@ export default function WorkerProgressPage() {
   const [job, setJob] = useState<any>(null);
   const [content, setContent] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
+  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
 
   useEffect(() => {
     fetchJobDetails();
+
+    // Supabase Realtime Subscription
+    const channel = supabase
+      .channel(`job-progress-${jobId}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'JobProgress',
+        filter: `jobId=eq.${jobId}`
+      }, () => {
+        fetchJobDetails();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [jobId]);
 
   const fetchJobDetails = async () => {
@@ -131,6 +151,48 @@ export default function WorkerProgressPage() {
     }
   };
 
+  const handleCompleteInspection = async () => {
+    if (!confirm('Mark this inspection as completed? You can then proceed to submit your final quote.')) return;
+    setCompleting(true);
+    const res = await completeInspection(jobId);
+    if (res.success) {
+        alert('Inspection completed! You can now submit your final quote.');
+        fetchJobDetails();
+    } else {
+        alert(res.error || 'Failed to complete inspection');
+    }
+    setCompleting(false);
+  };
+
+  const handleStartJob = async () => {
+    setCompleting(true);
+    try {
+        const { error } = await supabase
+            .from('Job')
+            .update({ status: 'IN_PROGRESS', startedAt: new Date().toISOString() })
+            .eq('id', jobId);
+
+        if (error) throw error;
+
+        // Notify Client
+        if (job.clientId) {
+          await sendNotification({
+            userId: job.clientId,
+            title: 'Job Started!',
+            body: `Your specialist ${job.worker?.name || ''} has started working on your ${job.serviceType} request.`,
+            data: { jobId }
+          });
+        }
+
+        alert('Job started! You can now log your progress.');
+        fetchJobDetails();
+    } catch (err: any) {
+        alert(err.message || 'Failed to start job');
+    } finally {
+        setCompleting(false);
+    }
+  };
+
   if (loading) return (
     <div className="flex items-center justify-center p-24">
       <Loader2 className="animate-spin text-primary" size={40} />
@@ -148,6 +210,10 @@ export default function WorkerProgressPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-12 px-6">
+      <MediaLightbox 
+        url={selectedMedia} 
+        onClose={() => setSelectedMedia(null)} 
+      />
       <div className="mb-10">
         <h1 className="font-black text-2xl text-gray-900 tracking-tight leading-none">Execution Progress</h1>
         <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1">ID: {jobId}</p>
@@ -259,9 +325,17 @@ export default function WorkerProgressPage() {
                              {event.mediaUrls && event.mediaUrls.length > 0 && (
                                <div className="grid grid-cols-1 gap-4 mt-4">
                                   {event.mediaUrls.map((url: string, i: number) => (
-                                    <div key={i} className="rounded-2xl overflow-hidden border border-gray-200 aspect-video relative group">
+                                    <div 
+                                      key={i} 
+                                      onClick={() => setSelectedMedia(url)}
+                                      className="rounded-2xl overflow-hidden border border-gray-200 aspect-video relative group cursor-zoom-in"
+                                    >
                                        <img src={url} alt="Progress" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                                       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+                                       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors flex items-center justify-center">
+                                          <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-slate-900 opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100">
+                                            <Camera size={20} />
+                                          </div>
+                                       </div>
                                     </div>
                                   ))}
                                </div>
@@ -276,20 +350,46 @@ export default function WorkerProgressPage() {
         </div>
       </div>
 
-      {/* Completion Dock (Integrated) */}
-      {job.status === 'IN_PROGRESS' && (
+      {/* Completion/Quote Dock */}
+      {(job.status === 'IN_PROGRESS' || job.status === 'ACCEPTED') && (
         <div className="mt-12 p-8 bg-emerald-50 rounded-[2.5rem] border border-emerald-100 border-dashed">
-            <h4 className="text-lg font-black text-emerald-900 mb-2">Project Completion</h4>
-            <p className="text-sm text-emerald-700/70 font-bold mb-6 italic leading-relaxed">
-              Ready to wrap up? This will notify the client and request the final disbursement of funds from the escrow.
-            </p>
-            <button 
-              onClick={handleMarkComplete}
-              disabled={completing}
-              className="w-full py-5 bg-emerald-600 text-white font-black rounded-[2rem] flex items-center justify-center gap-2 hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 hover:scale-[1.02] active:scale-95 transition-all"
-            >
-               {completing ? <Loader2 className="animate-spin" size={20} /> : <><CheckCircle2 size={20} /> Finalize Job & Request Payout</>}
-            </button>
+            <h4 className="text-lg font-black text-emerald-900 mb-2">
+              {job.type === 'INSPECTION' ? 'Inspection Phase' : 'Project Completion'}
+            </h4>
+            {job.status === 'ACCEPTED' ? (
+              <button 
+                onClick={handleStartJob}
+                disabled={completing}
+                className="w-full py-5 bg-primary text-white font-black rounded-[2rem] flex items-center justify-center gap-2 hover:bg-primary/90 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+              >
+                {completing ? <Loader2 className="animate-spin" size={20} /> : <><Plus size={20} /> Start This Job Now</>}
+              </button>
+            ) : job.type === 'INSPECTION' && job.status === 'IN_PROGRESS' ? (
+              <div className="flex flex-col gap-4">
+                <button 
+                  onClick={handleCompleteInspection}
+                  disabled={completing}
+                  className="w-full py-5 bg-amber-500 text-white font-black rounded-[2rem] flex items-center justify-center gap-2 hover:bg-amber-600 shadow-xl shadow-amber-500/20 hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  {completing ? <Loader2 className="animate-spin" size={20} /> : <><CheckCircle2 size={20} /> Mark Inspection as Completed</>}
+                </button>
+
+                <Link 
+                  href={`/dashboard/worker/jobs/${jobId}/review`}
+                  className="w-full py-5 border-2 border-primary text-primary font-black rounded-[2rem] flex items-center justify-center gap-2 hover:bg-primary/5 transition-all text-center"
+                >
+                  Submit Final Project Quote
+                </Link>
+              </div>
+            ) : (
+              <button 
+                onClick={handleMarkComplete}
+                disabled={completing}
+                className="w-full py-5 bg-emerald-600 text-white font-black rounded-[2rem] flex items-center justify-center gap-2 hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 hover:scale-[1.02] active:scale-95 transition-all"
+              >
+                 {completing ? <Loader2 className="animate-spin" size={20} /> : <><CheckCircle2 size={20} /> Finalize Job & Request Payout</>}
+              </button>
+            )}
         </div>
       )}
     </div>

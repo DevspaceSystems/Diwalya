@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { generateSlug } from '@/lib/slug'
 
 export async function getUsers(query?: string, role?: string) {
   try {
@@ -15,7 +16,8 @@ export async function getUsers(query?: string, role?: string) {
     }
 
     if (role) {
-      queryBuilder = queryBuilder.eq('role', role);
+      console.log(`[getUsers] Filtering by role: ${role}`);
+      queryBuilder = queryBuilder.eq('role', role.toUpperCase());
     }
 
     const { data: users, error: userError } = await queryBuilder;
@@ -112,6 +114,7 @@ export async function updateUserProfile(userId: string, data: {
       .from('User')
       .update({
         name: data.name,
+        slug: generateSlug(data.name), // Note: Assuming generateSlug is imported or defined
         profilePicture: data.profilePicture
       })
       .eq('id', userId);

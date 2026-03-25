@@ -65,7 +65,6 @@ export default function WorkerLayout({ children }: { children: React.ReactNode }
     { name: 'Notifications', href: '/dashboard/worker/notifications', icon: Bell },
     { name: 'Messages', href: '/dashboard/worker/messages', icon: MessageSquare },
     { name: 'My Profile', href: '/dashboard/worker/profile', icon: User },
-    { name: 'Verification', href: '/dashboard/worker/verification', icon: ShieldCheck },
     { name: 'Reports & Issues', href: '/dashboard/worker/reports', icon: Bell },
     { name: 'Settings', href: '/dashboard/worker/settings', icon: Settings },
   ];
@@ -160,13 +159,18 @@ export default function WorkerLayout({ children }: { children: React.ReactNode }
                   )}
                 </div>
               </div>
-              <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center font-black text-lg border border-gray-100 overflow-hidden shadow-md ring-2 ring-white shrink-0">
+              <Link 
+                href="/dashboard/worker/profile" 
+                className="relative w-11 h-11 rounded-2xl bg-white flex items-center justify-center font-black text-lg border border-gray-100 overflow-hidden shadow-md ring-2 ring-white shrink-0 hover:ring-primary/20 transition-all active:scale-95"
+              >
                 <SupabaseImage 
                   src={user?.profilePicture || workerProfile?.profilePicture} 
                   alt={user?.name || 'Worker'} 
-                  className="w-full h-full" 
+                  width={44}
+                  height={44}
+                  className="w-full h-full object-cover" 
                 />
-              </div>
+              </Link>
             </div>
           </div>
         </header>

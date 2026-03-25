@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { 
-  ChevronLeft, 
   User, 
   Star, 
   MapPin, 
@@ -16,11 +15,13 @@ import {
   Calendar,
   ShieldCheck,
   TrendingUp,
-  Image as LucideImage
+  Image as LucideImage,
+  ExternalLink,
+  Award
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
-import WorkerSidebar from '@/components/WorkerSidebar';
+import SupabaseImage from '@/components/ui/SupabaseImage';
 
 export default function WorkerProfilePage() {
   const [profile, setProfile] = React.useState<any>(null);
@@ -44,162 +45,213 @@ export default function WorkerProfilePage() {
   }, []);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Loader2 className="animate-spin text-primary" size={48} />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="animate-spin text-primary" size={48} />
+        <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Loading Profile...</p>
+      </div>
     </div>
   );
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-12 pb-20">
-      <div className="flex justify-between items-end mb-4">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 pb-32">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Public Profile</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Manage your professional presence</p>
+            <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Your Public Profile</h2>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">This is how clients see you on the platform</p>
           </div>
-          <Link 
-            href="/dashboard/worker/settings"
-            className="px-6 py-3 bg-slate-900 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-slate-900/10"
-          >
-             <Edit3 size={16} /> Edit Profile
-          </Link>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <Link 
+              href={`/worker/${user?.id}`}
+              target="_blank"
+              className="flex-grow md:flex-none px-6 py-4 bg-white border border-gray-200 text-slate-700 font-bold rounded-2xl text-xs uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+               <ExternalLink size={16} /> View Public View
+            </Link>
+            <Link 
+              href="/dashboard/worker/settings"
+              className="flex-grow md:flex-none px-6 py-4 bg-primary text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20"
+            >
+               <Edit3 size={16} /> Edit Profile
+            </Link>
+          </div>
       </div>
-           {/* Profile Header Card */}
-           <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:bg-primary/10 transition-colors duration-700" />
-              
-              <div className="flex flex-col md:flex-row gap-10 relative z-10">
-                 <div className="w-40 h-40 rounded-[2.5rem] bg-slate-100 border border-slate-200 overflow-hidden shadow-xl shadow-slate-200/50 shrink-0">
-                    {profile?.profilePicture ? (
-                       <img src={profile.profilePicture} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                       <User size={80} className="text-slate-300 m-auto mt-6" />
-                    )}
-                 </div>
 
-                 <div className="flex-grow space-y-6">
-                    <div>
-                       <div className="flex items-center gap-3 mb-2">
-                          <h2 className="text-4xl font-black text-slate-900 tracking-tight">{user?.user_metadata?.full_name || 'Professional'}</h2>
-                          {profile?.isVerified && (
-                             <span className="p-1 px-2.5 bg-blue-50 text-blue-500 rounded-full flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest border border-blue-100">
-                                <ShieldCheck size={14} /> Verified Pro
-                             </span>
-                          )}
-                       </div>
-                       <p className="text-lg font-black text-primary uppercase tracking-[0.15em] flex items-center gap-2">
-                          <Briefcase size={20} /> {profile?.jobCategory || 'Expert Service Provider'}
-                       </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                       <span className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100"><MapPin size={16} className="text-primary" /> {profile?.location || 'Ghana'}</span>
-                       <span className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100"><Star size={16} className="text-amber-400" /> 5.0 Rating</span>
-                       <span className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100"><CheckCircle2 size={16} className="text-emerald-500" /> 100% Guaranteed</span>
-                    </div>
-
-                    <p className="text-slate-500 font-medium leading-relaxed max-w-2xl text-lg italic">
-                       "{profile?.bio || 'Professional artisan dedicated to providing high-quality service and exceptional craftsmanship. Ready to take on your next project with precision and care.'}"
-                    </p>
-                 </div>
+      {/* Profile Hero Card */}
+      <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden relative group">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px] pointer-events-none" />
+        
+        <div className="p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center md:items-start relative z-10">
+          <div className="relative shrink-0">
+            <div className="w-40 h-40 md:w-48 md:h-48 rounded-[2.5rem] bg-gray-50 border-4 border-white overflow-hidden shadow-2xl relative">
+              <SupabaseImage 
+                src={profile?.profilePicture} 
+                alt={user?.user_metadata?.full_name || 'Worker'} 
+                width={192}
+                height={192}
+                className="w-full h-full object-cover" 
+              />
+            </div>
+            {profile?.isVerified && (
+              <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white p-2.5 rounded-2xl shadow-lg border-4 border-white">
+                <ShieldCheck size={20} />
               </div>
-           </div>
+            )}
+          </div>
 
-           {/* Details Grid */}
-           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-              {/* Left Col: Badges & Info */}
-              <div className="lg:col-span-1 space-y-10">
-                 <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-blue-900/10">
-                    <h3 className="font-black text-xl mb-8 flex items-center gap-3">
-                       <TrendingUp className="text-primary" size={24} /> 
-                       Performance
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Response Time</p>
-                          <p className="font-black text-xl italic">Under 1hr</p>
-                       </div>
-                       <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Completion Rate</p>
-                          <p className="font-black text-xl">98%</p>
-                       </div>
-                       <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Repeat Clients</p>
-                          <p className="font-black text-xl">12+</p>
-                       </div>
-                       <div className="p-4 bg-primary text-white rounded-2xl">
-                          <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-1">Experience</p>
-                          <p className="font-black text-xl">5+ Years</p>
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-4 opacity-5">
-                       <Calendar size={64} className="text-slate-900" />
-                    </div>
-                    <h3 className="font-black text-xl text-slate-900 mb-6 flex items-center gap-3">
-                       <Clock className="text-primary" size={24} /> 
-                       Availability
-                    </h3>
-                    <div className="space-y-4">
-                       <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                          <span className="font-black text-emerald-600 text-[10px] uppercase tracking-widest">Currently Open</span>
-                          <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-                       </div>
-                       <p className="text-slate-500 text-sm font-medium leading-relaxed px-2">
-                          Available for new projects starting this week. Most active between 8:00 AM and 6:00 PM.
-                       </p>
-                    </div>
-                 </div>
+          <div className="flex-grow space-y-6 text-center md:text-left">
+            <div>
+              <div className="flex flex-col md:flex-row items-center gap-4 mb-2">
+                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+                  {user?.user_metadata?.full_name || 'Professional Worker'}
+                </h1>
+                {profile?.isVerified && (
+                  <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest border border-blue-100 shadow-sm">
+                    <ShieldCheck size={14} /> Verified Pro
+                  </span>
+                )}
               </div>
+              <p className="text-xl md:text-2xl font-bold text-primary flex items-center justify-center md:justify-start gap-2">
+                <Award size={24} className="text-secondary" /> {profile?.jobCategory || 'Expert Service Provider'}
+              </p>
+            </div>
 
-              {/* Right Col: Portfolio & Skills */}
-              <div className="lg:col-span-2 space-y-10">
-                 <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
-                       <h3 className="font-black text-2xl text-slate-900 flex items-center gap-3">
-                          <ImageIcon className="text-primary" size={28} /> 
-                          Portfolio
-                       </h3>
-                       <Link href="/dashboard/worker/portfolio" className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors">
-                          Manage Work Samples
-                       </Link>
-                    </div>
-
-                    {profile?.portfolioImages?.length > 0 ? (
-                       <div className="grid grid-cols-2 gap-6">
-                          {profile.portfolioImages.slice(0, 4).map((img: string, i: number) => (
-                             <div key={i} className="aspect-video rounded-[2rem] overflow-hidden group border border-slate-100 shadow-sm relative">
-                                <img src={img} alt={`Work ${i}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                                   <p className="text-white font-black text-xs uppercase tracking-widest italic">Verified Completed Work</p>
-                                </div>
-                             </div>
-                          ))}
-                       </div>
-                    ) : (
-                       <div className="py-20 flex flex-col items-center justify-center bg-slate-50 rounded-[2.5rem] border border-dashed border-slate-200">
-                          <LucideImage size={48} className="text-slate-200 mb-4" />
-                          <p className="text-slate-400 font-bold text-sm">Upload your portfolio to build trust!</p>
-                       </div>
-                    )}
-                 </div>
-
-                 <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
-                    <h3 className="font-black text-2xl text-slate-900 mb-8 flex items-center gap-3">
-                       <ShieldCheck className="text-primary" size={28} /> 
-                       Skills & Specializations
-                    </h3>
-                    <div className="flex flex-wrap gap-4">
-                       {['Plumbing', 'Electrical Repair', 'Project Management', 'Site Inspection', 'Cost Estimation'].map((skill) => (
-                          <span key={skill} className="px-6 py-3.5 bg-slate-50 text-slate-900 font-black rounded-2xl border border-slate-100 text-xs uppercase tracking-widest shadow-sm hover:shadow-lg transition-all cursor-default">
-                             {skill}
-                          </span>
-                       ))}
-                    </div>
-                 </div>
+            <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+              <div className="flex items-center gap-2 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
+                <MapPin size={16} className="text-primary" /> {profile?.location || 'Ghana'}
               </div>
-           </div>
+              <div className="flex items-center gap-2 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm text-yellow-600">
+                <Star size={16} className="fill-yellow-500 text-yellow-500" /> 5.0 Rating
+              </div>
+              <div className="flex items-center gap-2 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm text-emerald-600">
+                <CheckCircle2 size={16} className="text-emerald-500" /> 100% Guaranteed
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute left-0 top-0 w-1 h-full bg-primary/10 rounded-full" />
+              <p className="pl-6 text-slate-600 font-medium leading-relaxed max-w-3xl text-lg italic">
+                "{profile?.bio || 'Professional artisan dedicated to providing high-quality service and exceptional craftsmanship. Ready to take on your next project with precision and care.'}"
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Metrics & Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Sidebar Column */}
+        <div className="lg:col-span-1 space-y-8">
+          {/* Performance Stats */}
+          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-900/10 border border-slate-800">
+            <h3 className="font-black text-xl mb-8 flex items-center gap-3">
+              <TrendingUp className="text-secondary" size={24} /> 
+              Platform Stats
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-default group">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-200">Response</p>
+                <p className="font-black text-xl italic text-blue-400">Under 1hr</p>
+              </div>
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-default group">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-200">Success</p>
+                <p className="font-black text-xl text-emerald-400">98%</p>
+              </div>
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-default group">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-200">Repeat</p>
+                <p className="font-black text-xl text-amber-400">12+</p>
+              </div>
+              <div className="p-4 bg-primary text-white rounded-2xl shadow-lg shadow-blue-500/20">
+                <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-1">Exp.</p>
+                <p className="font-black text-xl">5+ Years</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Availability Block */}
+          <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm text-center md:text-left relative overflow-hidden">
+            <div className="absolute -top-4 -right-4 bg-primary/5 p-8 rounded-full blur-2xl pointer-events-none" />
+            <h3 className="font-black text-xl text-slate-900 mb-6 flex items-center justify-center md:justify-start gap-3 relative">
+              <Clock className="text-primary" size={24} /> 
+              Availability Status
+            </h3>
+            <div className="space-y-4 relative">
+              <div className="flex items-center justify-between p-5 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <span className="font-black text-emerald-600 text-xs uppercase tracking-[0.2em]">Currently Accepting Jobs</span>
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+              </div>
+              <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                Most active between **8:00 AM** and **6:00 PM** daily. Ready for urgent inspections and estimates.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Column */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Portfolio Grid */}
+          <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-gray-100 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+              <h3 className="font-black text-2xl text-slate-900 flex items-center gap-3">
+                <ImageIcon className="text-primary" size={28} /> 
+                Showcase Portfolio
+              </h3>
+              <Link href="/dashboard/worker/portfolio" className="bg-gray-50 px-4 py-2 rounded-xl text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary hover:bg-primary/5 transition-all border border-gray-100">
+                Manage Samples
+              </Link>
+            </div>
+
+            {profile?.portfolioImages?.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {profile.portfolioImages.slice(0, 4).map((img: string, i: number) => (
+                  <div key={i} className="aspect-video rounded-3xl overflow-hidden group border border-gray-100 shadow-sm relative cursor-pointer">
+                    <SupabaseImage 
+                      src={img} 
+                      alt={`Portfolio ${i}`} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
+                      <div className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-widest italic">
+                        <CheckCircle2 size={14} className="text-emerald-400" /> Professional Finish
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-24 flex flex-col items-center justify-center bg-gray-50/50 rounded-[2.5rem] border border-dashed border-gray-200">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-gray-200 mb-4">
+                  <LucideImage size={32} />
+                </div>
+                <p className="text-slate-400 font-bold text-sm tracking-tight mb-4">You haven't uploaded any work samples yet.</p>
+                <Link href="/dashboard/worker/portfolio" className="px-6 py-3 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-primary uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
+                  Get Started
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Specializations */}
+          <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-gray-100 shadow-sm">
+            <h3 className="font-black text-2xl text-slate-900 mb-8 flex items-center gap-3">
+              <ShieldCheck className="text-primary" size={28} /> 
+              Verified Specializations
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              {['Project Management', 'Site Inspection', 'Cost Estimation', 'Plumbing', 'Electrical Repair'].map((skill) => (
+                <div key={skill} className="px-6 py-4 bg-gray-50 text-slate-900 font-black rounded-2xl border border-gray-100 text-xs uppercase tracking-widest shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-default flex items-center gap-2 group">
+                  <div className="w-2 h-2 rounded-full bg-primary group-hover:scale-150 transition-transform" />
+                  {skill}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -16,9 +16,12 @@ import {
   AlertCircle,
   Coins,
   Loader2,
-  X
+  X,
+  PlayCircle,
+  Volume2,
+  CalendarCheck
 } from 'lucide-react';
-import { getAdminBookings, adminReleasePartialFunds } from '@/app/actions/booking';
+import { getAdminBookings, adminReleasePartialFunds, assignWorker, scheduleInspection, adminApproveEstimate, getJobEstimate, adminReleaseFinalPayout } from '@/app/actions/booking';
 import { cn, formatGHS } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
@@ -35,6 +38,17 @@ export default function GlobalBookingsPage() {
   const [processing, setProcessing] = useState(false);
   const [adminId, setAdminId] = useState<string>('');
 
+  // Assignment State
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [workers, setWorkers] = useState<any[]>([]);
+  const [inspectionDate, setInspectionDate] = useState('');
+  const [accompanyingMember, setAccompanyingMember] = useState('');
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showFinalPayoutModal, setShowFinalPayoutModal] = useState(false);
+  const [currentEstimate, setCurrentEstimate] = useState<any>(null);
+  const [finalPayoutAmount, setFinalPayoutAmount] = useState('');
+
   useEffect(() => {
     async function init() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -47,7 +61,16 @@ export default function GlobalBookingsPage() {
 
   useEffect(() => {
     fetchBookings();
+    fetchWorkers();
   }, [statusFilter]);
+
+  const fetchWorkers = async () => {
+    const { data, error } = await supabase
+      .from('WorkerProfile')
+      .select('*, user:User(*)')
+      .eq('verificationStatus', 'APPROVED');
+    if (!error) setWorkers(data);
+  };
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -87,12 +110,94 @@ export default function GlobalBookingsPage() {
      }
   };
 
+  const handleAssignWorker = async (workerId: string) => {
+    if (!selectedJob) return;
+    setProcessing(true);
+    const res = await assignWorker(selectedJob.id, workerId);
+    if (res.success) {
+      alert('Worker assigned and notified!');
+      setShowAssignModal(false);
+      fetchBookings();
+    } else {
+      alert(res.error || 'Failed to assign worker');
+    }
+    setProcessing(false);
+  };
+
+
+  const handleScheduleInspection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedJob || !inspectionDate) return;
+    setProcessing(true);
+    const res = await scheduleInspection(selectedJob.id, inspectionDate, accompanyingMember);
+    if (res.success) {
+      alert('Inspection scheduled successfully!');
+      setShowScheduleModal(false);
+      fetchBookings();
+    } else {
+      alert(res.error || 'Failed to schedule');
+    }
+    setProcessing(false);
+  };
+
+  const handleOpenFinalPayout = (job: any) => {
+    setSelectedJob(job);
+    const defaultAmount = (job.priceAmount || 0) * 0.95;
+    setFinalPayoutAmount(defaultAmount.toString());
+    setShowFinalPayoutModal(true);
+  };
+
+  const handleReleaseFinalPayout = async () => {
+    if (!selectedJob) return;
+    const amount = parseFloat(finalPayoutAmount);
+    if (isNaN(amount) || amount <= 0) return alert('Invalid amount');
+
+    setProcessing(true);
+    const res = await adminReleaseFinalPayout(selectedJob.id, amount);
+    if (res.success) {
+      alert('Final payout released to specialist wallet!');
+      setShowFinalPayoutModal(false);
+      fetchBookings();
+    } else {
+      alert(res.error || 'Failed to release payout');
+    }
+    setProcessing(false);
+  };
+
+  const handleReviewEstimate = async (job: any) => {
+    setSelectedJob(job);
+    setProcessing(true);
+    const res = await getJobEstimate(job.id);
+    if (res.success) {
+      setCurrentEstimate(res.data);
+      setShowReviewModal(true);
+    } else {
+      alert('Failed to fetch estimate details');
+    }
+    setProcessing(false);
+  };
+
+  const handleApproveEstimate = async () => {
+    if (!selectedJob) return;
+    setProcessing(true);
+    const res = await adminApproveEstimate(selectedJob.id);
+    if (res.success) {
+      alert('Estimate approved and sent to client!');
+      setShowReviewModal(false);
+      fetchBookings();
+    } else {
+      alert(res.error || 'Failed to approve');
+    }
+    setProcessing(false);
+  };
+
   const statusColors: Record<string, string> = {
     PENDING: 'bg-yellow-50 text-yellow-600',
-    ADMIN_REVIEW: 'bg-blue-50 text-blue-600 border-blue-100',
+    ESTIMATE_PENDING_ADMIN_REVIEW: 'bg-purple-50 text-purple-600 border-purple-100',
+    ESTIMATE_SUBMITTED: 'bg-green-50 text-green-600 border-green-100',
+    IN_PROGRESS: 'bg-primary/10 text-primary border-primary/20',
     WORKER_REVIEW: 'bg-slate-50 text-slate-600 border-slate-100',
     ACCEPTED: 'bg-indigo-50 text-indigo-600 border-indigo-100',
-    IN_PROGRESS: 'bg-primary/10 text-primary border-primary/20',
     COMPLETED: 'bg-emerald-50 text-emerald-600 border-emerald-100',
     CANCELLED: 'bg-red-50 text-red-600 border-red-100',
   };
@@ -173,7 +278,7 @@ export default function GlobalBookingsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 pt-2">
+                  <div className="flex items-center justify-between pt-2">
                     <div className="flex-grow">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Financials</p>
                         <div className="flex items-center gap-2">
@@ -181,6 +286,20 @@ export default function GlobalBookingsPage() {
                             {job.paymentId && <div className="p-1 bg-emerald-100 text-emerald-600 rounded-lg" title="Paid"><CreditCard size={12}/></div>}
                         </div>
                     </div>
+                    {job.audioUrl && (
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => {
+                            const audio = new Audio(job.audioUrl);
+                            audio.play();
+                          }}
+                          className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center hover:bg-primary/20 transition-all font-black text-[10px] uppercase tracking-widest"
+                          title="Play Audio Description"
+                        >
+                          <Volume2 size={18} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -198,6 +317,28 @@ export default function GlobalBookingsPage() {
                       <Coins size={18} />
                    </button>
                  )}
+                 {job.status === 'ADMIN_REVIEW' && (
+                    <button 
+                      onClick={() => {
+                        setSelectedJob(job);
+                        setShowAssignModal(true);
+                      }}
+                      className="px-4 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                      Assign
+                    </button>
+                  )}
+                  {job.status === 'INSPECTION_PAYMENT_PENDING' && (
+                    <button 
+                      onClick={() => {
+                        setSelectedJob(job);
+                        setShowScheduleModal(true);
+                      }}
+                      className="px-4 py-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                      Schedule Visit
+                    </button>
+                  )}
                  <button className="flex-grow py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
                     View Details
                  </button>
@@ -269,6 +410,230 @@ export default function GlobalBookingsPage() {
                 </button>
              </form>
           </div>
+        </div>
+      )}
+
+      {/* Schedule Inspection Modal */}
+      {showScheduleModal && selectedJob && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+           <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-amber-50/50">
+                 <div>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Schedule Inspection</h3>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Inspection Paid: {formatGHS(100)}</p>
+                 </div>
+                 <button onClick={() => setShowScheduleModal(false)} className="w-10 h-10 bg-white text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
+                   <X size={20} />
+                 </button>
+              </div>
+
+              <form onSubmit={handleScheduleInspection} className="p-8 space-y-6">
+                 <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Inspection Date & Time</label>
+                    <input 
+                      type="datetime-local"
+                      required
+                      value={inspectionDate}
+                      onChange={(e) => setInspectionDate(e.target.value)}
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                    />
+                 </div>
+
+                 <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Accompanying Member (Optional)</label>
+                    <input 
+                      type="text"
+                      placeholder="e.g. Ama from Diwalya HQ"
+                      value={accompanyingMember}
+                      onChange={(e) => setAccompanyingMember(e.target.value)}
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                    />
+                 </div>
+
+                 <button 
+                   type="submit"
+                   disabled={processing}
+                   className="w-full py-5 bg-amber-500 text-white font-black rounded-2xl hover:bg-amber-600 transition-all uppercase tracking-widest text-xs shadow-xl shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                 >
+                    {processing ? <Loader2 className="animate-spin" /> : <><CalendarCheck size={18} /> Confirm Schedule</>}
+                 </button>
+              </form>
+           </div>
+        </div>
+      )}
+
+      {/* Assign Worker Modal */}
+      {showAssignModal && selectedJob && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+             <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                <div>
+                   <h3 className="text-2xl font-black text-slate-900 tracking-tight">Assign Specialist</h3>
+                   <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Select the best fit for this request</p>
+                </div>
+                <button onClick={() => setShowAssignModal(false)} className="w-10 h-10 bg-white text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
+                  <X size={20} />
+                </button>
+             </div>
+
+             <div className="p-6 overflow-y-auto flex-grow space-y-3">
+                {workers.length === 0 ? (
+                  <div className="text-center py-10 text-slate-400 font-bold italic">No approved specialists found.</div>
+                ) : workers.map((worker) => (
+                  <button
+                    key={worker.id}
+                    disabled={processing}
+                    onClick={() => handleAssignWorker(worker.userId)}
+                    className="w-full p-6 bg-white border border-slate-100 rounded-3xl flex items-center justify-between hover:border-primary hover:bg-primary/5 transition-all text-left shadow-sm hover:shadow-md group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200">
+                         {worker.user?.profilePicture ? (
+                           <img src={worker.user.profilePicture} alt={worker.user.name} className="w-full h-full object-cover" />
+                         ) : (
+                           <div className="w-full h-full flex items-center justify-center font-black text-slate-400">{worker.user?.name?.charAt(0)}</div>
+                         )}
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-900 group-hover:text-primary transition-colors">{worker.businessName || worker.user?.name}</h4>
+                        <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{worker.category}</p>
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 px-4 py-2 rounded-xl text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:bg-primary group-hover:text-white transition-all">
+                       Select
+                    </div>
+                  </button>
+                ))}
+             </div>
+          </div>
+        </div>
+      )}
+      {/* Review Estimate Modal */}
+      {showReviewModal && selectedJob && currentEstimate && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+           <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-purple-50/50">
+                 <div>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Review Specialist Quote</h3>
+                    <p className="text-purple-600 text-[10px] font-black uppercase tracking-widest mt-1">Job ID: {selectedJob.id}</p>
+                 </div>
+                 <button onClick={() => setShowReviewModal(false)} className="w-10 h-10 bg-white text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
+                   <X size={20} />
+                 </button>
+              </div>
+
+              <div className="p-8 space-y-6">
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-50 rounded-2xl">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Labor Cost</p>
+                       <p className="text-xl font-black text-slate-900">{formatGHS(currentEstimate.laborCost)}</p>
+                    </div>
+                    <div className="p-4 bg-slate-50 rounded-2xl">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Materials</p>
+                       <p className="text-xl font-black text-slate-900">{formatGHS(currentEstimate.materialCost)}</p>
+                    </div>
+                 </div>
+
+                 <div className="p-6 bg-slate-900 text-white rounded-2xl">
+                    <div className="flex justify-between items-end">
+                       <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Quote</p>
+                          <p className="text-3xl font-black text-white">{formatGHS(currentEstimate.totalCost)}</p>
+                       </div>
+                       <div className="text-right">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Duration</p>
+                          <p className="font-black">{currentEstimate.estimatedDuration}</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="space-y-2">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Specialist Notes</p>
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-600 italic">
+                       "{currentEstimate.workerNotes || 'No notes provided'}"
+                    </div>
+                 </div>
+
+                 <div className="flex gap-4">
+                    <button 
+                      onClick={handleApproveEstimate}
+                      disabled={processing}
+                      className="flex-1 py-5 bg-purple-600 text-white font-black rounded-2xl hover:bg-purple-700 transition-all uppercase tracking-widest text-xs shadow-xl shadow-purple-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                       {processing ? <Loader2 className="animate-spin" /> : <><CheckCircle size={18} /> Approve & Send</>}
+                    </button>
+                    <button 
+                      onClick={() => setShowReviewModal(false)}
+                      className="px-6 py-5 border-2 border-slate-100 text-slate-400 font-black rounded-2xl hover:bg-slate-50 transition-all uppercase tracking-widest text-[10px]"
+                    >
+                       Reject
+                    </button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
+      {/* Final Payout Modal */}
+      {showFinalPayoutModal && selectedJob && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+           <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden">
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-emerald-50/50">
+                 <div>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Release Final Funds</h3>
+                    <p className="text-emerald-600 text-[10px] font-black uppercase tracking-widest mt-1 tracking-tighter">Job ID: {selectedJob.id}</p>
+                 </div>
+                 <button onClick={() => setShowFinalPayoutModal(false)} className="w-10 h-10 bg-white text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
+                   <X size={20} />
+                 </button>
+              </div>
+
+              <div className="p-8 space-y-6">
+                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="flex justify-between items-center mb-1">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Escrow Amount</p>
+                       <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Secured</p>
+                    </div>
+                    <p className="text-2xl font-black text-slate-900">{formatGHS(selectedJob.priceAmount)}</p>
+                 </div>
+
+                 <div className="space-y-4">
+                    <div>
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Amount to Release (GHS)</label>
+                       <div className="relative">
+                          <CreditCard className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            value={finalPayoutAmount}
+                            onChange={(e) => setFinalPayoutAmount(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full pl-14 pr-6 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-xl text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all"
+                          />
+                       </div>
+                       <p className="mt-2 text-[10px] font-bold text-slate-400 italic">
+                          Suggested (95%): {formatGHS(selectedJob.priceAmount * 0.95)}
+                       </p>
+                    </div>
+
+                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                       <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+                          <AlertCircle size={12} /> Financial Guard
+                       </p>
+                       <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
+                          This will permanently transfer funds from escrow to the worker's wallet. Ensure the client has confirmed satisfaction.
+                       </p>
+                    </div>
+                 </div>
+
+                 <button 
+                   onClick={handleReleaseFinalPayout}
+                   disabled={processing}
+                   className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all uppercase tracking-widest text-xs shadow-xl shadow-emerald-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                 >
+                    {processing ? <Loader2 className="animate-spin" /> : <><CheckCircle size={18} /> Confirm Disbursement</>}
+                 </button>
+              </div>
+           </div>
         </div>
       )}
     </div>

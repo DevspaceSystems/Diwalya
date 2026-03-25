@@ -137,13 +137,22 @@ export async function getPlatformStats() {
 
     if (workersError) throw workersError;
 
+    // 5. Total Clients
+    const { count: totalClients, error: clientsError } = await supabaseAdmin
+      .from('User')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'CLIENT');
+
+    if (clientsError) throw clientsError;
+
     return {
       success: true,
       stats: {
         commission,
         totalRevenue: totalRevenue,
         activeBookings: activeBookings || 0,
-        totalWorkers: totalWorkers || 0
+        totalWorkers: totalWorkers || 0,
+        totalClients: totalClients || 0
       }
     }
   } catch (error: any) {

@@ -33,7 +33,6 @@ const menuItems = [
   { name: 'Notifications', href: '/dashboard/worker/notifications', icon: Bell },
   { name: 'Messages', href: '/dashboard/worker/messages', icon: MessageSquare },
   { name: 'My Profile', href: '/dashboard/worker/profile', icon: User },
-  { name: 'Verification', href: '/dashboard/worker/verification', icon: ShieldCheck },
   { name: 'Reports & Issues', href: '/dashboard/worker/reports', icon: AlertCircle },
   { name: 'Settings', href: '/dashboard/worker/settings', icon: Settings },
 ];

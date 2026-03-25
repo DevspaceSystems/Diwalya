@@ -27,9 +27,10 @@ import { useRouter } from 'next/navigation';
 
 const sidebarLinks = [
   { href: '/dashboard/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/admin/workers', label: 'Workers', icon: Users },
-  { href: '/dashboard/admin/bookings', label: 'Bookings', icon: Briefcase },
-  { href: '/dashboard/admin/inspections', label: 'Inspections', icon: ClipboardList },
+  { href: '/dashboard/admin/users', label: 'Clients', icon: Users },
+  { href: '/dashboard/admin/workers', label: 'Workers', icon: Briefcase },
+  { href: '/dashboard/admin/bookings', label: 'Bookings', icon: ClipboardList },
+  { href: '/dashboard/admin/inspections', label: 'Inspections', icon: FileText },
   { href: '/dashboard/admin/payments', label: 'Payments', icon: CreditCard },
   { href: '/dashboard/admin/verifications', label: 'Verifications', icon: ShieldCheck },
   { href: '/dashboard/admin/disputes', label: 'Disputes', icon: ShieldAlert },
@@ -56,7 +57,7 @@ export function AdminSidebar() {
   };
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-400 flex flex-col fixed inset-y-0 left-0 z-50 border-r border-white/5">
+    <div className="bg-slate-900 text-slate-400 flex flex-col h-full border-r border-white/5 shadow-2xl overflow-y-auto">
       <div className="p-8">
          <div className="bg-white p-2 rounded-lg inline-block">
             <Image src="/diwalya-logo.png" alt="Diwalya Admin" width={120} height={30} className="object-contain" />
@@ -100,6 +101,6 @@ export function AdminSidebar() {
           <LogOut size={20} /> Secure Logout
         </button>
       </div>
-    </aside>
+    </div>
   );
 }

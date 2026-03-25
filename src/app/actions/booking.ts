@@ -2,7 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { revalidatePath } from 'next/cache'
-import { sendNotification } from '@/lib/notifications'
+import { sendNotification, notifyAdmins } from '@/lib/notifications'
 import { logActivity } from './activity'
 import { formatGHS } from '@/lib/utils'
 
@@ -16,6 +16,7 @@ export async function createJob(data: {
   location: string
   scheduledAt: string | Date
   priceAmount: number
+  audioUrl?: string
 }) {
   try {
     const { data: job, error } = await supabaseAdmin
@@ -24,12 +25,21 @@ export async function createJob(data: {
         ...data,
         id: `JOB-${Date.now()}`,
         status: 'ADMIN_REVIEW',
-        scheduledAt: new Date(data.scheduledAt).toISOString()
+        priceAmount: data.priceAmount || 0,
+        scheduledAt: new Date(data.scheduledAt).toISOString(),
+        audioUrl: data.audioUrl || null
       })
       .select()
       .single();
 
     if (error) throw error;
+
+    // Notify Admins
+    await notifyAdmins({
+      title: 'New Service Request',
+      body: `A new ${data.serviceType} request has been submitted for ${data.location}.`,
+      data: { jobId: job.id }
+    });
 
     revalidatePath('/dashboard/admin/bookings')
     
@@ -47,11 +57,44 @@ export async function createJob(data: {
   }
 }
 
+export async function getJob(jobId: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('Job')
+      .select('*, client:User!clientId(*), worker:User!workerId(*)')
+      .eq('id', jobId)
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function adminApproveAndForward(jobId: string) {
     try {
         const { error } = await supabaseAdmin
           .from('Job')
           .update({ status: 'WORKER_REVIEW' })
+          .eq('id', jobId);
+
+        if (error) throw error;
+        revalidatePath('/dashboard/admin/bookings')
+        return { success: true }
+    } catch (error: any) {
+        return { success: false, error: error.message }
+    }
+}
+
+export async function assignWorker(jobId: string, workerId: string) {
+    try {
+        const { error } = await supabaseAdmin
+          .from('Job')
+          .update({ 
+            status: 'WORKER_REVIEW',
+            workerId: workerId 
+          })
           .eq('id', jobId);
 
         if (error) throw error;
@@ -138,6 +181,17 @@ export async function logJobProgress(data: {
       .update({ status: 'IN_PROGRESS' })
       .eq('id', data.jobId)
       .eq('status', 'ACCEPTED');
+
+    // Notify Client
+    const { data: job } = await supabaseAdmin.from('Job').select('clientId').eq('id', data.jobId).single();
+    if (job?.clientId) {
+        await sendNotification({
+            userId: job.clientId,
+            title: 'New Job Update',
+            body: `Your specialist added a new update: "${data.content.substring(0, 50)}..."`,
+            data: { jobId: data.jobId }
+        });
+    }
 
     await logActivity({
       type: 'SYSTEM_ALERT',
@@ -515,6 +569,48 @@ export async function createInspectionRequest(data: {
   }
 }
 
+export async function proposeInspection(data: {
+  jobId: string,
+  workerId: string,
+  inspectionFee: number
+}) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('Job')
+      .update({ 
+        status: 'INSPECTION_REQUESTED',
+        priceAmount: data.inspectionFee,
+        type: 'INSPECTION'
+      })
+      .eq('id', data.jobId);
+
+    if (error) throw error;
+
+    // Notify Client
+    const { data: job } = await supabaseAdmin.from('Job').select('clientId, serviceType').eq('id', data.jobId).single();
+    if (job) {
+      await sendNotification({
+        userId: job.clientId,
+        title: 'Inspection Requested',
+        body: `Worker has requested a site inspection for your ${job.serviceType} request. Fee: ${formatGHS(data.inspectionFee)}.`,
+        data: { jobId: data.jobId }
+      });
+    }
+
+    await logActivity({
+      type: 'SYSTEM_ALERT',
+      content: `Worker proposed an inspection fee of ${formatGHS(data.inspectionFee)}`,
+      userId: data.workerId,
+      metadata: { jobId: data.jobId }
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Propose Inspection Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function submitJobEstimate(data: {
   jobId: string
   workerId: string
@@ -536,17 +632,17 @@ export async function submitJobEstimate(data: {
 
     if (error) throw error;
 
-    // Update job status
+    // Update job status to require admin review
     const { error: jobErr } = await supabaseAdmin
       .from('Job')
-      .update({ status: 'ADMIN_REVIEW' })
+      .update({ status: 'ESTIMATE_PENDING_ADMIN_REVIEW' })
       .eq('id', data.jobId);
 
     if (jobErr) throw jobErr;
 
     await logActivity({
       type: 'SYSTEM_ALERT',
-      content: `Estimate of ${formatGHS(data.totalCost)} submitted for job ${data.jobId}`,
+      content: `Estimate of ${formatGHS(data.totalCost)} submitted and pending admin review for job ${data.jobId}`,
       userId: data.workerId,
       metadata: { jobId: data.jobId, estimateId: estimate.id }
     });
@@ -556,6 +652,125 @@ export async function submitJobEstimate(data: {
     console.error('Submit Estimate Error:', error);
     return { success: false, error: error.message };
   }
+}
+
+
+export async function scheduleInspection(jobId: string, scheduledAt: string | Date, accompanyingMemberId?: string) {
+    try {
+        const { error } = await supabaseAdmin
+          .from('Job')
+          .update({ 
+            inspectionScheduledAt: new Date(scheduledAt).toISOString(),
+            accompanyingMemberId: accompanyingMemberId || null,
+            status: 'IN_PROGRESS' 
+          })
+          .eq('id', jobId);
+
+        if (error) throw error;
+
+        // Notify Client & Specialist
+        const { data: job } = await supabaseAdmin.from('Job').select('clientId, workerId').eq('id', jobId).single();
+        if (job) {
+            await sendNotification({
+                userId: job.clientId,
+                title: 'Inspection Scheduled',
+                body: `Your site inspection has been scheduled for ${new Date(scheduledAt).toLocaleString()}.`,
+                data: { jobId }
+            });
+            if (job.workerId) {
+              await sendNotification({
+                  userId: job.workerId,
+                  title: 'New Inspection Scheduled',
+                  body: `You have an inspection scheduled for ${new Date(scheduledAt).toLocaleString()}.`,
+                  data: { jobId }
+              });
+            }
+        }
+
+        revalidatePath('/dashboard/admin/bookings');
+
+        await logActivity({
+          type: 'SYSTEM_ALERT',
+          content: `Inspection scheduled for ${new Date(scheduledAt).toLocaleDateString()}`,
+          metadata: { jobId, scheduledAt }
+        });
+
+        return { success: true }
+    } catch (error: any) {
+        return { success: false, error: error.message }
+    }
+}
+
+export async function completeInspection(jobId: string) {
+    try {
+        const { error } = await supabaseAdmin
+          .from('Job')
+          .update({ 
+            status: 'IN_PROGRESS' 
+          })
+          .eq('id', jobId);
+
+        if (error) throw error;
+
+        // Notify Client
+        const { data: job } = await supabaseAdmin.from('Job').select('clientId').eq('id', jobId).single();
+        if (job) {
+            await sendNotification({
+                userId: job.clientId,
+                title: 'Inspection Completed',
+                body: 'The specialist has completed the site inspection and will submit a quote shortly.',
+                data: { jobId }
+            });
+        }
+
+        revalidatePath('/dashboard/admin/bookings');
+
+        await logActivity({
+          type: 'SYSTEM_ALERT',
+          content: `Inspection marked as completed for ${jobId}`,
+          metadata: { jobId }
+        });
+
+        return { success: true }
+    } catch (error: any) {
+        return { success: false, error: error.message }
+    }
+}
+
+
+export async function adminApproveEstimate(jobId: string) {
+    try {
+        const { error } = await supabaseAdmin
+          .from('Job')
+          .update({ status: 'ESTIMATE_SUBMITTED' })
+          .eq('id', jobId);
+
+        if (error) throw error;
+
+        // Notify Client
+        const { data: job } = await supabaseAdmin.from('Job').select('clientId').eq('id', jobId).single();
+        if (job) {
+            await sendNotification({
+                userId: job.clientId,
+                title: 'Quote Ready for Review',
+                body: 'The specialist has provided a final quote. Please review and pay to start the work.',
+                data: { jobId }
+            });
+        }
+
+        revalidatePath('/dashboard/admin/bookings');
+        revalidatePath(`/dashboard/client/jobs/${jobId}/estimate`);
+
+        await logActivity({
+          type: 'SYSTEM_ALERT',
+          content: `Admin approved estimate for job ${jobId}. Client notified.`,
+          metadata: { jobId }
+        });
+
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
 }
 
 export async function getJobEstimate(jobId: string) {
@@ -639,6 +854,108 @@ export async function adminReviewEstimate(adminId: string, jobId: string, approv
     console.error('Admin Review Estimate Error:', error);
     return { success: false, error: error.message };
   }
+}
+
+export async function recordPaymentSuccess(data: {
+  jobId: string,
+  reference: string,
+  amount: number,
+  type: 'INSPECTION' | 'JOB'
+}) {
+  try {
+    const nextStatus = data.type === 'INSPECTION' ? 'IN_PROGRESS' : 'ACCEPTED';
+    const { data: job, error: jobErr } = await supabaseAdmin
+      .from('Job')
+      .update({ 
+        status: nextStatus,
+        paidAt: new Date().toISOString(),
+        paymentReference: data.reference
+      })
+      .eq('id', data.jobId)
+      .select('*, client:User!clientId(*), worker:User!workerId(*)')
+      .single();
+
+    if (jobErr) throw jobErr;
+
+    // Notify Worker
+    if (job.workerId) {
+      await sendNotification({
+        userId: job.workerId,
+        title: 'Payment Received!',
+        body: `The client has paid for the ${data.type === 'INSPECTION' ? 'inspection' : 'job'}. You can now proceed.`,
+        data: { jobId: data.jobId }
+      });
+    }
+
+    // Notify Admins
+    await notifyAdmins({
+      title: 'New Payment Confirmed',
+      body: `Payment of ${formatGHS(data.amount)} received for job ${data.jobId} (${job.serviceType})`,
+      data: { jobId: data.jobId }
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Record Payment Success Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function adminReleaseFinalPayout(jobId: string, workerAmount: number) {
+    try {
+        // Fetch job and worker
+        const { data: job, error: jobErr } = await supabaseAdmin
+          .from('Job')
+          .select('*, worker:User!workerId(*)')
+          .eq('id', jobId)
+          .single();
+
+        if (jobErr) throw jobErr;
+        if (!job.worker) throw new Error('Worker not found');
+
+        // 1. Update Worker Wallet
+        const newBalance = (job.worker.walletBalance || 0) + workerAmount;
+        const { error: walletErr } = await supabaseAdmin
+          .from('User')
+          .update({ walletBalance: newBalance })
+          .eq('id', job.workerId);
+
+        if (walletErr) throw walletErr;
+
+        // 2. Mark job as fully settled
+        const { error: updateErr } = await supabaseAdmin
+          .from('Job')
+          .update({ payoutReleasedAt: new Date().toISOString(), status: 'COMPLETED' }) // Ensure it's completed
+          .eq('id', jobId);
+
+        if (updateErr) throw updateErr;
+
+        // Notify Worker & Admins
+        await sendNotification({
+            userId: job.workerId,
+            title: 'Final Payout Released 💰',
+            body: `The final payout of ${formatGHS(workerAmount)} has been added to your wallet. Great job!`,
+            data: { jobId }
+        });
+        await notifyAdmins({
+            title: 'Funds Disbursed',
+            body: `Final payout of ${formatGHS(workerAmount)} was released to ${job.worker.name} for job ${jobId}.`,
+            data: { jobId }
+        });
+
+        // 3. Log Payout Transaction
+        await logActivity({
+          type: 'FUNDS_RELEASED',
+          content: `Final payout of ${formatGHS(workerAmount)} released to ${job.worker.name}`,
+          metadata: { jobId, amount: workerAmount, totalJobCost: job.priceAmount }
+        });
+
+        revalidatePath('/dashboard/admin/bookings');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Final Payout Error:', error);
+        return { success: false, error: error.message };
+    }
 }
 
 export async function getInspections(status?: string) {

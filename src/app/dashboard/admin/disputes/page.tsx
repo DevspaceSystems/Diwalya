@@ -16,12 +16,14 @@ import {
 } from 'lucide-react';
 import { cn, formatGHS } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import MediaLightbox from '@/components/ui/MediaLightbox';
 
 export default function AdminDisputesPage() {
   const [disputes, setDisputes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDispute, setSelectedDispute] = useState<any>(null);
   const [progressLogs, setProgressLogs] = useState<any[]>([]);
+  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
@@ -104,6 +106,10 @@ export default function AdminDisputesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+      <MediaLightbox 
+        url={selectedMedia} 
+        onClose={() => setSelectedMedia(null)} 
+      />
       <main className="flex-grow p-8">
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
            <div className="flex items-center gap-4">
@@ -228,7 +234,12 @@ export default function AdminDisputesPage() {
                                         {log.mediaUrls && log.mediaUrls.length > 0 && (
                                             <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                                                 {log.mediaUrls.map((url: string, i: number) => (
-                                                    <img key={i} src={url} className="w-16 h-16 rounded-lg object-cover border border-gray-200 hover:scale-110 active:scale-150 transition-all cursor-zoom-in" />
+                                                    <img 
+                                                      key={i} 
+                                                      src={url} 
+                                                      onClick={() => setSelectedMedia(url)}
+                                                      className="w-16 h-16 rounded-lg object-cover border border-gray-200 hover:scale-110 transition-all cursor-zoom-in" 
+                                                    />
                                                 ))}
                                             </div>
                                         )}

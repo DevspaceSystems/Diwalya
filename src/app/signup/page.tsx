@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, ArrowRight, Loader2, ShieldCheck, Briefcase, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, ShieldCheck, Briefcase, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { sendWelcomeNotification } from '@/app/actions/broadcasts';
 
@@ -16,9 +17,11 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
+  // Removed multi-step states as per user request to use the previous UI
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -49,199 +52,187 @@ export default function SignupPage() {
 
       if (signupError) throw signupError;
 
-      // Auth succeeded. Proceed to notify and sync.
-      
-      // Send welcome email + in-app notification + Ensure DB Sync
       if (data?.user) {
-        sendWelcomeNotification(data.user.id, name, email, role).catch(console.error);
+        // Await the sync to ensure User record exists for Storage permissions/Profile creation
+        await sendWelcomeNotification(data.user.id, name, email, role);
+      }
+
+      // If session is null, email confirmation is likely required in Supabase settings
+      if (!data.session) {
+        setIsSuccess(true);
+        setError('');
+        return;
       }
 
       // Redirect based on role
-      router.push(role === 'WORKER' ? '/dashboard/worker' : '/dashboard/client');
+      // Redirect based on role - Using window.location for a clean state
+      window.location.href = role === 'WORKER' ? '/dashboard/worker' : '/dashboard/client';
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
       setIsLoading(false);
     }
-
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link href="/" className="flex justify-center mb-6">
-          <Image src="/diwalya-logo.png" alt="Diwalya Logo" width={180} height={45} className="object-contain" />
-        </Link>
-        <h2 className="text-center text-3xl font-extrabold text-gray-900">
-          Create Your Account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Join Ghana's trusted skilled labor marketplace
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100">
+        <div className="text-center">
+          <Link href="/">
+            <Image src="/diwalya-logo.png" alt="Diwalya Logo" width={180} height={45} className="mx-auto mb-6 cursor-pointer" />
+          </Link>
+          <h2 className="text-3xl font-black text-gray-900 tracking-tight">Create your account</h2>
+          <p className="mt-2 text-sm text-gray-500 font-bold">Choose your role to get started</p>
+        </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl rounded-2xl sm:px-10 border border-gray-100">
-          
-          {/* Role Selection */}
-          <div className="grid grid-cols-2 gap-3 mb-8">
-            <button
-              onClick={() => setRole('CLIENT')}
-              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
-                role === 'CLIENT' 
-                ? 'border-primary bg-primary/5 text-primary' 
-                : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
-              }`}
-            >
-              <User className="mb-2" size={24} />
-              <span className="text-sm font-bold uppercase tracking-wide">Hire Talent</span>
-            </button>
-            <button
-              onClick={() => setRole('WORKER')}
-              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
-                role === 'WORKER' 
-                ? 'border-secondary bg-secondary/5 text-secondary' 
-                : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
-              }`}
-            >
-              <Briefcase className="mb-2" size={24} />
-              <span className="text-sm font-bold uppercase tracking-wide">Work & Earn</span>
-            </button>
-          </div>
+        {/* Role Selection */}
+        <div className="flex p-1.5 bg-gray-50 rounded-xl mb-8">
+          <button
+            type="button"
+            onClick={() => setRole('CLIENT')}
+            className={`flex-1 flex items-center justify-center p-3 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
+              role === 'CLIENT' 
+              ? 'bg-white text-primary shadow-sm border border-gray-100' 
+              : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <User className="mr-2" size={16} /> Hire Talent
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole('WORKER')}
+            className={`flex-1 flex items-center justify-center p-3 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
+              role === 'WORKER' 
+              ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' 
+              : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <Briefcase className="mr-2" size={16} /> Work & Earn
+          </button>
+        </div>
 
-          <form className="space-y-4" onSubmit={handleSignup}>
-            {error && (
-              <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded text-sm text-red-700">
-                {error}
+        <form className="mt-8 space-y-6" onSubmit={handleSignup}>
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl flex items-start gap-3">
+              <ShieldCheck className="text-red-500 shrink-0 mt-0.5" size={18} />
+              <p className="text-sm text-red-700 font-bold">{error}</p>
+            </div>
+          )}
+
+          {isSuccess && (
+            <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-xl space-y-2">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="text-green-500" size={20} />
+                <h3 className="text-green-800 font-black uppercase text-xs tracking-widest">Account Created!</h3>
               </div>
-            )}
-            
+              <p className="text-sm text-green-700 font-bold">
+                Please check your email (<span className="underline">{email}</span>) to confirm your account before logging in.
+              </p>
+              <Link href="/login" className="inline-block text-xs font-black text-primary uppercase tracking-widest py-2">
+                Continue to Login →
+              </Link>
+            </div>
+          )}
+          
+          <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Full Name</label>
+              <div className="relative mt-1">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="name"
-                  name="name"
-                  type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm transition-all text-gray-900"
+                  className="appearance-none relative block w-full pl-12 pr-3 py-3.5 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm font-bold bg-white"
                   placeholder="John Doe"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Email Address</label>
+              <div className="relative mt-1">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="email"
-                  name="email"
                   type="email"
-                  autoComplete="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm transition-all text-gray-900"
+                  className="appearance-none relative block w-full pl-12 pr-3 py-3.5 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm font-bold bg-white"
                   placeholder="name@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Password</label>
+              <div className="relative mt-1">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="password"
-                  name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm transition-all text-gray-900"
-                  placeholder="At least 8 characters"
+                  className="appearance-none relative block w-full pl-12 pr-12 py-3.5 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm font-bold bg-white"
+                  placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
                 </button>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-center mt-6">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-600">
-                I agree to the{' '}
-                <a href="#" className="font-medium text-primary hover:underline">
-                  Terms of Service
-                </a>{' '}
-                and{' '}
-                <a href="#" className="font-medium text-primary hover:underline">
-                  Privacy Policy
-                </a>
-              </label>
-            </div>
+          <div className="flex items-center">
+            <input required type="checkbox" className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer" />
+            <label className="ml-3 block text-sm text-gray-500 font-bold">
+              I agree to the <span className="text-primary hover:underline cursor-pointer">Terms</span> and <span className="text-primary hover:underline cursor-pointer">Privacy Policy</span>
+            </label>
+          </div>
 
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-lg font-bold text-white transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed ${
-                  role === 'WORKER' ? 'bg-secondary hover:bg-secondary-light focus:ring-secondary' : 'bg-primary hover:bg-primary-light focus:ring-primary'
-                }`}
-              >
-                {isLoading ? (
-                  <Loader2 className="animate-spin h-6 w-6" />
-                ) : (
-                  <>
-                    Create Account
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`group relative w-full flex justify-center py-4 px-4 border border-transparent text-lg font-black rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all active:scale-[0.98] ${
+                role === 'WORKER' 
+                ? 'bg-slate-900 hover:bg-slate-800 focus:ring-slate-500 shadow-lg shadow-slate-200' 
+                : 'bg-primary hover:bg-primary-light focus:ring-primary shadow-lg shadow-primary/20'
+              } disabled:opacity-50`}
+            >
+              {isLoading ? (
+                <Loader2 className="animate-spin h-6 w-6" />
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="ml-2 h-6 w-6" />
+                </>
+              )}
+            </button>
+          </div>
+        </form>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link href="/login" className="font-medium text-primary hover:text-primary-light transition-colors">
-              Log in instead
-            </Link>
-          </p>
-        </div>
+        <p className="mt-8 text-center text-sm text-gray-500 font-bold">
+          Already have an account?{' '}
+          <Link href="/login" className="text-primary hover:text-primary-light transition-colors">
+            Log in instead
+          </Link>
+        </p>
       </div>
       
-      <div className="mt-8 text-center">
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-500 font-medium">
-          <ShieldCheck size={18} className="text-green-500" />
-          Your data is encrypted and secure with 256-bit SSL
-        </div>
+      <div className="mt-8 flex items-center justify-center gap-2 text-gray-400 font-black text-[10px] uppercase tracking-[0.2em]">
+        <ShieldCheck size={16} className="text-primary" />
+        Data is encrypted and secure with 256-bit SSL
       </div>
     </div>
   );

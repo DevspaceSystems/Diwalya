@@ -123,6 +123,19 @@ export async function sendWelcomeNotification(userId: string, name: string, emai
   try {
     console.log(`[sendWelcomeNotification] Syncing user ${email} (${userId}) to DB...`);
 
+    // Check for ghost records with the same email but different ID
+    const { data: conflictUser } = await supabaseAdmin
+      .from('User')
+      .select('id')
+      .eq('email', email)
+      .neq('id', userId)
+      .maybeSingle();
+
+    if (conflictUser) {
+      console.warn(`[sendWelcomeNotification] Found ghost record for email ${email} with ID ${conflictUser.id}. Removing...`);
+      await supabaseAdmin.from('User').delete().eq('id', conflictUser.id);
+    }
+
     // 0. Ensure user exists in handle_new_user (Fallback for Trigger)
     const { error: syncError } = await supabaseAdmin.from('User').upsert({
       id: userId,
@@ -134,6 +147,7 @@ export async function sendWelcomeNotification(userId: string, name: string, emai
 
     if (syncError) {
       console.error('[sendWelcomeNotification] Sync Error:', syncError);
+      // Don't throw here to ensure email attempts continue, but it will be caught in onboarding if it fails again
     } else {
       // Also ensure a wallet exists
       await supabaseAdmin.from('Wallet').upsert({

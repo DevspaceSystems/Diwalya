@@ -15,11 +15,13 @@ import {
 } from 'lucide-react';
 import { getPendingVerifications, approveWorker, rejectWorker } from '@/app/actions/worker';
 import { cn } from '@/lib/utils';
+import MediaLightbox from '@/components/ui/MediaLightbox';
 
 export default function VerificationCenterPage() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRequests();
@@ -50,6 +52,10 @@ export default function VerificationCenterPage() {
 
   return (
     <div className="p-8">
+      <MediaLightbox 
+        url={selectedMedia} 
+        onClose={() => setSelectedMedia(null)} 
+      />
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Verification Center</h1>
@@ -108,13 +114,12 @@ export default function VerificationCenterPage() {
 
                 <div className="flex gap-4">
                   {req.ghanaCardUrl && (
-                    <a 
-                      href={req.ghanaCardUrl} 
-                      target="_blank" 
+                    <button 
+                      onClick={() => setSelectedMedia(req.ghanaCardUrl)}
                       className="inline-flex items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-lg shadow-slate-900/10"
                     >
-                      <FileText size={18} /> View ID Documentation <ExternalLink size={14} />
-                    </a>
+                      <FileText size={18} /> View ID Documentation
+                    </button>
                   )}
                 </div>
               </div>

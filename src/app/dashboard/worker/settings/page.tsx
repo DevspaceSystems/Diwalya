@@ -38,7 +38,6 @@ export default function WorkerSettingsPage() {
     category: '',
     location: '',
     experienceYears: 0,
-    hourlyRate: 0,
     availability: '',
   });
   const [profilePicture, setProfilePicture] = useState<string>('');
@@ -61,7 +60,6 @@ export default function WorkerSettingsPage() {
           category: wp.category || '',
           location: wp.location || '',
           experienceYears: wp.experienceYears || 0,
-          hourlyRate: wp.hourlyRate || 0,
           availability: wp.availability || '',
         });
       }
@@ -211,17 +209,6 @@ export default function WorkerSettingsPage() {
                   min="0"
                   value={form.experienceYears}
                   onChange={e => setForm(f => ({ ...f, experienceYears: Number(e.target.value) }))}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Hourly Rate (GHS)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.hourlyRate}
-                  onChange={e => setForm(f => ({ ...f, hourlyRate: Number(e.target.value) }))}
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>

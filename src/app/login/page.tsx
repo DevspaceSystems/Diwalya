@@ -44,23 +44,23 @@ export default function LoginPage() {
         }
       }
       
-      const userRole = data.user?.user_metadata?.role || 'CLIENT';
+      const userRole = (data.user?.user_metadata?.role || 'CLIENT').toString().toUpperCase();
       
-      // Enforce strict persona boundary
-      if (userRole === 'CLIENT' && role === 'WORKER') {
+      // Enforce strict persona boundary (Case-insensitive)
+      if (userRole === 'CLIENT' && role.toUpperCase() === 'WORKER') {
         await supabase.auth.signOut();
         throw new Error("This account is registered as a Client (Hire Talent). Please switch to the 'Hire Talent' tab to log in.");
       }
       
-      if (userRole === 'WORKER' && role === 'CLIENT') {
+      if (userRole === 'WORKER' && role.toUpperCase() === 'CLIENT') {
         await supabase.auth.signOut();
         throw new Error("This account is registered as a Worker (Work & Earn). Please switch to the 'Work & Earn' tab to log in.");
       }
 
       // Enforce Role Selection (except for Admins)
-      if (userRole !== role && userRole !== 'ADMIN') {
+      if (userRole !== role.toUpperCase() && userRole !== 'ADMIN') {
         await supabase.auth.signOut();
-        throw new Error(`Role mismatch. This account is registered as a ${userRole === 'WORKER' ? 'Worker' : 'Client'}.`);
+        throw new Error(`Role mismatch. This account is registered as a ${userRole}.`);
       }
 
       if (userRole === 'ADMIN') {
@@ -74,9 +74,9 @@ export default function LoginPage() {
         );
         router.push('/dashboard/admin');
       } else if (userRole === 'WORKER') {
-        router.push('/dashboard/worker');
+        window.location.href = '/dashboard/worker';
       } else {
-        router.push('/search');
+        window.location.href = '/search';
       }
     } catch (err: any) {
       setError(err.message || 'Failed to login. Please check your credentials.');

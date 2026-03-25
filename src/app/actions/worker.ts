@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { sendNotification } from '@/lib/notifications'
 import { logActivity } from './activity'
 import { ensureAdmin, logAdminAction } from './auth'
+import { generateUniqueSlug } from '@/lib/slug'
 
 export async function createWorkerProfile(userId: string, data: {
   businessName: string
@@ -18,18 +19,52 @@ export async function createWorkerProfile(userId: string, data: {
   try {
     // 1. Ensure User record exists (upsert instead of update)
     // This prevents foreign key constraint errors if the sync failed at signup
-    const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
-    
-    await supabaseAdmin
+    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const email = authData?.user?.email;
+
+    if (!email) {
+      console.error('[createWorkerProfile] No email found for user in Auth:', userId);
+      throw new Error('Critical: Your account email could not be verified. Please contact support.');
+    }
+
+    // Check for ghost records: if another ID has this email, we must remove it 
+    // to avoid unique constraint violations on email during the final sync.
+    const { data: conflictUser } = await supabaseAdmin
+      .from('User')
+      .select('id')
+      .eq('email', email)
+      .neq('id', userId)
+      .maybeSingle();
+
+    // Check for existing user with THIS ID to preserve their set name if available
+    const { data: existingUser } = await supabaseAdmin
+      .from('User')
+      .select('name, slug')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (conflictUser) {
+      console.warn(`[createWorkerProfile] Found ghost record for email ${email} with ID ${conflictUser.id}. Removing...`);
+      // Delete old ghost record to clear the email constraint
+      await supabaseAdmin.from('User').delete().eq('id', conflictUser.id);
+    }
+
+    const { error: userError } = await supabaseAdmin
       .from('User')
       .upsert({ 
         id: userId,
         profilePicture: data.profilePicture,
-        name: userData?.user?.user_metadata?.full_name || 'Worker',
-        email: userData?.user?.email || 'worker@diwalya.com',
+        name: existingUser?.name || authData?.user?.user_metadata?.full_name || 'Worker',
+        slug: existingUser?.slug || generateUniqueSlug(existingUser?.name || authData?.user?.user_metadata?.full_name || 'Worker'),
+        email: email,
         role: 'WORKER',
         updatedAt: new Date().toISOString()
       }, { onConflict: 'id' });
+
+    if (userError) {
+      console.error('[createWorkerProfile] User Sync Error:', userError);
+      throw new Error(`Critical: Failed to sync user record. ${userError.message}`);
+    }
 
     // 1b. Sync to Auth Metadata to ensure Navbar and other client-side components see it
     await supabaseAdmin.auth.admin.updateUserById(userId, {
@@ -75,9 +110,9 @@ export async function createWorkerProfile(userId: string, data: {
   }
 }
 
-export async function rejectWorker(userId: string, reason: string, adminId: string = 'admin') {
+export async function rejectWorker(userId: string, reason: string) {
   try {
-    await ensureAdmin(adminId)
+    const admin = await ensureAdmin()
     const { error } = await supabaseAdmin
       .from('WorkerProfile')
       .update({
@@ -95,16 +130,16 @@ export async function rejectWorker(userId: string, reason: string, adminId: stri
         body: `Your worker verification request was rejected. Reason: ${reason}. Please update your profile and try again.`
     })
     
-    await logAdminAction(adminId, `Rejected worker ${userId} verification`, { targetId: userId, reason });
+    await logAdminAction(admin.id, `Rejected worker ${userId} verification`, { targetId: userId, reason });
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
   }
 }
 
-export async function approveWorker(userId: string, adminId: string = 'admin') {
+export async function approveWorker(userId: string) {
   try {
-    await ensureAdmin(adminId)
+    const admin = await ensureAdmin()
     const { error } = await supabaseAdmin
       .from('WorkerProfile')
       .update({
@@ -125,7 +160,7 @@ export async function approveWorker(userId: string, adminId: string = 'admin') {
         body: 'Congratulations! Your worker profile has been verified. You now have the verified badge and will rank higher in search results.'
     })
 
-    await logAdminAction(adminId, `Approved worker ${userId} verification`, { targetId: userId });
+    await logAdminAction(admin.id, `Approved worker ${userId} verification`, { targetId: userId });
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
@@ -190,7 +225,7 @@ export async function getWorkerById(id: string) {
     const { data: user, error: userError } = await supabaseAdmin
       .from('User')
       .select('*, workerProfile:WorkerProfile(*)')
-      .eq('id', id)
+      .or(`id.eq.${id},slug.eq.${id}`)
       .single();
 
     if (userError) throw userError;
@@ -215,6 +250,84 @@ export async function notifyAdminOfRejection(userId: string, reason: string) {
     return { success: true };
   } catch (error: any) {
     console.error('Notify Admin Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function toggleLove(targetId: string, userId: string) {
+  try {
+    const { data: existing, error: checkError } = await supabaseAdmin
+      .from('Love')
+      .select('id')
+      .match({ userId, targetId })
+      .maybeSingle();
+
+    if (checkError) throw checkError;
+
+    if (existing) {
+      await supabaseAdmin.from('Love').delete().match({ userId, targetId });
+      return { success: true, loved: false };
+    } else {
+      await supabaseAdmin.from('Love').insert({ userId, targetId });
+      return { success: true, loved: true };
+    }
+  } catch (error: any) {
+    console.error('Toggle Love Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getWorkerStats(workerId: string, currentUserId?: string) {
+  try {
+    const { count: lovedCount, error: countError } = await supabaseAdmin
+      .from('Love')
+      .select('*', { count: 'exact', head: true })
+      .eq('targetId', workerId);
+
+    if (countError) throw countError;
+
+    let isLoved = false;
+    if (currentUserId) {
+      const { data, error: userLoveError } = await supabaseAdmin
+        .from('Love')
+        .select('id')
+        .match({ userId: currentUserId, targetId: workerId })
+        .maybeSingle();
+      if (userLoveError) throw userLoveError;
+      isLoved = !!data;
+    }
+
+    const { data: reviews, error: reviewsError } = await supabaseAdmin
+      .from('Review')
+      .select('rating')
+      .eq('targetId', workerId);
+
+    if (reviewsError) throw reviewsError;
+
+    const reviewCount = reviews?.length || 0;
+    const avgRating = reviewCount > 0 
+      ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount 
+      : 0;
+
+    return { success: true, lovedCount, isLoved, reviewCount, avgRating };
+  } catch (error: any) {
+    console.error('Get Worker Stats Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getWorkerReviews(workerId: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('Review')
+      .select('*, author:User(name, profilePicture)')
+      .eq('targetId', workerId)
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('Get Worker Reviews Error:', error);
     return { success: false, error: error.message };
   }
 }

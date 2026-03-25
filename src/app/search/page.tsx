@@ -33,8 +33,6 @@ export default function SearchPage() {
             workerProfile: {
               location: 'Accra',
               category: 'Quality Check',
-              hourlyRate: 0,
-              verificationStatus: 'APPROVED'
             }
           }]);
         } else {
@@ -133,14 +131,6 @@ export default function SearchPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Price Range</label>
-                  <input type="range" className="w-full mt-2 accent-primary" />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1 font-medium">
-                    <span>{formatGHS(0)}</span>
-                    <span>{formatGHS(500)}+</span>
-                  </div>
-                </div>
               </div>
             </div>
           </aside>
@@ -171,7 +161,6 @@ export default function SearchPage() {
                   const name = worker.name || 'Worker';
                   const category = profile?.category || 'Service Provider';
                   const loc = profile?.location || 'Ghana';
-                  const price = profile?.hourlyRate || 0;
                   const isVerified = (profile?.verificationStatus === 'APPROVED') || (profile?.isVerified);
                   const rating = 5.0; 
                   const jobs = 0;
@@ -179,7 +168,7 @@ export default function SearchPage() {
                   
                   return (
                     <Link 
-                      href={`/worker/${worker.id}`} 
+                      href={`/worker/${worker.slug || worker.id}`} 
                       key={worker.id}
                       className="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row gap-6 group"
                     >
@@ -188,7 +177,9 @@ export default function SearchPage() {
                         <SupabaseImage 
                           src={worker.profilePicture} 
                           alt={name} 
-                          className="w-full h-full" 
+                          width={128}
+                          height={128}
+                          className="w-full h-full object-cover" 
                         />
                       ) : (
                         <div className="w-full h-full bg-blue-50 flex items-center justify-center text-primary font-black text-3xl uppercase">

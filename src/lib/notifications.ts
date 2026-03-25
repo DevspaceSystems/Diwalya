@@ -103,6 +103,36 @@ export async function sendNotification({
 }
 
 /**
+ * Sends a notification to all administrators.
+ */
+export async function notifyAdmins({ title, body, data = {} }: { title: string, body: string, data?: any }) {
+  try {
+    const { data: admins, error } = await supabaseAdmin
+      .from('User')
+      .select('id')
+      .eq('role', 'ADMIN');
+
+    if (error) throw error;
+    if (!admins) return { success: true, count: 0 };
+
+    const results = await Promise.all(
+      admins.map(admin => sendNotification({ 
+        userId: admin.id, 
+        title: `[ADMIN] ${title}`, 
+        body, 
+        data,
+        channels: ['email', 'push']
+      }))
+    );
+
+    return { success: true, count: admins.length, results };
+  } catch (error: any) {
+    console.error('Notify Admins Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Sends a multicast push notification to multiple tokens.
  */
 export async function sendMulticastPush({

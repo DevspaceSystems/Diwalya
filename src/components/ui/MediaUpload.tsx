@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Upload, X, Image, Video, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Video, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { compressImage } from '@/lib/image-utils';
+import MediaLightbox from './MediaLightbox';
 
 interface MediaUploadProps {
   label?: string;
@@ -28,6 +29,7 @@ export default function MediaUpload({
 }: MediaUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadedUrls, setUploadedUrls] = useState<string[]>(existingUrls);
+  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +104,10 @@ export default function MediaUpload({
 
   return (
     <div className={`space-y-4 ${className}`}>
+      <MediaLightbox 
+        url={selectedMedia} 
+        onClose={() => setSelectedMedia(null)} 
+      />
       {label && (
         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">
           {label} ({uploadedUrls.length}/{maxFiles})
@@ -173,7 +179,15 @@ export default function MediaUpload({
                 <img
                   src={url}
                   alt={`Upload ${i + 1}`}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  onClick={() => setSelectedMedia(url)}
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105 cursor-zoom-in"
+                />
+              )}
+              {/* Overlay for Video click since <video> might not trigger onClick easily if it's just a preview */}
+              {isVideo(url) && (
+                <div 
+                  onClick={() => setSelectedMedia(url)}
+                  className="absolute inset-0 cursor-zoom-in z-10"
                 />
               )}
               {/* Remove button */}
@@ -188,7 +202,7 @@ export default function MediaUpload({
               <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 {isVideo(url)
                   ? <Video size={14} className="text-white drop-shadow" />
-                  : <Image size={14} className="text-white drop-shadow" />
+                  : <ImageIcon size={14} className="text-white drop-shadow" />
                 }
               </div>
             </div>

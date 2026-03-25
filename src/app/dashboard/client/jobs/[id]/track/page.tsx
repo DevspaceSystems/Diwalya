@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { getJobProgress, completeJobAndReleaseFunds, raiseDispute } from '@/app/actions/booking';
 import { supabase } from '@/lib/supabase';
 import { formatGHS } from '@/lib/utils';
+import MediaLightbox from '@/components/ui/MediaLightbox';
 
 export default function ClientTrackPage() {
   const params = useParams();
@@ -26,6 +27,7 @@ export default function ClientTrackPage() {
   const [loading, setLoading] = useState(true);
   const [job, setJob] = useState<any>(null);
   const [progressLogs, setProgressLogs] = useState<any[]>([]);
+  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [releasing, setReleasing] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
@@ -33,6 +35,31 @@ export default function ClientTrackPage() {
 
   useEffect(() => {
     fetchJobData();
+
+    // Supabase Realtime Subscription
+    const channel = supabase
+      .channel(`client-job-track-${jobId}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'JobProgress',
+        filter: `jobId=eq.${jobId}`
+      }, () => {
+        fetchJobData();
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'Job',
+        filter: `id=eq.${jobId}`
+      }, () => {
+        fetchJobData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [jobId]);
 
   const fetchJobData = async () => {
@@ -111,6 +138,10 @@ export default function ClientTrackPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
+      <MediaLightbox 
+        url={selectedMedia} 
+        onClose={() => setSelectedMedia(null)} 
+      />
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b z-50 px-6 h-20 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -186,9 +217,17 @@ export default function ClientTrackPage() {
                             {log.mediaUrls && log.mediaUrls.length > 0 && (
                                <div className="grid grid-cols-2 gap-3">
                                   {log.mediaUrls.map((url: string, i: number) => (
-                                    <div key={i} className="rounded-xl overflow-hidden aspect-video relative group cursor-pointer border border-gray-200 shadow-sm">
+                                    <div 
+                                      key={i} 
+                                      onClick={() => setSelectedMedia(url)}
+                                      className="rounded-xl overflow-hidden aspect-video relative group cursor-zoom-in border border-gray-200 shadow-sm"
+                                    >
                                        <img src={url} alt="Proof" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                          <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-slate-900 opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100">
+                                            <Info size={16} />
+                                          </div>
+                                       </div>
                                     </div>
                                   ))}
                                </div>

@@ -5,21 +5,66 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Camera, MapPin, Briefcase, FileText, ArrowRight, CheckCircle2, Loader2, Upload, ChevronRight, Star, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { updateUserProfile } from '@/app/actions/user';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function WorkerSetupPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUser(session.user);
+      } else {
+        router.push('/login');
+      }
+    };
+    fetchUser();
+  }, [router]);
+  
+  // Form State
+  const [profilePicture, setProfilePicture] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [customCategory, setCustomCategory] = useState('');
+  const [location, setLocation] = useState('');
+  const [bio, setBio] = useState('Skilled professional ready to provide high-quality services.');
+  const [experience, setExperience] = useState(2);
 
-  const handleFinish = (e: React.FormEvent) => {
+  const handleFinish = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const res = await updateUserProfile(user.id, {
+        name: user.user_metadata?.full_name || 'User',
+        role: 'WORKER',
+        profilePicture: profilePicture || user.user_metadata?.profilePicture,
+        workerData: {
+          businessName: user.user_metadata?.full_name || 'My Business',
+          location: location,
+          category: selectedCategory === 'other' ? customCategory : selectedCategory,
+          bio: bio,
+          experienceYears: experience,
+        }
+      });
+
+      if (res.success) {
+        setStep(4);
+      } else {
+        alert('Failed to save profile: ' + res.error);
+      }
+    } catch (error) {
+      console.error('Setup Error:', error);
+    } finally {
       setLoading(false);
-      setStep(4);
-    }, 2000);
+    }
   };
 
   return (
@@ -132,6 +177,8 @@ export default function WorkerSetupPage() {
                       type="text" 
                       required 
                       placeholder="e.g. Osu, Accra" 
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
                       className="w-full pl-16 pr-6 py-5 bg-slate-50/50 border border-slate-100 rounded-[2rem] focus:ring-4 focus:ring-secondary/5 focus:border-secondary focus:bg-white focus:outline-none transition-all font-bold text-slate-900" 
                     />
                   </div>
