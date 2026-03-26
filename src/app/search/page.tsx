@@ -69,7 +69,7 @@ export default function SearchPage() {
     <div className="min-h-screen bg-gray-50 pb-20 pt-4">
       <div className="max-w-7xl mx-auto px-4 pt-6">
         <div className="relative max-w-2xl mx-auto">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700" size={20} />
           <input 
             type="text" 
             placeholder="Search workers, skills, or locations..." 
@@ -112,7 +112,7 @@ export default function SearchPage() {
                         {['Plumbing', 'Electrical', 'Carpentry', 'Mechanic', 'Photography'].map(cat => (
                           <label key={cat} className="flex items-center gap-2 cursor-pointer group">
                             <input type="checkbox" className="w-4 h-4 rounded text-primary focus:ring-primary border-gray-300" />
-                            <span className="text-gray-600 group-hover:text-primary transition-colors text-sm font-medium">{cat}</span>
+                            <span className="text-gray-800 group-hover:text-primary transition-colors text-sm font-medium">{cat}</span>
                           </label>
                         ))}
                       </div>
@@ -123,7 +123,7 @@ export default function SearchPage() {
                         {['Delivery', 'Cleaning', 'Security', 'Gardening', 'Laundry', 'General Labor'].map(cat => (
                           <label key={cat} className="flex items-center gap-2 cursor-pointer group">
                             <input type="checkbox" className="w-4 h-4 rounded text-secondary focus:ring-secondary border-gray-300" />
-                            <span className="text-gray-600 group-hover:text-secondary transition-colors text-sm font-medium">{cat}</span>
+                            <span className="text-gray-800 group-hover:text-secondary transition-colors text-sm font-medium">{cat}</span>
                           </label>
                         ))}
                       </div>
@@ -139,15 +139,15 @@ export default function SearchPage() {
           <main className="flex-grow">
             <div className="mb-6">
               <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Available workers in <span className="text-primary">{location}</span></h1>
-              <p className="text-gray-500 font-medium">{filteredWorkers.length} professionals found</p>
+              <p className="text-gray-700 font-medium">{filteredWorkers.length} professionals found</p>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
               {isLoading ? (
-                <div className="py-20 text-center text-gray-500 font-bold animate-pulse">Searching profiles...</div>
+                <div className="py-20 text-center text-gray-700 font-bold animate-pulse">Searching profiles...</div>
               ) : filteredWorkers.length === 0 ? (
                 <div className="py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
-                  <p className="text-gray-400 font-bold text-lg">No workers found matching your criteria</p>
+                  <p className="text-gray-700 font-bold text-lg">No workers found matching your criteria</p>
                   <button 
                     onClick={() => {setQuery(''); setLocation('All Locations');}}
                     className="mt-4 text-primary font-bold hover:underline"
@@ -207,19 +207,19 @@ export default function SearchPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                      <div className="flex items-center gap-4 text-sm text-gray-700 mb-4">
                         <div className="flex items-center gap-1 text-yellow-500 font-bold">
                           <Star size={16} className="fill-yellow-500" /> {rating}
                         </div>
                         <div className="flex items-center gap-1 font-medium">
-                          <MapPin size={16} className="text-gray-400" /> {loc}
+                          <MapPin size={16} className="text-gray-700" /> {loc}
                         </div>
                         <div className="font-medium">{jobs} jobs completed</div>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
                         <span className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black uppercase tracking-wider rounded-full">Available Today</span>
-                        <span className="px-3 py-1 bg-gray-50 text-gray-600 text-[10px] font-black uppercase tracking-wider rounded-full">Top Rated</span>
+                        <span className="px-3 py-1 bg-gray-50 text-gray-800 text-[10px] font-black uppercase tracking-wider rounded-full">Top Rated</span>
                       </div>
                     </div>
 

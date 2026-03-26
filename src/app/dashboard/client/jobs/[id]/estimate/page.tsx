@@ -152,7 +152,7 @@ export default function ClientEstimateReviewPage() {
               <div className="flex justify-between items-start">
                  <div>
                    <h2 className="text-4xl font-black text-gray-900 tracking-tight">{formatGHS(estimate.totalCost)}</h2>
-                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                   <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">
                      {job.status === 'INSPECTION_REQUESTED' ? 'Platform Inspection Fee' : 'Total Fixed Quote'}
                    </p>
                  </div>
@@ -164,20 +164,20 @@ export default function ClientEstimateReviewPage() {
 
               <div className="grid grid-cols-2 gap-6 pt-10 border-t border-gray-50">
                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Labor Cost</p>
+                    <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Labor Cost</p>
                     <p className="text-xl font-black text-gray-900">{formatGHS(estimate.laborCost)}</p>
                  </div>
                  
                  {(job.status === 'ESTIMATE_SUBMITTED' || job.status === 'INSPECTION_REQUESTED') && (
                     <div className="space-y-1">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Materials/Parts</p>
+                       <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Materials/Parts</p>
                        <p className="text-xl font-black text-gray-900">{formatGHS(estimate.materialCost)}</p>
                     </div>
                  )}
               </div>
 
               <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100">
-                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+                 <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-4">
                    {job.status === 'INSPECTION_REQUESTED' ? 'Inspection Details' : "Worker's Notes & Duration"}
                  </p>
                  <div className="flex items-center gap-3 mb-4">
@@ -186,7 +186,7 @@ export default function ClientEstimateReviewPage() {
                        <span className="text-xs font-black text-gray-900 uppercase tracking-widest">{estimate.estimatedDuration}</span>
                     </div>
                  </div>
-                 <p className="text-sm font-medium text-gray-600 leading-relaxed italic">
+                 <p className="text-sm font-medium text-gray-800 leading-relaxed italic">
                     "{estimate.workerNotes || 'No specific notes provided.'}"
                  </p>
               </div>
@@ -195,10 +195,10 @@ export default function ClientEstimateReviewPage() {
            <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white flex items-center justify-between">
               <div>
                  <h4 className="font-black text-lg mb-1 leading-none">Job Details</h4>
-                 <p className="text-slate-400 text-xs font-bold">{job.description}</p>
+                 <p className="text-slate-700 text-xs font-bold">{job.description}</p>
               </div>
               <div className="text-right">
-                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Location</p>
+                 <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">Location</p>
                  <p className="text-sm font-black text-primary">{job.location}</p>
               </div>
            </div>
@@ -212,18 +212,18 @@ export default function ClientEstimateReviewPage() {
                     <ShieldCheck size={40} />
                  </div>
                  <h3 className="text-xl font-black text-gray-900 tracking-tight">Accept & Invest</h3>
-                 <p className="text-xs text-gray-400 font-bold mt-2 leading-relaxed">
+                 <p className="text-xs text-gray-700 font-bold mt-2 leading-relaxed">
                     Protect your funds with Diwalya Escrow. We only release payment when the job is done.
                  </p>
               </div>
 
               <div className="space-y-4">
                  <div className="flex justify-between items-center px-2">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Platform Fee</span>
+                    <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Platform Fee</span>
                     <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Included</span>
                  </div>
                  <div className="flex justify-between items-center px-2 pb-6 border-b border-gray-50">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mediation</span>
+                    <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Mediation</span>
                     <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Free</span>
                  </div>
                  <div className="flex justify-between items-end px-2 pt-2">
@@ -244,15 +244,15 @@ export default function ClientEstimateReviewPage() {
                   <button 
                     onClick={handleDecline}
                     disabled={processing}
-                    className="w-full py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest hover:text-red-500 transition-colors disabled:opacity-50"
+                    className="w-full py-4 text-gray-700 font-black text-[10px] uppercase tracking-widest hover:text-red-500 transition-colors disabled:opacity-50"
                   >
                     {processing ? 'Processing...' : (job.status === 'IN_PROGRESS' ? 'Cancel Job' : 'Decline Quote')}
                   </button>
               </div>
 
               <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-3">
-                 <CreditCard size={18} className="text-gray-400" />
-                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-tight">
+                 <CreditCard size={18} className="text-gray-700" />
+                 <p className="text-[9px] font-black text-gray-700 uppercase tracking-widest leading-tight">
                     Secure payment via Mobile Money or Bank Card
                  </p>
               </div>

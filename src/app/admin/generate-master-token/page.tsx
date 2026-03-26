@@ -36,7 +36,7 @@ export default function GenerateTokenPage() {
         <h1 className="text-3xl font-black text-white mb-2 tracking-tighter flex items-center gap-3">
           <Key className="text-blue-500" /> Genesis Token
         </h1>
-        <p className="text-slate-500 text-sm mb-8 font-medium">Generate a one-time secure link for Super Admin initialization.</p>
+        <p className="text-slate-700 text-sm mb-8 font-medium">Generate a one-time secure link for Super Admin initialization.</p>
 
         {!token ? (
           <form onSubmit={handleGenerate} className="space-y-6">
@@ -61,7 +61,7 @@ export default function GenerateTokenPage() {
           <div className="space-y-6">
             <div className="p-6 bg-slate-950 rounded-2xl border border-blue-500/20 break-all">
               <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2 font-mono">Secure Token Created</p>
-              <p className="text-slate-300 font-mono text-xs">{token.token}</p>
+              <p className="text-slate-600 font-mono text-xs">{token.token}</p>
             </div>
             
             <button

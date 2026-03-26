@@ -209,12 +209,18 @@ export async function getWorkerProfile(userId: string) {
   try {
     const { data, error } = await supabaseAdmin
       .from('WorkerProfile')
-      .select('*')
+      .select('*, user:User(profilePicture, name)')
       .eq('userId', userId)
       .single();
 
     if (error && error.code !== 'PGRST116') throw error;
-    return { success: true, data };
+    // Flatten profilePicture up to top level for easy access
+    const profile = data ? {
+      ...data,
+      profilePicture: data.user?.profilePicture || null,
+      displayName: data.user?.name || null,
+    } : null;
+    return { success: true, data: profile };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

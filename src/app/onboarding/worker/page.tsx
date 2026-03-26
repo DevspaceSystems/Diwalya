@@ -326,7 +326,7 @@ export default function WorkerOnboarding() {
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Business or Full Name</label>
                 <div className="relative">
-                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700" size={18} />
                   <input
                     type="text"
                     required
@@ -342,7 +342,7 @@ export default function WorkerOnboarding() {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
                   <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700" size={18} />
                     <input
                       type="text"
                       required
@@ -356,7 +356,7 @@ export default function WorkerOnboarding() {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Years of Experience</label>
                   <div className="relative">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700" size={18} />
                     <input
                       type="number"
                       required
@@ -444,7 +444,7 @@ export default function WorkerOnboarding() {
                   {profilePicUrl ? (
                     <Image src={profilePicUrl} alt="Preview" fill className="object-cover" />
                   ) : (
-                    <User size={48} className="text-gray-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                    <User size={48} className="text-gray-800 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   )}
                   <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                     <Camera className="text-white" size={24} />
@@ -462,7 +462,7 @@ export default function WorkerOnboarding() {
                     />
                   </label>
                 </div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Profile Picture (Mandatory)</p>
+                <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Profile Picture (Mandatory)</p>
               </div>
 
                 <div className="flex items-center justify-between mb-2">
@@ -487,7 +487,7 @@ export default function WorkerOnboarding() {
               <div className="flex gap-4">
                 <button 
                   onClick={handleBack}
-                  className="flex-1 py-4 border-2 border-gray-100 text-gray-500 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-all"
+                  className="flex-1 py-4 border-2 border-gray-100 text-gray-700 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-all"
                 >
                   <ArrowLeft size={20} /> Back
                 </button>
@@ -557,7 +557,7 @@ export default function WorkerOnboarding() {
                 <button 
                   onClick={handleBack}
                   disabled={isLoading}
-                  className="flex-1 py-4 border-2 border-gray-100 text-gray-500 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-all disabled:opacity-50"
+                  className="flex-1 py-4 border-2 border-gray-100 text-gray-700 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-all disabled:opacity-50"
                 >
                   <ArrowLeft size={20} /> Back
                 </button>
@@ -571,7 +571,7 @@ export default function WorkerOnboarding() {
               </div>
 
               <div className="text-center">
-                 <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                 <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-700 uppercase tracking-[0.2em]">
                     <ShieldCheck size={14} className="text-blue-500" /> Secure Verification Powered by AI
                  </div>
               </div>

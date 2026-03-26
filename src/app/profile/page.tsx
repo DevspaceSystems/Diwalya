@@ -140,7 +140,7 @@ export default function ProfilePage() {
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50">
     <div className="flex flex-col items-center gap-4">
        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-       <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Loading Profile...</p>
+       <p className="text-sm font-bold text-slate-700 uppercase tracking-widest">Loading Profile...</p>
     </div>
   </div>;
 
@@ -164,7 +164,7 @@ export default function ProfilePage() {
                   {(dbUser?.profilePicture || user.user_metadata?.profilePicture) ? (
                     <Image src={dbUser?.profilePicture || user.user_metadata.profilePicture} alt="Profile" fill className="object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <div className="w-full h-full flex items-center justify-center text-gray-700">
                       <User size={48} strokeWidth={1.5} />
                     </div>
                   )}
@@ -184,9 +184,9 @@ export default function ProfilePage() {
                    </span>
                  )}
                </div>
-               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-gray-500 font-bold text-sm">
-                 <span className="flex items-center gap-1.5"><Mail size={16} className="text-slate-500" /> {user.email}</span>
-                 <span className="flex items-center gap-1.5"><Briefcase size={16} className="text-slate-500" /> {role}</span>
+               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-gray-700 font-bold text-sm">
+                 <span className="flex items-center gap-1.5"><Mail size={16} className="text-slate-700" /> {user.email}</span>
+                 <span className="flex items-center gap-1.5"><Briefcase size={16} className="text-slate-700" /> {role}</span>
                </div>
             </div>
           </div>
@@ -198,14 +198,14 @@ export default function ProfilePage() {
           {/* Sidebar / Info */}
           <div className="md:col-span-1 space-y-6">
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-              <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-4">Account Stats</h3>
+              <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest mb-4">Account Stats</h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 font-bold flex items-center gap-2"><Clock size={16} /> Joined</span>
+                  <span className="text-gray-800 font-bold flex items-center gap-2"><Clock size={16} /> Joined</span>
                   <span className="text-slate-900 font-black">{new Date(user.created_at).toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 font-bold flex items-center gap-2"><CheckCircle size={16} /> Status</span>
+                  <span className="text-gray-800 font-bold flex items-center gap-2"><CheckCircle size={16} /> Status</span>
                   <span className="text-green-600 font-black">Active</span>
                 </div>
               </div>
@@ -244,10 +244,10 @@ export default function ProfilePage() {
                 {portfolio.length === 0 ? (
                   <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-[2rem] bg-gray-50/50">
                     <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                       <Upload className="text-gray-300" size={24} />
+                       <Upload className="text-gray-800" size={24} />
                     </div>
-                    <p className="text-slate-500 font-bold">No portfolio items yet.</p>
-                    <p className="text-[10px] text-gray-300 font-black uppercase tracking-[0.2em] mt-1">Upload photos/videos of your works</p>
+                    <p className="text-slate-700 font-bold">No portfolio items yet.</p>
+                    <p className="text-[10px] text-gray-800 font-black uppercase tracking-[0.2em] mt-1">Upload photos/videos of your works</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
@@ -275,7 +275,7 @@ export default function ProfilePage() {
                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3 shadow-xl group-hover:scale-110 transition-transform">
                             <Plus size={24} className="text-primary" />
                          </div>
-                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Upload your first video</p>
+                         <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Upload your first video</p>
                       </div>
                    </div>
                 </div>
@@ -285,10 +285,10 @@ export default function ProfilePage() {
                 <h2 className="text-2xl font-black text-slate-900 mb-6">Recent Bookings</h2>
                 <div className="text-center py-20">
                   <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Briefcase className="text-gray-300" size={32} />
+                    <Briefcase className="text-gray-800" size={32} />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 mb-2">No bookings yet</h3>
-                  <p className="text-gray-500 max-w-xs mx-auto mb-8">Ready to get something done? Find Ghana's best workers today.</p>
+                  <p className="text-gray-700 max-w-xs mx-auto mb-8">Ready to get something done? Find Ghana's best workers today.</p>
                   <button onClick={() => router.push('/search')} className="bg-primary hover:bg-primary-light text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
                     Explore Workers
                   </button>
@@ -309,7 +309,7 @@ export default function ProfilePage() {
               </h2>
               <button 
                 onClick={() => setIsEditing(false)}
-                className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+                className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -318,7 +318,7 @@ export default function ProfilePage() {
             <div className="p-6 overflow-y-auto w-full no-scrollbar">
               <form id="editProfileForm" onSubmit={handleSaveProfile} className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Full Name</label>
+                  <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Full Name</label>
                   <input 
                     type="text" required
                     className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
@@ -326,7 +326,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Phone</label>
+                  <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Phone</label>
                   <input 
                     type="tel"
                     className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
@@ -339,7 +339,7 @@ export default function ProfilePage() {
                     <hr className="my-6 border-gray-100 border-dashed" />
                     <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-4">Professional Details</h3>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Professional Category</label>
+                      <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Professional Category</label>
                       <input 
                         type="text" required
                         className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
@@ -349,7 +349,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Experience (Years)</label>
+                        <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Experience (Years)</label>
                         <input 
                           type="number" min="0" required
                           className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
@@ -357,7 +357,7 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Hourly Rate (GHS)</label>
+                        <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Hourly Rate (GHS)</label>
                         <input 
                           type="number" min="0"
                           className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
@@ -366,7 +366,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Location / Area</label>
+                      <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Location / Area</label>
                       <input 
                         type="text" required
                         className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
@@ -375,7 +375,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Bio / About Me</label>
+                      <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Bio / About Me</label>
                       <textarea 
                         rows={3}
                         className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none resize-none"

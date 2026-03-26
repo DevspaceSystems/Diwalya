@@ -87,7 +87,7 @@ export default function SuperAdminDashboard() {
                                 <TrendingUp size={12} /> {card.trend}
                             </span>
                         </div>
-                        <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">{card.label}</p>
+                        <p className="text-sm font-black text-slate-700 uppercase tracking-widest mb-1">{card.label}</p>
                         <p className="text-4xl font-black text-slate-900">{card.value}</p>
                     </div>
                 ))}
@@ -153,7 +153,7 @@ export default function SuperAdminDashboard() {
                         <h4 className="font-black text-lg mb-6 flex items-center gap-2">
                            <MessageSquare className="text-primary" size={24} fill="currentColor" opacity={0.1} /> Quick Broadcast
                         </h4>
-                        <p className="text-slate-500 text-sm font-medium mb-6 leading-relaxed">Need to alert all users about maintenance or a system update?</p>
+                        <p className="text-slate-700 text-sm font-medium mb-6 leading-relaxed">Need to alert all users about maintenance or a system update?</p>
                         <button 
                           onClick={() => setShowMessenger(true)}
                           className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl shadow-slate-900/10 hover:shadow-2xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"

@@ -35,7 +35,7 @@ export default function FinancialLedgerPage() {
   };
 
   if (loading || !data) {
-     return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-black text-slate-400 uppercase tracking-widest text-xs animate-pulse">Auditing platform finances...</div>;
+     return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-black text-slate-700 uppercase tracking-widest text-xs animate-pulse">Auditing platform finances...</div>;
   }
 
   const { stats, transactions, wallets } = data;
@@ -46,7 +46,7 @@ export default function FinancialLedgerPage() {
         <div className="flex justify-between items-end">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Financial Ledger</h1>
-            <p className="text-slate-500 font-medium mt-1 uppercase text-[10px] tracking-widest font-black">Platform-wide economics</p>
+            <p className="text-slate-700 font-medium mt-1 uppercase text-[10px] tracking-widest font-black">Platform-wide economics</p>
           </div>
           <button className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:scale-[1.02] transition-all">
             <Download size={16} /> Export Reconciliation
@@ -62,7 +62,7 @@ export default function FinancialLedgerPage() {
                         <TrendingUp size={28} className="text-emerald-400" />
                     </div>
                 </div>
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Total Transaction Volume</p>
+                <p className="text-xs font-black text-slate-700 uppercase tracking-widest mb-1">Total Transaction Volume</p>
                 <p className="text-4xl font-black">{formatGHS(stats.totalVolume)}</p>
             </div>
 
@@ -72,7 +72,7 @@ export default function FinancialLedgerPage() {
                         <Zap size={28} />
                     </div>
                 </div>
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Platform Commission (5%)</p>
+                <p className="text-xs font-black text-slate-700 uppercase tracking-widest mb-1">Platform Commission (5%)</p>
                 <p className="text-4xl font-black text-slate-900">{formatGHS(stats.platformCommission)}</p>
             </div>
 
@@ -82,7 +82,7 @@ export default function FinancialLedgerPage() {
                         <Wallet size={28} />
                     </div>
                 </div>
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Active User Wallets</p>
+                <p className="text-xs font-black text-slate-700 uppercase tracking-widest mb-1">Active User Wallets</p>
                 <p className="text-4xl font-black text-slate-900">{stats.activeWallets}</p>
             </div>
         </div>
@@ -98,9 +98,9 @@ export default function FinancialLedgerPage() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50/50 sticky top-0 border-b border-slate-100 backdrop-blur-md">
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Total</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Reference</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Total</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-700">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50 font-medium">
@@ -108,7 +108,7 @@ export default function FinancialLedgerPage() {
                                     <tr key={t.id} className="hover:bg-slate-50/50">
                                         <td className="px-6 py-5">
                                             <p className="text-sm font-black text-slate-900">Ref: {t.payment?.reference.slice(-12) || 'N/A'}</p>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase">{t.serviceType}</p>
+                                            <p className="text-[10px] text-slate-700 font-bold uppercase">{t.serviceType}</p>
                                         </td>
                                         <td className="px-6 py-5 text-sm font-black text-slate-900">{formatGHS(t.priceAmount)}</td>
                                         <td className="px-6 py-5">
@@ -135,7 +135,7 @@ export default function FinancialLedgerPage() {
                             {wallets.map((w: any) => (
                                 <div key={w.id} className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:border-indigo-200 transition-all">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-white rounded-xl shadow-inner border border-slate-100 flex items-center justify-center font-black text-slate-400">
+                                        <div className="w-12 h-12 bg-white rounded-xl shadow-inner border border-slate-100 flex items-center justify-center font-black text-slate-700">
                                             {w.user.name[0]}
                                         </div>
                                         <div>
@@ -150,7 +150,7 @@ export default function FinancialLedgerPage() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-lg font-black text-slate-900 tracking-tight">{formatGHS(w.balance)}</p>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Available Funds</p>
+                                        <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Available Funds</p>
                                     </div>
                                 </div>
                             ))}

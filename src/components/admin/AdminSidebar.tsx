@@ -57,12 +57,12 @@ export function AdminSidebar() {
   };
 
   return (
-    <div className="bg-slate-900 text-slate-400 flex flex-col h-full border-r border-white/5 shadow-2xl overflow-y-auto">
+    <div className="bg-slate-900 text-slate-700 flex flex-col h-full border-r border-white/5 shadow-2xl overflow-y-auto">
       <div className="p-8">
          <div className="bg-white p-2 rounded-lg inline-block">
             <Image src="/diwalya-logo.png" alt="Diwalya Admin" width={120} height={30} className="object-contain" />
          </div>
-         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2 ml-1">Admin Panel</p>
+         <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mt-2 ml-1">Admin Panel</p>
       </div>
       
       <nav className="flex-grow px-4 space-y-1 overflow-y-auto scrollbar-hide custom-scrollbar">

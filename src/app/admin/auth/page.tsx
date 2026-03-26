@@ -99,7 +99,7 @@ export default function AdminAuthPage() {
         <h2 className="text-3xl font-black text-white tracking-tight mb-2">
           {isAdminSetup ? 'Primary Admin Setup' : 'Administrator Login'}
         </h2>
-        <p className="text-slate-400 font-medium">
+        <p className="text-slate-700 font-medium">
           {isAdminSetup 
             ? 'No administrator found. Create the primary root account.' 
             : 'Enter your credentials to access the command center.'}
@@ -117,10 +117,10 @@ export default function AdminAuthPage() {
             
             {isAdminSetup && (
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Full Name</label>
+                <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Full Name</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <ShieldCheck className="h-5 w-5 text-slate-500" />
+                    <ShieldCheck className="h-5 w-5 text-slate-700" />
                   </div>
                   <input
                     type="text"
@@ -135,10 +135,10 @@ export default function AdminAuthPage() {
             )}
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Email Address</label>
+              <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-500" />
+                  <Mail className="h-5 w-5 text-slate-700" />
                 </div>
                 <input
                   type="email"
@@ -152,10 +152,10 @@ export default function AdminAuthPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Secure Password</label>
+              <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">Secure Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-500" />
+                  <Lock className="h-5 w-5 text-slate-700" />
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -168,7 +168,7 @@ export default function AdminAuthPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-700 hover:text-white transition-colors"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -192,7 +192,7 @@ export default function AdminAuthPage() {
           </form>
         </div>
 
-        <p className="mt-10 text-center text-slate-500 text-xs font-medium">
+        <p className="mt-10 text-center text-slate-700 text-xs font-medium">
           Protected by Diwalya Sentinel System. Unauthorised access attempts are logged.
         </p>
       </div>

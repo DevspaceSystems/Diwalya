@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
           </Link>
         </div>
         <h2 className="text-center text-3xl font-black text-gray-900 tracking-tight">Set New Password</h2>
-        <p className="mt-2 text-center text-sm font-bold text-gray-500">
+        <p className="mt-2 text-center text-sm font-bold text-gray-700">
           Almost there! Enter your new password below.
         </p>
       </div>
@@ -90,7 +90,7 @@ export default function ResetPasswordPage() {
                   <CheckCircle2 size={32} className="text-green-500" />
                </div>
                <h3 className="text-xl font-black text-gray-900 mb-2">Password Updated!</h3>
-               <p className="text-sm font-medium text-gray-500 mb-8">
+               <p className="text-sm font-medium text-gray-700 mb-8">
                  Your password has been changed successfully. Redirecting to login...
                </p>
             </div>
@@ -104,12 +104,12 @@ export default function ResetPasswordPage() {
               )}
 
               <div className="space-y-2">
-                <label htmlFor="password" className="text-[10px] uppercase tracking-widest font-black text-gray-400 px-2">
+                <label htmlFor="password" className="text-[10px] uppercase tracking-widest font-black text-gray-700 px-2">
                   New Password
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                    <Lock className="h-5 w-5 text-gray-700 group-focus-within:text-primary transition-colors" />
                   </div>
                   <input
                     id="password"

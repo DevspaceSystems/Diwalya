@@ -68,7 +68,7 @@ export default function BottomNav() {
                             href={item.href} 
                             className={cn(
                                 "flex flex-col items-center min-w-[60px] transition-all duration-300 relative",
-                                isActive ? "text-primary -translate-y-1" : "text-gray-400"
+                                isActive ? "text-primary -translate-y-1" : "text-gray-700"
                             )}
                         >
                             <item.icon size={22} className={cn("transition-all", isActive ? 'stroke-[2.5px]' : 'stroke-[2px]')} />

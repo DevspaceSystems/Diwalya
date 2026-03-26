@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
           </Link>
         </div>
         <h2 className="text-center text-3xl font-black text-gray-900 tracking-tight">Recovery</h2>
-        <p className="mt-2 text-center text-sm font-bold text-gray-500">
+        <p className="mt-2 text-center text-sm font-bold text-gray-700">
           Enter your email and we'll send you a reset link
         </p>
       </div>
@@ -58,12 +58,12 @@ export default function ForgotPasswordPage() {
                   <CheckCircle2 size={32} className="text-green-500" />
                </div>
                <h3 className="text-xl font-black text-gray-900 mb-2">Email Sent!</h3>
-               <p className="text-sm font-medium text-gray-500 mb-8">
+               <p className="text-sm font-medium text-gray-700 mb-8">
                  Check your inbox for a link to reset your password. If it doesn't appear within a few minutes, check your spam folder.
                </p>
                <button 
                  onClick={() => {setSuccess(false); setEmail('');}} 
-                 className="w-full bg-gray-50 text-gray-600 hover:text-gray-900 py-4 px-4 rounded-2xl text-sm font-bold transition-colors"
+                 className="w-full bg-gray-50 text-gray-800 hover:text-gray-900 py-4 px-4 rounded-2xl text-sm font-bold transition-colors"
                >
                  Try another email
                </button>
@@ -78,12 +78,12 @@ export default function ForgotPasswordPage() {
               )}
 
               <div className="space-y-2">
-                <label htmlFor="email" className="text-[10px] uppercase tracking-widest font-black text-gray-400 px-2">
+                <label htmlFor="email" className="text-[10px] uppercase tracking-widest font-black text-gray-700 px-2">
                   Registered Email Address
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                    <Mail className="h-5 w-5 text-gray-700 group-focus-within:text-primary transition-colors" />
                   </div>
                   <input
                     id="email"
@@ -112,7 +112,7 @@ export default function ForgotPasswordPage() {
           )}
 
           <div className="mt-8 text-center border-t border-gray-50 pt-6">
-            <Link href="/login" className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">
+            <Link href="/login" className="text-sm font-bold text-gray-700 hover:text-primary transition-colors">
               Remember your password? Sign in instead
             </Link>
           </div>

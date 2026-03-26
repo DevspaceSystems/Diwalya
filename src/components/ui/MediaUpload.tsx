@@ -109,7 +109,7 @@ export default function MediaUpload({
         onClose={() => setSelectedMedia(null)} 
       />
       {label && (
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">
+        <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 block">
           {label} ({uploadedUrls.length}/{maxFiles})
         </label>
       )}
@@ -129,7 +129,7 @@ export default function MediaUpload({
           {uploading ? (
             <div className="flex flex-col items-center gap-3">
               <Loader2 size={32} className="text-primary animate-spin" />
-              <p className="text-sm font-bold text-slate-500">Uploading...</p>
+              <p className="text-sm font-bold text-slate-700">Uploading...</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
@@ -138,7 +138,7 @@ export default function MediaUpload({
               </div>
               <div>
                 <p className="font-black text-slate-700 text-sm">Drop files here or click to upload</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest mt-1">
                   {accept.includes('video') ? 'Images & Videos' : 'Images'} • Max {maxFiles} files
                 </p>
               </div>

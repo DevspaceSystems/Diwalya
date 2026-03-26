@@ -154,7 +154,7 @@ export default function ClientTrackPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-           <Link href={`/chat/${job.id}`} className="p-2 text-gray-400 hover:text-primary transition-colors">
+           <Link href={`/chat/${job.id}`} className="p-2 text-gray-700 hover:text-primary transition-colors">
               <MessageSquare size={24} />
            </Link>
         </div>
@@ -167,18 +167,18 @@ export default function ClientTrackPage() {
            {/* Job Card */}
            <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-12 translate-x-12 blur-2xl"></div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Service Overview</p>
+              <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-2">Service Overview</p>
               <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">{job.serviceType}</h2>
               <div className="grid grid-cols-2 gap-6">
                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Worker</p>
+                    <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-1">Worker</p>
                     <p className="font-black text-gray-900 flex items-center gap-2">
                        {job.worker.name} 
                        <ShieldCheck size={14} className="text-blue-500" />
                     </p>
                  </div>
                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                    <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-1">Status</p>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
                        <Clock size={10} /> {job.status}
                     </span>
@@ -191,16 +191,16 @@ export default function ClientTrackPage() {
               <div className="flex items-center justify-between">
                  <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                    Work Execution Log
-                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 bg-slate-50 px-2 py-1 rounded-lg">Real-Time</span>
+                   <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 bg-slate-50 px-2 py-1 rounded-lg">Real-Time</span>
                  </h3>
-                 <History size={20} className="text-gray-300" />
+                 <History size={20} className="text-gray-800" />
               </div>
 
               <div className="relative pl-8 space-y-12 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-100">
                 {progressLogs.length === 0 ? (
                   <div className="py-20 text-center bg-gray-50 rounded-[2rem] border border-dashed border-gray-200">
                      <Loader2 size={32} className="text-gray-200 mx-auto mb-2 animate-spin" />
-                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Awaiting first update from worker...</p>
+                     <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Awaiting first update from worker...</p>
                   </div>
                 ) : (
                   progressLogs.map((log, idx) => (
@@ -208,7 +208,7 @@ export default function ClientTrackPage() {
                       <div className="absolute left-[-21px] top-1 w-4 h-4 rounded-full bg-white border-4 border-emerald-500 shadow-sm z-10"></div>
                       <div className="space-y-4">
                          <div className="flex items-center justify-between">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">
                                {new Date(log.createdAt).toLocaleDateString()} @ {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                          </div>
@@ -250,17 +250,17 @@ export default function ClientTrackPage() {
                     <ShieldCheck size={20} />
                     <span className="text-[10px] font-black uppercase tracking-widest">Escrow Protected Payout</span>
                  </div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Budget Secured</p>
+                 <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">Total Budget Secured</p>
                  <p className="text-4xl font-black mb-10 tracking-tight">{formatGHS(job.payment?.amount || 0)}</p>
                  
                  <div className="space-y-6">
                     <div className="flex items-start gap-4">
-                       <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 text-xs font-bold leading-none shrink-0">1</div>
-                       <p className="text-xs text-slate-400 leading-relaxed">Funds are held by **Diwalya Escrow** until you confirm completion.</p>
+                       <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-700 text-xs font-bold leading-none shrink-0">1</div>
+                       <p className="text-xs text-slate-700 leading-relaxed">Funds are held by **Diwalya Escrow** until you confirm completion.</p>
                     </div>
                     <div className="flex items-start gap-4">
-                       <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 text-xs font-bold leading-none shrink-0">2</div>
-                       <p className="text-xs text-slate-400 leading-relaxed">Once satisfied, click the release button below to pay the worker.</p>
+                       <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-700 text-xs font-bold leading-none shrink-0">2</div>
+                       <p className="text-xs text-slate-700 leading-relaxed">Once satisfied, click the release button below to pay the worker.</p>
                     </div>
                  </div>
               </div>
@@ -270,7 +270,7 @@ export default function ClientTrackPage() {
               <h4 className="font-black text-gray-900 flex items-center gap-2 tracking-tight">
                  <Info size={18} className="text-primary" /> Help & Support
               </h4>
-              <p className="text-xs text-gray-500 font-bold leading-relaxed">
+              <p className="text-xs text-gray-700 font-bold leading-relaxed">
                  Having issues with the quality of work? Do not release payment. Instead, raise a dispute for admin review.
               </p>
               <button 
@@ -289,7 +289,7 @@ export default function ClientTrackPage() {
            <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="text-center md:text-left">
                  <p className="text-xl font-black text-gray-900 tracking-tight leading-none mb-1">Confirm Service Completion</p>
-                 <p className="text-xs font-bold text-gray-400 tracking-tighter">Clicking release will transfer {formatGHS(job.payment?.amount || 0)} to the worker.</p>
+                 <p className="text-xs font-bold text-gray-700 tracking-tighter">Clicking release will transfer {formatGHS(job.payment?.amount || 0)} to the worker.</p>
               </div>
               <button 
                 onClick={handleReleasePayment}
@@ -311,12 +311,12 @@ export default function ClientTrackPage() {
                     <AlertCircle size={32} />
                  </div>
                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">Raise a Dispute</h3>
-                 <p className="text-gray-400 text-sm font-bold uppercase tracking-widest mt-1">Ref: {jobId}</p>
+                 <p className="text-gray-700 text-sm font-bold uppercase tracking-widest mt-1">Ref: {jobId}</p>
               </div>
 
               <form onSubmit={handleRaiseDispute} className="space-y-4">
                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Dispute Reason</label>
+                    <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1">Dispute Reason</label>
                     <select 
                       value={disputeReason}
                       onChange={(e) => setDisputeReason(e.target.value)}
@@ -332,7 +332,7 @@ export default function ClientTrackPage() {
                     </select>
                  </div>
                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Evidence Details</label>
+                    <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1">Evidence Details</label>
                     <textarea 
                       value={disputeDesc}
                       onChange={(e) => setDisputeDesc(e.target.value)}
@@ -345,7 +345,7 @@ export default function ClientTrackPage() {
                     <button 
                       type="button"
                       onClick={() => setShowDisputeModal(false)}
-                      className="flex-1 py-4 bg-gray-50 text-gray-400 font-bold rounded-2xl hover:bg-gray-100 transition-all"
+                      className="flex-1 py-4 bg-gray-50 text-gray-700 font-bold rounded-2xl hover:bg-gray-100 transition-all"
                     >
                        Cancel
                     </button>

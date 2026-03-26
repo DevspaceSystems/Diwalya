@@ -63,7 +63,7 @@ export default function AdminDashboard() {
       <div className="mb-10 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tighter">Admin Dashboard Overview</h1>
-          <p className="text-gray-500 font-bold flex items-center gap-2 uppercase tracking-widest text-[10px]">
+          <p className="text-gray-700 font-bold flex items-center gap-2 uppercase tracking-widest text-[10px]">
             <Activity size={14} className="text-green-500" /> System Status: <span className="text-green-500">Online</span>
           </p>
         </div>
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
                 alert(`Error generating report: ${res.error || 'Failed to fetch data'}`);
               }
             }}
-            className="bg-white px-6 py-3 border border-gray-200 rounded-2xl font-bold text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm"
+            className="bg-white px-6 py-3 border border-gray-200 rounded-2xl font-bold text-gray-800 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm"
           >
             Generate Report <TrendingUp size={18} />
           </button>
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
                 {stat.change}
               </span>
             </div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
+            <p className="text-sm font-bold text-gray-700 uppercase tracking-widest mb-1">{stat.label}</p>
             <p className="text-3xl font-black text-gray-900">{stat.value}</p>
           </div>
         ))}
@@ -134,15 +134,15 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                            <h4 className="font-bold text-gray-900 group-hover:text-primary transition-colors">{name}</h4>
-                           <p className="text-xs text-gray-500 font-medium">{category} • {loc}</p>
+                           <p className="text-xs text-gray-700 font-medium">{category} • {loc}</p>
                         </div>
                      </div>
                      <div className="flex items-center gap-4">
-                        <span className="text-xs text-gray-400 font-bold">{date}</span>
+                        <span className="text-xs text-gray-700 font-bold">{date}</span>
                         <Link href={`/dashboard/admin/verifications?id=${worker.userId}`} className="px-5 py-2 bg-secondary text-white font-black text-xs rounded-xl shadow-lg shadow-orange-500/10 hover:scale-105 transition-all">
                            Review ID
                         </Link>
-                        <button className="p-2 text-gray-300 hover:text-gray-600">
+                        <button className="p-2 text-gray-800 hover:text-gray-800">
                            <MoreVertical size={16} />
                         </button>
                      </div>
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
                  <AlertCircle className="text-orange-500 shrink-0" size={24} />
                  <div>
                     <h4 className="font-black text-lg">System Update</h4>
-                    <p className="text-slate-400 text-sm mt-1">Paystack API credentials need renewal in 3 days.</p>
+                    <p className="text-slate-700 text-sm mt-1">Paystack API credentials need renewal in 3 days.</p>
                  </div>
               </div>
               <button className="w-full py-4 bg-white/10 hover:bg-white/20 rounded-2xl font-bold transition-all text-sm border border-white/5">
@@ -178,7 +178,7 @@ export default function AdminDashboard() {
                           </div>
                           <span className="text-xs font-bold text-gray-700">Ref: #TXN-00{i}</span>
                        </div>
-                       <span className="font-black text-gray-900 text-xs">₵240.00</span>
+                       <span className="font-black text-gray-900 text-xs">{formatGHS(240)}</span>
                     </div>
                  ))}
               </div>

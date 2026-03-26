@@ -25,7 +25,7 @@ import {
   Loader2,
   AlertTriangle
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatGHS } from '@/lib/utils';
 import { getUsers, deleteUser } from '@/app/actions/user';
 import { moderateUser, liftSanctions } from '@/app/actions/report';
 import { approveWorker, rejectWorker } from '@/app/actions/worker';
@@ -115,11 +115,11 @@ export default function EnhancedWorkerManagement() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Worker Management</h1>
-            <p className="text-slate-500 font-medium mt-1 uppercase text-[10px] tracking-widest font-black text-primary">Professional Network Control</p>
+            <p className="text-slate-700 font-medium mt-1 uppercase text-[10px] tracking-widest font-black text-primary">Professional Network Control</p>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
             <div className="relative flex-grow md:flex-grow-0">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-700" size={18} />
               <input 
                 type="text" 
                 placeholder="Search name, skill, or ID..." 
@@ -136,42 +136,42 @@ export default function EnhancedWorkerManagement() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Worker</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Category & Location</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Rating</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-700">Worker</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-700">Category & Location</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-700">Status</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-700">Rating</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-700 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 font-medium text-sm">
                 {loading && workers.length === 0 ? (
-                  <tr><td colSpan={5} className="py-20 text-center text-slate-400 font-bold animate-pulse text-lg">Syncing professional database...</td></tr>
+                  <tr><td colSpan={5} className="py-20 text-center text-slate-700 font-bold animate-pulse text-lg">Syncing professional database...</td></tr>
                 ) : workers.length === 0 ? (
-                  <tr><td colSpan={5} className="py-20 text-center text-slate-400 font-bold text-lg">No workers found in registry.</td></tr>
+                  <tr><td colSpan={5} className="py-20 text-center text-slate-700 font-bold text-lg">No workers found in registry.</td></tr>
                 ) : workers.map((worker) => (
                   <tr key={worker.id} className={cn("hover:bg-slate-50/50 transition-all group", processingId === worker.id && "opacity-50 pointer-events-none")}>
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex-shrink-0 flex items-center justify-center font-black text-slate-400 overflow-hidden shadow-inner border border-slate-200">
+                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex-shrink-0 flex items-center justify-center font-black text-slate-700 overflow-hidden shadow-inner border border-slate-200">
                           {worker.profilePicture ? <img src={worker.profilePicture} className="w-full h-full object-cover" /> : worker.name[0]}
                         </div>
                         <div>
                           <p className="font-black text-slate-900 group-hover:text-primary transition-colors">{worker.name}</p>
-                          <p className="text-[10px] text-slate-400 font-bold">{worker.email}</p>
+                          <p className="text-[10px] text-slate-700 font-bold">{worker.email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex flex-col">
                         <span className="font-black text-slate-700">{worker.workerProfile?.category || 'General'}</span>
-                        <span className="text-[10px] text-slate-400 font-black uppercase flex items-center gap-1 mt-0.5"><MapPin size={10} /> {worker.workerProfile?.location || 'Ghana'}</span>
+                        <span className="text-[10px] text-slate-700 font-black uppercase flex items-center gap-1 mt-0.5"><MapPin size={10} /> {worker.workerProfile?.location || 'Ghana'}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex flex-col gap-2">
                         <span className={cn(
                           "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter inline-flex items-center gap-1 w-fit",
-                          worker.workerProfile?.isVerified ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-100 text-slate-500 border border-slate-200"
+                          worker.workerProfile?.isVerified ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-100 text-slate-700 border border-slate-200"
                         )}>
                           {worker.workerProfile?.isVerified ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
                           {worker.workerProfile?.isVerified ? 'Verified' : 'Unverified'}
@@ -276,12 +276,12 @@ export default function EnhancedWorkerManagement() {
               </div>
               <div className="text-center">
                 <h3 className="text-xl font-black text-slate-900 leading-tight">Confirm {confirmModal.action}?</h3>
-                <p className="text-slate-500 text-sm mt-2 font-medium">Are you sure you want to {confirmModal.action.toLowerCase()} worker <span className="font-black text-slate-800">{confirmModal.workerName}</span>?</p>
+                <p className="text-slate-700 text-sm mt-2 font-medium">Are you sure you want to {confirmModal.action.toLowerCase()} worker <span className="font-black text-slate-800">{confirmModal.workerName}</span>?</p>
               </div>
               <div className="flex gap-3">
                 <button 
                   onClick={() => setConfirmModal(null)}
-                  className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
+                  className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
                 >
                   Cancel
                 </button>
@@ -316,12 +316,12 @@ export default function EnhancedWorkerManagement() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">Worker Dossier</h2>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Verification Intelligence Unit</p>
+                    <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em]">Verification Intelligence Unit</p>
                   </div>
                </div>
                <button 
                  onClick={() => setViewingWorker(null)}
-                 className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all border border-slate-100 z-[70]"
+                 className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-700 hover:bg-red-50 hover:text-red-500 transition-all border border-slate-100 z-[70]"
                >
                  <X size={24} />
                </button>
@@ -329,7 +329,7 @@ export default function EnhancedWorkerManagement() {
              
              <div className="p-10 overflow-y-auto w-full space-y-10 custom-scrollbar">
                 <div className="flex flex-col md:flex-row gap-10 items-start">
-                  <div className="w-40 h-40 bg-slate-100 rounded-[2.5rem] flex-shrink-0 flex items-center justify-center font-black text-5xl text-slate-300 overflow-hidden shadow-2xl border-4 border-white">
+                  <div className="w-40 h-40 bg-slate-100 rounded-[2.5rem] flex-shrink-0 flex items-center justify-center font-black text-5xl text-slate-600 overflow-hidden shadow-2xl border-4 border-white">
                     {viewingWorker.profilePicture ? <img src={viewingWorker.profilePicture} className="w-full h-full object-cover" /> : viewingWorker.name[0]}
                   </div>
                   <div className="flex-grow space-y-4">
@@ -339,12 +339,12 @@ export default function EnhancedWorkerManagement() {
                         Professional Worker
                       </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-6 text-slate-500 font-bold">
+                    <div className="flex flex-wrap items-center gap-6 text-slate-700 font-bold">
                       <span className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 text-sm"><Mail size={16} className="text-primary" /> {viewingWorker.email}</span>
                       <span className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 text-sm"><Phone size={16} className="text-primary" /> {viewingWorker.phone || 'No Contact Data'}</span>
                     </div>
                     <div className="p-3 bg-slate-900 rounded-2xl flex items-center justify-between w-fit gap-6 shadow-xl">
-                       <code className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">ID: {viewingWorker.id}</code>
+                       <code className="text-xs font-black text-slate-700 uppercase tracking-widest ml-2">ID: {viewingWorker.id}</code>
                        <button 
                          onClick={() => {
                            navigator.clipboard.writeText(viewingWorker.id);
@@ -364,10 +364,10 @@ export default function EnhancedWorkerManagement() {
                     { label: 'Status', value: viewingWorker.isBanned ? 'TERMINATED' : viewingWorker.isSuspended ? 'SUSPENDED' : 'OPERATIONAL', color: viewingWorker.isBanned ? 'text-red-500' : viewingWorker.isSuspended ? 'text-orange-500' : 'text-emerald-500' },
                     { label: 'Network Joined', value: new Date(viewingWorker.createdAt).toLocaleDateString(), color: 'text-slate-900' },
                     { label: 'Verification', value: viewingWorker.workerProfile?.isVerified ? 'VERIFIED' : 'PENDING', color: viewingWorker.workerProfile?.isVerified ? 'text-emerald-500' : 'text-slate-400' },
-                    { label: 'Wallet Balance', value: `GHS ${viewingWorker.wallet?.balance?.toFixed(2) || '0.00'}`, color: 'text-primary' }
+                    { label: 'Wallet Balance', value: formatGHS(viewingWorker.wallet?.balance || 0), color: 'text-primary' }
                   ].map((stat, idx) => (
                     <div key={idx} className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                      <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-2">{stat.label}</p>
+                      <p className="text-[10px] uppercase font-black tracking-widest text-slate-700 mb-2">{stat.label}</p>
                       <p className={cn("text-lg font-black tracking-tight", stat.color)}>{stat.value}</p>
                     </div>
                   ))}
@@ -382,27 +382,27 @@ export default function EnhancedWorkerManagement() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                       <div>
-                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Business Name</p>
+                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-700 mb-1">Business Name</p>
                         <p className="text-base font-black text-slate-900">{viewingWorker.workerProfile.businessName || 'Independent Provider'}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Specialization</p>
+                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-700 mb-1">Specialization</p>
                         <p className="text-base font-black text-slate-900">{viewingWorker.workerProfile.category}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Operating Base</p>
+                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-700 mb-1">Operating Base</p>
                         <p className="text-base font-black text-slate-900">{viewingWorker.workerProfile.location}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Industry Experience</p>
+                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-700 mb-1">Industry Experience</p>
                         <p className="text-base font-black text-slate-900">{viewingWorker.workerProfile.experienceYears} Standard Years</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Standard Rate</p>
-                        <p className="text-base font-black text-slate-900 font-mono">GHS {viewingWorker.workerProfile.hourlyRate || '0.00'}/hr</p>
+                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-700 mb-1">Standard Rate</p>
+                        <p className="text-base font-black text-slate-900 font-mono">{formatGHS(viewingWorker.workerProfile.hourlyRate || 0)}/hr</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Reputation Score</p>
+                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-700 mb-1">Reputation Score</p>
                         <div className="flex items-center gap-2 text-yellow-500">
                            <Star size={18} className="fill-current" />
                            <span className="text-base font-black">{viewingWorker.workerProfile.rating || '0.0'} Trust Level</span>
@@ -411,14 +411,14 @@ export default function EnhancedWorkerManagement() {
                     </div>
 
                     <div className="space-y-4">
-                      <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">Professional Bio / Mission Statement</p>
+                      <p className="text-[10px] uppercase font-black tracking-widest text-slate-700">Professional Bio / Mission Statement</p>
                       <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 shadow-inner">
                         <p className="text-slate-600 leading-relaxed font-medium text-sm italic whitespace-pre-wrap">"{viewingWorker.workerProfile.bio || 'The professional has not provided a mission statement yet.'}"</p>
                       </div>
                     </div>
 
                     <div className="space-y-4">
-                      <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">Government Identity Verification (Ghana Card)</p>
+                      <p className="text-[10px] uppercase font-black tracking-widest text-slate-700">Government Identity Verification (Ghana Card)</p>
                       {viewingWorker.workerProfile.ghanaCardUrl ? (
                         <div className="relative group overflow-hidden rounded-[2.5rem] border-4 border-slate-100 shadow-2xl">
                           <img 

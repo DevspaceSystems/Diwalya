@@ -93,7 +93,7 @@ export default function WorkerPortfolioPage() {
       <div className="flex justify-between items-end mb-4">
           <div>
             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Work Portfolio</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Showcase your best work</p>
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">Showcase your best work</p>
           </div>
           {success && (
             <div className="flex items-center gap-2 text-emerald-600 font-black text-sm bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 animate-in fade-in zoom-in">
@@ -106,7 +106,7 @@ export default function WorkerPortfolioPage() {
            <div className="bg-slate-900 p-10 rounded-[2.5rem] text-white overflow-hidden relative group">
               <div className="relative z-10">
                  <h2 className="text-3xl font-black mb-4 tracking-tight">Showcase Your Best Work 💎</h2>
-                 <p className="text-slate-400 font-bold max-w-md leading-relaxed text-sm">
+                 <p className="text-slate-700 font-bold max-w-md leading-relaxed text-sm">
                    Upload high-quality photos and videos of your completed projects. Verified portfolios get <span className="text-white">3x more job requests</span> on Diwalya.
                  </p>
               </div>
@@ -125,7 +125,7 @@ export default function WorkerPortfolioPage() {
                        </div>
                        <h3 className="font-black text-gray-900">Work Photos</h3>
                     </div>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{portfolioImages.length} / 6</span>
+                    <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">{portfolioImages.length} / 6</span>
                  </div>
 
                  <MediaUpload
@@ -138,7 +138,7 @@ export default function WorkerPortfolioPage() {
                    onUploadComplete={setPortfolioImages}
                  />
                  
-                 <p className="text-[10px] text-gray-400 font-bold italic">Max 5MB per image. PNG, JPG supported.</p>
+                 <p className="text-[10px] text-gray-700 font-bold italic">Max 5MB per image. PNG, JPG supported.</p>
               </div>
 
               {/* Video Portfolio */}
@@ -150,7 +150,7 @@ export default function WorkerPortfolioPage() {
                        </div>
                        <h3 className="font-black text-gray-900">Work Videos</h3>
                     </div>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{portfolioVideos.length} / 3</span>
+                    <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">{portfolioVideos.length} / 3</span>
                  </div>
 
                  <MediaUpload
@@ -163,7 +163,7 @@ export default function WorkerPortfolioPage() {
                    onUploadComplete={setPortfolioVideos}
                  />
 
-                 <p className="text-[10px] text-gray-400 font-bold italic">Max 10MB per video. MP4, MOV supported.</p>
+                 <p className="text-[10px] text-gray-700 font-bold italic">Max 10MB per video. MP4, MOV supported.</p>
               </div>
            </div>
 

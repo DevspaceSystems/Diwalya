@@ -170,15 +170,19 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
     setMessage('');
 
     const res = await sendChatMsg({
-        jobId: 'direct_inquiry_' + id, // Simplified for profile chat
+        jobId: undefined, // Direct profile inquiry — no job yet
         senderId: user.id,
+        recipientId: id, // The worker's user ID
         content: text
     });
 
-    if (!res.success) {
+    if (!res.success && (res as any).blocked) {
+        // Only show security warning for explicitly blocked messages
         setShowWarning(true);
-        // Remove the suspicious message from UI log for better enforcement
         setChatLog(prev => prev.filter(m => m.text !== text));
+    } else if (!res.success) {
+        // DB or other error — show the message as failed but no security scare
+        setChatLog(prev => prev.map(m => m.text === text ? { ...m, failed: true } : m));
     } else {
         setShowWarning(false);
     }
@@ -208,14 +212,14 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
     <div className="min-h-screen bg-gray-50 pb-32">
       <nav className="bg-white shadow-sm border-b sticky top-0 z-50 h-16 flex items-center">
         <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between">
-          <Link href="/search" className="text-gray-600 hover:text-primary flex items-center gap-2 font-bold">
+          <Link href="/search" className="text-gray-800 hover:text-primary flex items-center gap-2 font-bold">
             <ArrowRight size={18} className="rotate-180" /> Back to Search
           </Link>
           <div className="flex items-center gap-4">
-            <button onClick={handleShare} className="p-2 text-gray-400 hover:text-primary rounded-full transition-all">
+            <button onClick={handleShare} className="p-2 text-gray-700 hover:text-primary rounded-full transition-all">
               <Share2 size={20} />
             </button>
-            <button onClick={toggleLove} className={cn("p-2 rounded-full transition-all", isLoved ? "text-red-500 bg-red-50" : "text-gray-400 hover:bg-red-50")}>
+            <button onClick={toggleLove} className={cn("p-2 rounded-full transition-all", isLoved ? "text-red-500 bg-red-50" : "text-gray-700 hover:bg-red-50")}>
               <Heart size={20} className={isLoved ? "fill-red-500 text-red-500" : ""} />
             </button>
           </div>
@@ -247,22 +251,22 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                  
                  <div className="flex flex-wrap items-center gap-8">
                     <div className="text-center md:text-left">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Rating</p>
+                       <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-1">Rating</p>
                        <div className="flex items-center gap-1.5 font-black text-gray-900">
                           <Star size={18} className="fill-yellow-500 text-yellow-500" />
                           <span>{reviewStats.rating > 0 ? reviewStats.rating.toFixed(1) : 'New'}</span>
-                          <span className="text-gray-400 font-bold ml-1 text-xs">({reviewStats.count})</span>
+                          <span className="text-gray-700 font-bold ml-1 text-xs">({reviewStats.count})</span>
                        </div>
                     </div>
                     <div className="text-center md:text-left">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Loves</p>
+                       <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-1">Loves</p>
                        <div className="flex items-center gap-1.5 font-black text-red-500">
                           <Heart size={18} className="fill-red-500" />
                           <span>{lovedCount}</span>
                        </div>
                     </div>
                     <div className="text-center md:text-left">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Location</p>
+                       <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-1">Location</p>
                        <div className="flex items-center gap-1.5 font-black text-gray-900">
                           <MapPin size={18} className="text-primary" />
                           <span>{profile.location || 'Ghana'}</span>
@@ -276,7 +280,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
             <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-12">
                <section>
                   <h2 className="text-2xl font-black text-gray-900 mb-6 tracking-tight">Biography</h2>
-                  <p className="text-gray-600 font-medium leading-relaxed">{profile.bio || 'This worker has not provided a biography yet.'}</p>
+                  <p className="text-gray-800 font-medium leading-relaxed">{profile.bio || 'This worker has not provided a biography yet.'}</p>
                </section>
                
                <section>
@@ -325,7 +329,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                   ) : (
                     [1, 2, 3].map((i) => (
                       <div key={i} className="aspect-square bg-gray-100 rounded-3xl overflow-hidden hover:opacity-90 transition-all cursor-pointer border-2 border-white shadow-md flex items-center justify-center relative group">
-                        <Briefcase size={32} className="text-gray-300 group-hover:scale-110 transition-transform" />
+                        <Briefcase size={32} className="text-gray-800 group-hover:scale-110 transition-transform" />
                         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                       </div>
                     ))
@@ -340,7 +344,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                   <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-2">
                      <Star size={18} className="fill-yellow-500 text-yellow-500" />
                      <span className="font-black text-slate-900">{reviewStats.rating.toFixed(1)}</span>
-                     <span className="text-slate-400 font-bold text-xs">/ 5.0</span>
+                     <span className="text-slate-700 font-bold text-xs">/ 5.0</span>
                   </div>
                </div>
 
@@ -348,7 +352,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                  <div className="space-y-6">
                     {reviews.map((review, i) => (
                       <div key={review.id || i} className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 flex gap-4 items-start animate-in fade-in duration-500">
-                         <div className="w-12 h-12 rounded-2xl bg-white overflow-hidden shrink-0 border border-slate-100 flex items-center justify-center font-black text-slate-400 uppercase">
+                         <div className="w-12 h-12 rounded-2xl bg-white overflow-hidden shrink-0 border border-slate-100 flex items-center justify-center font-black text-slate-700 uppercase">
                             {review.author?.profilePicture ? (
                               <SupabaseImage src={review.author.profilePicture} alt={review.author.name} className="w-full h-full" />
                             ) : (
@@ -359,7 +363,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                             <div className="flex justify-between items-start mb-2">
                                <div>
                                   <h4 className="font-black text-slate-900">{review.author?.name || 'Anonymous client'}</h4>
-                                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                  <p className="text-[10px] text-slate-700 font-black uppercase tracking-widest">
                                     {new Date(review.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
                                   </p>
                                </div>
@@ -380,7 +384,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                  </div>
                ) : (
                  <div className="text-center py-12 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-                    <p className="text-slate-400 font-bold">No reviews yet. Be the first to hire {worker?.name}!</p>
+                    <p className="text-slate-700 font-bold">No reviews yet. Be the first to hire {worker?.name}!</p>
                  </div>
                )}
             </div>
@@ -394,7 +398,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                    <CheckCircle size={18} className="text-emerald-500" />
                    <p className="text-xl font-black">Job-Based Pricing</p>
                 </div>
-                <p className="text-[10px] text-gray-400 font-bold mt-2 leading-tight">Worker provides a custom quote based on your specific job details.</p>
+                <p className="text-[10px] text-gray-700 font-bold mt-2 leading-tight">Worker provides a custom quote based on your specific job details.</p>
               </div>
 
               <div className="space-y-6">
@@ -404,26 +408,26 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                    </div>
                    <div>
                       <h4 className="font-black text-gray-900 text-sm">Response Time</h4>
-                      <p className="text-xs text-gray-500 font-bold">Fast • within 30 mins</p>
+                      <p className="text-xs text-gray-700 font-bold">Fast • within 30 mins</p>
                    </div>
                 </div>
                 
                 <div className="p-5 bg-slate-900 rounded-3xl text-white relative overflow-hidden">
                    <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl"></div>
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                   <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest mb-3 flex items-center gap-2">
                       <Lock size={12} className="text-emerald-400" /> Anti-Bypass Security
                    </p>
                    <div className="space-y-3">
                       <div className="flex justify-between items-center text-xs font-bold">
-                         <span className="text-slate-400">Phone:</span>
+                         <span className="text-slate-700">Phone:</span>
                          <span>{maskContact(worker.phone)}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs font-bold">
-                         <span className="text-slate-400">Email:</span>
+                         <span className="text-slate-700">Email:</span>
                          <span>{maskContact(worker.email)}</span>
                       </div>
                    </div>
-                   <p className="text-[9px] text-slate-500 italic mt-4 leading-tight">Full details revealed after first payment release.</p>
+                   <p className="text-[9px] text-slate-700 italic mt-4 leading-tight">Full details revealed after first payment release.</p>
                 </div>
               </div>
 
@@ -442,7 +446,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                 </button>
               </div>
 
-              <p className="text-center text-[10px] text-gray-400 font-black uppercase tracking-widest">
+              <p className="text-center text-[10px] text-gray-700 font-black uppercase tracking-widest">
                 Shielded by Diwalya Escrow 🛡️
               </p>
             </div>
@@ -459,7 +463,7 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
                 <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center font-black text-lg">{worker.name.charAt(0)}</div>
                 <div>
                   <h3 className="font-black text-lg tracking-tight">Direct Inquiry</h3>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Professional Channel</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-700">Professional Channel</p>
                 </div>
               </div>
               <button onClick={() => setShowChat(false)} className="hover:bg-white/10 p-2 rounded-full transition-all">

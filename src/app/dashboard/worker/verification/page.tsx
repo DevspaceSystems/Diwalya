@@ -60,7 +60,7 @@ export default function WorkerVerificationPage() {
       <div className="flex justify-between items-end mb-4">
           <div>
             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Trust & Verification</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Unlock your official trust badge</p>
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">Unlock your official trust badge</p>
           </div>
           <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-500 rounded-xl border border-blue-100">
              <ShieldCheck size={18} />
@@ -101,7 +101,7 @@ export default function WorkerVerificationPage() {
                  <div key={step.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative group hover:shadow-xl hover:border-primary/20 transition-all duration-500">
                     <div className={cn(
                       "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm",
-                      step.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-500" : "bg-slate-50 text-slate-400"
+                      step.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-500" : "bg-slate-50 text-slate-700"
                     )}>
                        <step.icon size={28} />
                     </div>
@@ -110,12 +110,12 @@ export default function WorkerVerificationPage() {
                        <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">{step.label}</h3>
                        {step.status === 'COMPLETED' && <CheckCircle2 size={14} className="text-emerald-500" />}
                     </div>
-                    <p className="text-slate-500 text-xs font-medium leading-relaxed mb-6">{step.description}</p>
+                    <p className="text-slate-700 text-xs font-medium leading-relaxed mb-6">{step.description}</p>
 
                     <div className="flex items-center justify-between mt-auto">
                        <span className={cn(
                          "text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full",
-                         step.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"
+                         step.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-700"
                        )}>
                           {step.status}
                        </span>
@@ -140,14 +140,14 @@ export default function WorkerVerificationPage() {
                       </h3>
 
                       <div className="space-y-6">
-                         <p className="text-slate-500 font-medium text-sm leading-relaxed mb-8">
+                         <p className="text-slate-700 font-medium text-sm leading-relaxed mb-8">
                             Please upload a clear photo of your <span className="text-slate-900 font-black">Ghana Card (Front & Back)</span>.
                             Ensure all details are legible and the photo is not blurry.
                          </p>
 
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="space-y-4">
-                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Ghana Card Front</p>
+                               <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center">Ghana Card Front</p>
                                <MediaUpload 
                                   bucket="worker-documents"
                                   folder={`${user?.id}/gh-card-front`}
@@ -159,7 +159,7 @@ export default function WorkerVerificationPage() {
                                />
                             </div>
                             <div className="space-y-4">
-                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Ghana Card Back</p>
+                               <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center">Ghana Card Back</p>
                                <MediaUpload 
                                   bucket="worker-documents"
                                   folder={`${user?.id}/gh-card-back`}

@@ -54,13 +54,13 @@ export default function WorkerProgressOverviewPage() {
     <div className="p-8 max-w-6xl mx-auto space-y-10">
       <div className="mb-8">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight">Progress Tracking</h1>
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Monitor your active project milestones</p>
+        <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-0.5">Monitor your active project milestones</p>
       </div>
 
       {loading ? (
         <div className="py-24 flex flex-col items-center justify-center bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
           <Loader2 className="animate-spin text-primary mb-4" size={40} />
-          <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Loading active projects...</p>
+          <p className="text-gray-700 font-black uppercase tracking-widest text-[10px]">Loading active projects...</p>
         </div>
       ) : jobs.length === 0 ? (
         <div className="py-24 flex flex-col items-center justify-center bg-white rounded-[2.5rem] border border-slate-100 shadow-sm text-center">
@@ -68,7 +68,7 @@ export default function WorkerProgressOverviewPage() {
             <TrendingUp size={40} className="text-gray-200" />
           </div>
           <h3 className="text-xl font-black text-gray-900 mb-2">No Active Projects</h3>
-          <p className="text-gray-400 font-bold text-sm max-w-xs mx-auto leading-relaxed">
+          <p className="text-gray-700 font-bold text-sm max-w-xs mx-auto leading-relaxed">
             Start a new job to track its progress and milestones here.
           </p>
         </div>
@@ -89,12 +89,12 @@ export default function WorkerProgressOverviewPage() {
                             )}>
                                {job.status.replace(/_/g, ' ')}
                             </span>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                            <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest leading-none">
                                ID: {job.id.slice(0, 8)}
                             </span>
                          </div>
                          <h3 className="text-3xl font-black text-slate-900">{job.serviceType}</h3>
-                         <p className="text-slate-500 font-bold mt-2 flex items-center gap-2">
+                         <p className="text-slate-700 font-bold mt-2 flex items-center gap-2">
                             <MapPin size={16} className="text-primary" /> {job.location}
                          </p>
                       </div>
@@ -131,15 +131,15 @@ export default function WorkerProgressOverviewPage() {
                    <div className="xl:w-80 flex flex-col justify-between items-stretch gap-6 border-t xl:border-t-0 xl:border-l border-slate-100 pt-10 xl:pt-0 xl:pl-10">
                       <div className="space-y-6">
                          <div className="flex items-center gap-3">
-                            <Activity size={20} className="text-slate-300" />
+                            <Activity size={20} className="text-slate-600" />
                             <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest">Summary</h4>
                          </div>
-                         <p className="text-slate-500 text-xs leading-relaxed font-medium">
+                         <p className="text-slate-700 text-xs leading-relaxed font-medium">
                             This project is currently in the <span className="text-slate-900 font-black">{job.status}</span> phase. 
                             Keep updating your progress to ensure client transparency.
                          </p>
                          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Next Milestone</span>
+                            <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Next Milestone</span>
                             <span className="text-[10px] font-black text-primary uppercase tracking-widest">Completion</span>
                          </div>
                       </div>

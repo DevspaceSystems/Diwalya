@@ -56,7 +56,7 @@ export default function Home() {
               {/* Search Bar Container */}
               <div className="bg-white p-2 sm:p-3 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center gap-2 max-w-4xl mx-auto transform hover:scale-[1.01] transition-transform duration-300">
                 <div className="flex-grow w-full flex items-center bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-gray-300 transition-colors">
-                  <Search className="text-gray-400 mr-3 shrink-0" size={20} />
+                  <Search className="text-gray-700 mr-3 shrink-0" size={20} />
                   <input
                     type="text"
                     placeholder="What service do you need? (e.g. Plumber)"
@@ -64,8 +64,8 @@ export default function Home() {
                   />
                 </div>
                 <div className="w-full sm:w-auto shrink-0 flex items-center bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-gray-300 transition-colors">
-                  <MapPin className="text-gray-400 mr-3 shrink-0" size={20} />
-                  <select className="bg-transparent w-full text-gray-600 focus:outline-none cursor-pointer appearance-none text-base sm:text-lg">
+                  <MapPin className="text-gray-700 mr-3 shrink-0" size={20} />
+                  <select className="bg-transparent w-full text-gray-800 focus:outline-none cursor-pointer appearance-none text-base sm:text-lg">
                     <option>Sunyani</option>
                     <option>Accra</option>
                     <option>Kumasi</option>
@@ -98,7 +98,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Popular Services in <span className="text-primary">Sunyani</span></h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">Connecting you with both highly skilled professionals and reliable manual labor for everyday tasks.</p>
+              <p className="text-lg text-gray-800 max-w-2xl mx-auto">Connecting you with both highly skilled professionals and reliable manual labor for everyday tasks.</p>
             </div>
 
             {/* Skilled Workers Section */}
@@ -120,7 +120,7 @@ export default function Home() {
                       <category.icon size={28} />
                     </div>
                     <h3 className="font-bold text-gray-800 text-lg group-hover:text-primary transition-colors">{category.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1 font-medium">{category.count}</p>
+                    <p className="text-sm text-gray-700 mt-1 font-medium">{category.count}</p>
                   </Link>
                 ))}
               </div>
@@ -145,7 +145,7 @@ export default function Home() {
                       <category.icon size={28} />
                     </div>
                     <h3 className="font-bold text-gray-800 text-lg group-hover:text-secondary transition-colors">{category.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1 font-medium">{category.count}</p>
+                    <p className="text-sm text-gray-700 mt-1 font-medium">{category.count}</p>
                   </Link>
                 ))}
               </div>
@@ -215,7 +215,7 @@ export default function Home() {
                           <p className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">{category}</p>
                         </div>
                       </div>
-                      <p className="text-gray-600 text-sm line-clamp-2 mb-6">{profile?.bio || 'No bio available yet.'}</p>
+                      <p className="text-gray-800 text-sm line-clamp-2 mb-6">{profile?.bio || 'No bio available yet.'}</p>
                       <Link href={`/worker/${worker.id}`} className="w-full py-3 bg-gray-50 hover:bg-primary hover:text-white text-primary font-bold rounded-xl transition-colors border border-gray-200 hover:border-primary block text-center">
                         View Profile & Book
                       </Link>
@@ -224,7 +224,7 @@ export default function Home() {
                 );
               })}
               {featuredWorkers.length === 0 && (
-                <div className="col-span-full py-12 text-center text-gray-500 font-medium">
+                <div className="col-span-full py-12 text-center text-gray-700 font-medium">
                   Loading featured workers...
                 </div>
               )}
@@ -237,7 +237,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">How Diwalya Works</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">Get your tasks done in three simple steps with our secure platform.</p>
+              <p className="text-lg text-gray-800 max-w-2xl mx-auto">Get your tasks done in three simple steps with our secure platform.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
@@ -254,7 +254,7 @@ export default function Home() {
                     {item.step}
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{item.desc}</p>
+                  <p className="text-gray-800 leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -286,7 +286,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12 border-t border-gray-800">
+      <footer className="bg-gray-900 text-gray-700 py-12 border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-gray-800">
             <div className="col-span-1 md:col-span-1">

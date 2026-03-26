@@ -108,7 +108,7 @@ export default function NotificationBell() {
       {/* Bell Button */}
       <button
         onClick={() => { setOpen(!open); if (!open) fetchNotifications(); }}
-        className="relative p-2 text-gray-400 hover:text-primary transition-colors focus:outline-none"
+        className="relative p-2 text-gray-700 hover:text-primary transition-colors focus:outline-none"
         aria-label="Notifications"
       >
         <Bell size={24} />
@@ -126,7 +126,7 @@ export default function NotificationBell() {
           <div className="px-6 py-5 border-b border-slate-50 flex items-center justify-between">
             <div>
               <h3 className="font-black text-slate-900 text-base tracking-tight">Notifications</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{unread} unread</p>
+              <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">{unread} unread</p>
             </div>
             <div className="flex items-center gap-2">
               {unread > 0 && (
@@ -137,7 +137,7 @@ export default function NotificationBell() {
                   <CheckCheck size={12} /> Mark all read
                 </button>
               )}
-              <button onClick={() => setOpen(false)} className="text-slate-300 hover:text-slate-500 transition-colors ml-2">
+              <button onClick={() => setOpen(false)} className="text-slate-600 hover:text-slate-700 transition-colors ml-2">
                 <X size={18} />
               </button>
             </div>
@@ -146,14 +146,14 @@ export default function NotificationBell() {
           {/* Notification List */}
           <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-50">
             {loading ? (
-              <div className="py-16 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest animate-pulse">
+              <div className="py-16 text-center text-[10px] font-black text-slate-600 uppercase tracking-widest animate-pulse">
                 Loading...
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-16 text-center">
                 <Bell size={32} className="text-slate-100 mx-auto mb-3" />
-                <p className="text-sm font-black text-slate-400">No notifications yet</p>
-                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1">You're all caught up!</p>
+                <p className="text-sm font-black text-slate-700">No notifications yet</p>
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-1">You're all caught up!</p>
               </div>
             ) : (
               notifications.map((n) => (
@@ -167,8 +167,8 @@ export default function NotificationBell() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-black text-slate-900 leading-tight ${n.isRead ? '' : 'text-slate-900'}`}>{n.title}</p>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5 leading-relaxed">{n.message}</p>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">{timeAgo(n.createdAt)}</p>
+                    <p className="text-xs text-slate-700 font-medium mt-0.5 leading-relaxed">{n.message}</p>
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">{timeAgo(n.createdAt)}</p>
                   </div>
                   {!n.isRead && (
                     <div className="w-2 h-2 bg-primary rounded-full mt-2 shrink-0"></div>

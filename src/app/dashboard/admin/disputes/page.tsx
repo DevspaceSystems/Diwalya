@@ -118,13 +118,13 @@ export default function AdminDisputesPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-black text-gray-900 tracking-tight">Dispute Resolution</h1>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Platform Integrity Hub</p>
+                <p className="text-xs font-bold text-gray-700 uppercase tracking-widest mt-1">Platform Integrity Hub</p>
               </div>
            </div>
            
            <div className="flex bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm">
               <button className="px-6 py-2 bg-slate-900 text-white font-black rounded-xl text-xs uppercase tracking-widest">Active Cases</button>
-              <button className="px-6 py-2 text-gray-400 font-bold rounded-xl text-xs uppercase tracking-widest hover:text-gray-600">Archived</button>
+              <button className="px-6 py-2 text-gray-700 font-bold rounded-xl text-xs uppercase tracking-widest hover:text-gray-800">Archived</button>
            </div>
         </header>
 
@@ -134,12 +134,12 @@ export default function AdminDisputesPage() {
               {loading ? (
                 <div className="py-20 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-dashed border-gray-200">
                    <Loader2 className="animate-spin text-primary mb-4" />
-                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-none">Scanning for disputes...</p>
+                   <p className="text-xs font-bold text-gray-700 uppercase tracking-widest leading-none">Scanning for disputes...</p>
                 </div>
               ) : disputes.length === 0 ? (
                 <div className="py-20 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-dashed border-gray-200">
                    <CheckCircle2 size={40} className="text-emerald-500 mb-4" />
-                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Everything is peaceful</p>
+                   <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Everything is peaceful</p>
                 </div>
               ) : (
                 disputes.map((dispute) => (
@@ -156,12 +156,12 @@ export default function AdminDisputesPage() {
                   >
                      <div className="flex justify-between items-start mb-4">
                         <div className="flex gap-4">
-                            <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
+                            <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-800">
                                 <AlertTriangle size={24} />
                             </div>
                             <div>
                                 <h4 className="font-black text-gray-900 text-lg tracking-tight leading-none mb-1">{dispute.reason}</h4>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-1 flex items-center gap-2">
                                     Ref: {dispute.id} <span className="w-1 h-1 bg-gray-300 rounded-full"></span> {new Date(dispute.createdAt).toLocaleString()}
                                 </p>
                             </div>
@@ -176,11 +176,11 @@ export default function AdminDisputesPage() {
                      
                      <div className="grid grid-cols-2 gap-4 mt-6">
                         <div className="bg-gray-50 p-4 rounded-2xl">
-                           <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Claimant</p>
+                           <p className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-1">Claimant</p>
                            <p className="text-xs font-black text-gray-900">{dispute.job?.client?.name}</p>
                         </div>
                         <div className="bg-gray-50 p-4 rounded-2xl border-l-4 border-red-500">
-                           <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Target</p>
+                           <p className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-1">Target</p>
                            <p className="text-xs font-black text-gray-900">{dispute.job?.worker?.name}</p>
                         </div>
                      </div>
@@ -194,7 +194,7 @@ export default function AdminDisputesPage() {
               {!selectedDispute ? (
                 <div className="bg-white p-10 rounded-[2.5rem] border border-dashed border-gray-200 text-center h-[600px] flex flex-col items-center justify-center">
                     <Scale size={48} className="text-gray-100 mb-4" />
-                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest max-w-[200px] leading-relaxed">
+                    <p className="text-sm font-bold text-gray-700 uppercase tracking-widest max-w-[200px] leading-relaxed">
                         Select a case from the list to begin arbitration
                     </p>
                 </div>
@@ -203,14 +203,14 @@ export default function AdminDisputesPage() {
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <h3 className="text-xl font-black text-red-600 tracking-tight leading-none">Case Arbitration</h3>
-                            <button onClick={() => setSelectedDispute(null)} className="p-1 text-gray-400 hover:text-gray-900"><XCircle size={20} /></button>
+                            <button onClick={() => setSelectedDispute(null)} className="p-1 text-gray-700 hover:text-gray-900"><XCircle size={20} /></button>
                         </div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Arbitrator: Administrative Oversight</p>
+                        <p className="text-xs font-bold text-gray-700 uppercase tracking-widest mb-6">Arbitrator: Administrative Oversight</p>
                     </div>
 
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Dispute Narrative</p>
+                            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1">Dispute Narrative</p>
                             <div className="p-4 bg-red-50/30 rounded-2xl border border-red-100">
                                 <p className="text-xs font-bold text-gray-700 leading-relaxed italic">"{selectedDispute.description}"</p>
                             </div>
@@ -218,18 +218,18 @@ export default function AdminDisputesPage() {
 
                         <div className="space-y-2">
                            <div className="flex items-center justify-between">
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Evidence Analysis</p>
+                              <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1">Evidence Analysis</p>
                               <span className="text-[9px] font-black text-primary uppercase tracking-widest">{progressLogs.length} LOGS</span>
                            </div>
                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                               {progressLogs.length === 0 ? (
                                 <div className="p-6 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                                   <p className="text-xs font-bold text-gray-300 uppercase tracking-widest">No progress logs found for this job</p>
+                                   <p className="text-xs font-bold text-gray-800 uppercase tracking-widest">No progress logs found for this job</p>
                                 </div>
                               ) : (
                                 progressLogs.map((log) => (
                                     <div key={log.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-blue-200 transition-all">
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{new Date(log.createdAt).toLocaleDateString()}</p>
+                                        <p className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-1">{new Date(log.createdAt).toLocaleDateString()}</p>
                                         <p className="text-xs font-bold text-gray-800 leading-tight mb-3">{log.content}</p>
                                         {log.mediaUrls && log.mediaUrls.length > 0 && (
                                             <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">

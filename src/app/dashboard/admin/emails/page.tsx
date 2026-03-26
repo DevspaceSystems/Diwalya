@@ -53,7 +53,7 @@ export default function AdminEmailsPage() {
           </div>
           Email Dispatch
         </h1>
-        <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest mt-3 ml-1 flex items-center gap-2">
+        <p className="text-slate-700 font-black uppercase text-[10px] tracking-widest mt-3 ml-1 flex items-center gap-2">
           <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
           Hostinger SMTP via info@diwalya.com
         </p>
@@ -66,7 +66,7 @@ export default function AdminEmailsPage() {
 
           {/* Template Selector */}
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Email Template</label>
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Email Template</label>
             <div className="grid grid-cols-1 gap-2">
               {EMAIL_TEMPLATES.map(t => (
                 <button
@@ -91,7 +91,7 @@ export default function AdminEmailsPage() {
           {selectedTemplate === 'CUSTOM' && (
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Subject Line</label>
+                <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Subject Line</label>
                 <input
                   type="text"
                   value={customSubject}
@@ -102,7 +102,7 @@ export default function AdminEmailsPage() {
                 />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Email Body</label>
+                <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Email Body</label>
                 <textarea
                   value={customBody}
                   onChange={e => setCustomBody(e.target.value)}
@@ -116,7 +116,7 @@ export default function AdminEmailsPage() {
 
           {/* Recipient */}
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Recipients</label>
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Recipients</label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { value: 'ALL', label: 'Everyone', icon: '👥' },
@@ -171,14 +171,14 @@ export default function AdminEmailsPage() {
         <div className="bg-slate-900 rounded-[2.5rem] p-8 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none"></div>
           <div className="relative z-10">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Preview</p>
+            <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">Preview</p>
             <h3 className="text-lg font-black text-white mb-6 tracking-tight">
               {selectedTemplate === 'CUSTOM' ? (customSubject || 'Custom Email') : currentTemplate?.subject}
             </h3>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-sm text-slate-300 font-medium leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-sm text-slate-600 font-medium leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
               {previewBody || 'Select a template to preview...'}
             </div>
-            <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-slate-700 uppercase tracking-widest">
               <Mail size={12} /> Sent via info@diwalya.com (Hostinger SMTP)
             </div>
           </div>

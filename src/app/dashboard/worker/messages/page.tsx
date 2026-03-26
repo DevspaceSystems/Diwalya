@@ -36,8 +36,7 @@ export default function WorkerMessagesPage() {
 
   const fetchChats = async (userId: string) => {
     setLoading(true);
-    // Fetch unique jobIds and recipient information from ChatMessage
-    // We'll simplify for now by fetching all messages and grouping by jobId or recipient
+    // Fetch all messages involving this user
     const { data, error } = await supabase
       .from('ChatMessage')
       .select('*, job:Job(id, serviceType, client:User(id, name, profilePicture))')
@@ -45,23 +44,61 @@ export default function WorkerMessagesPage() {
       .order('createdAt', { ascending: false });
 
     if (!error && data) {
+      // Find what missing Users we need to look up (for direct inquiries without a job)
+      const missingUserIds = new Set<string>();
+      data.forEach(msg => {
+        if (!msg.job) {
+          const otherId = msg.senderId === userId ? msg.recipientId : msg.senderId;
+          if (otherId && otherId !== 'admin') missingUserIds.add(otherId);
+        }
+      });
+
+      // Fetch the missing users
+      let fallbackUsers: Record<string, any> = {};
+      if (missingUserIds.size > 0) {
+        const { data: users } = await supabase
+          .from('User')
+          .select('id, name, profilePicture')
+          .in('id', Array.from(missingUserIds));
+        
+        if (users) {
+          users.forEach(u => fallbackUsers[u.id] = u);
+        }
+      }
+
       // Grouping logic to find unique conversations
       const uniqueChats: any[] = [];
       const seen = new Set();
       
       data.forEach((msg: any) => {
-        const chatKey = msg.jobId ? `job-${msg.jobId}` : `user-${msg.senderId === userId ? msg.recipientId : msg.senderId}`;
+        const otherUserId = msg.senderId === userId ? msg.recipientId : msg.senderId;
+        const chatKey = msg.jobId ? `job-${msg.jobId}` : `user-${otherUserId}`;
+        
         if (!seen.has(chatKey)) {
           seen.add(chatKey);
+          
+          let recipientName = 'Worker/Client';
+          let profilePicture = undefined;
+          
+          if (msg.job?.client) {
+             recipientName = msg.job.client.name;
+             profilePicture = msg.job.client.profilePicture;
+          } else if (otherUserId === 'admin') {
+             recipientName = 'Diwalya Admin';
+          } else if (fallbackUsers[otherUserId]) {
+             recipientName = fallbackUsers[otherUserId].name;
+             profilePicture = fallbackUsers[otherUserId].profilePicture;
+          }
+
           uniqueChats.push({
-            id: msg.jobId || (msg.senderId === userId ? msg.recipientId : msg.senderId),
+            id: msg.jobId || otherUserId,
             jobId: msg.jobId,
-            recipientId: msg.senderId === userId ? msg.recipientId : msg.senderId,
-            recipientName: msg.job?.client?.name || (msg.recipientId === 'admin' ? 'Diwalya Admin' : 'Worker/Client'),
+            recipientId: otherUserId,
+            recipientName,
             lastMessage: msg.content,
             time: msg.createdAt,
-            serviceType: msg.job?.serviceType,
-            profilePicture: msg.job?.client?.profilePicture
+            serviceType: msg.job?.serviceType || 'Direct Inquiry',
+            profilePicture
           });
         }
       });
@@ -75,7 +112,7 @@ export default function WorkerMessagesPage() {
       <div className="p-8 max-w-5xl mx-auto w-full flex justify-between items-end mb-4 shrink-0 px-8">
           <div>
             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Messages</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Manage your communication</p>
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">Manage your communication</p>
           </div>
           <button 
             onClick={() => setActiveChat({ recipientId: 'admin', recipientName: 'Diwalya Admin' })}
@@ -96,7 +133,7 @@ export default function WorkerMessagesPage() {
                 <MessageSquare size={32} className="text-gray-200" />
               </div>
               <h3 className="text-xl font-black text-gray-900 mb-2">No Conversations</h3>
-              <p className="text-gray-400 font-bold text-sm max-w-xs mx-auto">
+              <p className="text-gray-700 font-bold text-sm max-w-xs mx-auto">
                  Once you start chatting with clients or admins, your messages will appear here.
               </p>
            </div>
@@ -112,7 +149,7 @@ export default function WorkerMessagesPage() {
                        {chat.profilePicture ? (
                           <img src={chat.profilePicture} alt={chat.recipientName} className="w-full h-full object-cover" />
                        ) : (
-                          <User size={32} className="text-slate-300" />
+                          <User size={32} className="text-slate-600" />
                        )}
                     </div>
 
@@ -127,16 +164,16 @@ export default function WorkerMessagesPage() {
                                 <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-0.5">{chat.serviceType} Project</p>
                              )}
                           </div>
-                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest whitespace-nowrap">
+                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest whitespace-nowrap">
                              {new Date(chat.time).toLocaleDateString()}
                           </span>
                        </div>
-                       <p className="text-sm text-slate-500 font-medium leading-relaxed truncate group-hover:text-slate-700 transition-colors">
+                       <p className="text-sm text-slate-700 font-medium leading-relaxed truncate group-hover:text-slate-700 transition-colors">
                           {chat.lastMessage}
                        </p>
                     </div>
                     
-                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-primary group-hover:text-white transition-all">
+                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 group-hover:bg-primary group-hover:text-white transition-all">
                        <ChevronLeft size={16} className="rotate-180" />
                     </div>
                  </div>

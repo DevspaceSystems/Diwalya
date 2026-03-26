@@ -85,7 +85,7 @@ export default function RequestInspectionPage({ params }: Props) {
         <CheckCircle2 size={40} />
       </div>
       <h1 className="text-3xl font-black text-gray-900 mb-2">Inspection Requested!</h1>
-      <p className="text-gray-500 max-w-md">Your inspection has been booked and payment confirmed. Our team will assign a worker shortly.</p>
+      <p className="text-gray-700 max-w-md">Your inspection has been booked and payment confirmed. Our team will assign a worker shortly.</p>
     </div>
   );
 
@@ -113,7 +113,7 @@ export default function RequestInspectionPage({ params }: Props) {
             <ClipboardCheck size={32} />
           </div>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight">Request an Inspection</h1>
-          <p className="text-gray-500 font-medium mt-1">A professional will visit your site before providing a full quote.</p>
+          <p className="text-gray-700 font-medium mt-1">A professional will visit your site before providing a full quote.</p>
         </div>
 
         {/* Fee Info */}
@@ -162,7 +162,7 @@ export default function RequestInspectionPage({ params }: Props) {
             <div>
               <label className="text-xs font-black text-gray-700 uppercase tracking-widest block mb-1.5">Location</label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700" size={16} />
                 <input
                   required
                   type="text"
@@ -176,7 +176,7 @@ export default function RequestInspectionPage({ params }: Props) {
             <div>
               <label className="text-xs font-black text-gray-700 uppercase tracking-widest block mb-1.5">Preferred Date & Time</label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700" size={16} />
                 <input
                   required
                   type="datetime-local"

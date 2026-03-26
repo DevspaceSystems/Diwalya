@@ -68,7 +68,7 @@ export default function AdminReportsPage() {
              <ShieldAlert className="text-red-500" size={32} />
              Reports & Moderation
           </h1>
-          <p className="text-gray-500 font-medium tracking-tight">Review complaints and manage platform safety.</p>
+          <p className="text-gray-700 font-medium tracking-tight">Review complaints and manage platform safety.</p>
         </div>
         <div className="flex flex-wrap gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
           {['ALL', 'PENDING', 'REVIEWED', 'RESOLVED', 'DISMISSED'].map((f) => (
@@ -77,7 +77,7 @@ export default function AdminReportsPage() {
               onClick={() => setFilter(f)}
               className={cn(
                 "px-4 py-2 rounded-xl text-[10px] font-black transition-all whitespace-nowrap",
-                filter === f ? "bg-red-500 text-white shadow-md shadow-red-500/20" : "text-gray-400 hover:text-gray-600"
+                filter === f ? "bg-red-500 text-white shadow-md shadow-red-500/20" : "text-gray-700 hover:text-gray-600"
               )}
             >
               {f}
@@ -89,12 +89,12 @@ export default function AdminReportsPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
            <Loader2 className="animate-spin text-red-500 mb-4" size={40} />
-           <p className="text-gray-400 font-bold">Fetching reports...</p>
+           <p className="text-gray-700 font-bold">Fetching reports...</p>
         </div>
       ) : filteredReports.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
            <Flag className="text-gray-200 mb-4" size={60} />
-           <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">No reports to display</p>
+           <p className="text-gray-700 font-bold uppercase tracking-widest text-sm">No reports to display</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-8">
@@ -105,7 +105,7 @@ export default function AdminReportsPage() {
                 {/* Users Involved */}
                 <div className="p-8 lg:w-1/3 bg-gray-50/20 flex flex-col font-black">
                   <div className="flex items-center justify-between mb-8">
-                    <span className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Involved Parties</span>
+                    <span className="text-[10px] text-gray-700 uppercase tracking-widest font-black">Involved Parties</span>
                     <AlertTriangle className="text-orange-500" size={18} />
                   </div>
                   
@@ -114,7 +114,7 @@ export default function AdminReportsPage() {
                       <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-lg border-2 border-red-100">R</div>
                       <div className="flex-grow">
                         <p className="text-sm text-gray-900">{report.reporter.name}</p>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest">Reporter (Filed)</p>
+                        <p className="text-[10px] text-gray-700 uppercase tracking-widest">Reporter (Filed)</p>
                       </div>
                     </div>
 
@@ -131,7 +131,7 @@ export default function AdminReportsPage() {
                            {report.target.isBanned && <span className="bg-black text-[8px] text-white px-1.5 py-0.5 rounded font-black">BANNED</span>}
                            {report.target.isSuspended && <span className="bg-orange-500 text-[8px] text-white px-1.5 py-0.5 rounded font-black">SUSPENDED</span>}
                         </div>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest">Target (Accused)</p>
+                        <p className="text-[10px] text-gray-700 uppercase tracking-widest">Target (Accused)</p>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-orange-600">
                         <AlertTriangle size={12} /> {report.target.warningCount || 0}
@@ -152,7 +152,7 @@ export default function AdminReportsPage() {
                         report.status === 'PENDING' ? "border-orange-500 text-orange-500 bg-orange-50/30" :
                         report.status === 'REVIEWED' ? "border-blue-500 text-blue-500" :
                         report.status === 'RESOLVED' ? "border-green-500 text-green-500 bg-green-50/30" :
-                        "border-gray-200 text-gray-400"
+                        "border-gray-200 text-gray-700"
                       )}>
                         {report.status}
                       </span>
@@ -163,7 +163,7 @@ export default function AdminReportsPage() {
                    </p>
 
                    <div className="flex flex-wrap items-center gap-6">
-                      <div className="flex items-center gap-2 text-xs text-gray-400 bg-white border border-gray-100 px-4 py-2 rounded-xl">
+                      <div className="flex items-center gap-2 text-xs text-gray-700 bg-white border border-gray-100 px-4 py-2 rounded-xl">
                         <Clock size={14} /> {new Date(report.createdAt).toLocaleString()}
                       </div>
                       {report.jobId && (
@@ -182,7 +182,7 @@ export default function AdminReportsPage() {
                 {/* Moderation Actions */}
                 <div className="p-8 lg:w-1/4 bg-gray-50/10 flex flex-col justify-center gap-4">
                    <div className="space-y-3">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-2 px-2">Decision Tools</p>
+                      <p className="text-[10px] text-gray-700 uppercase tracking-widest font-black mb-2 px-2">Decision Tools</p>
                       
                       {report.status === 'PENDING' && (
                         <button 

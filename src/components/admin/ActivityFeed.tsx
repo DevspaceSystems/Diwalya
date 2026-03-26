@@ -42,7 +42,7 @@ const activityIcons: Record<string, any> = {
   REPORT_SUBMITTED: { icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-50', label: 'Report' },
   VERIFICATION_REQUEST: { icon: ShieldCheck, color: 'text-indigo-500', bg: 'bg-indigo-50', label: 'Verification Request' },
   VERIFICATION_APPROVED: { icon: CheckCircle, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Verified worker' },
-  SYSTEM_ALERT: { icon: Info, color: 'text-gray-500', bg: 'bg-gray-50', label: 'System Alert' },
+  SYSTEM_ALERT: { icon: Info, color: 'text-gray-700', bg: 'bg-gray-50', label: 'System Alert' },
 };
 
 export default function ActivityFeed() {
@@ -71,7 +71,7 @@ export default function ActivityFeed() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8 text-gray-400 font-bold uppercase tracking-widest text-xs">
+      <div className="flex items-center justify-center p-8 text-gray-700 font-bold uppercase tracking-widest text-xs">
         Connecting to live feed...
       </div>
     );
@@ -80,7 +80,7 @@ export default function ActivityFeed() {
   return (
     <div className="space-y-4">
       {activities.length === 0 ? (
-        <div className="text-center py-10 text-gray-400 font-medium">No recent activity detected.</div>
+        <div className="text-center py-10 text-gray-700 font-medium">No recent activity detected.</div>
       ) : (
         activities.map((activity) => {
           const config = activityIcons[activity.type] || activityIcons.SYSTEM_ALERT;
@@ -99,7 +99,7 @@ export default function ActivityFeed() {
                   <span className={cn("text-[10px] font-black uppercase tracking-widest", config.color)}>
                     {config.label}
                   </span>
-                  <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                  <span className="text-[10px] text-gray-700 font-bold flex items-center gap-1">
                     <Clock size={10} /> 
                     {new Date(activity.timestamp || activity.createdAt).toLocaleTimeString()}
                   </span>

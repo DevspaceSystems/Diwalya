@@ -53,7 +53,7 @@ export default function WorkerJobsPage() {
       <div className="flex justify-between items-end mb-4">
           <div>
             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Job Management</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Track & Manage your workload</p>
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">Track & Manage your workload</p>
           </div>
       </div>
           {/* Tabs Navigation */}
@@ -66,7 +66,7 @@ export default function WorkerJobsPage() {
                     "flex items-center gap-2 px-6 py-3.5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest transition-all whitespace-nowrap",
                     activeTab === tab.id 
                       ? "bg-primary text-white shadow-lg shadow-blue-500/20" 
-                      : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-600"
                   )}
                 >
                   <tab.icon size={14} />
@@ -74,7 +74,7 @@ export default function WorkerJobsPage() {
                   {tab.count > 0 && (
                     <span className={cn(
                       "ml-1 px-2 py-0.5 rounded-full text-[10px] font-black",
-                      activeTab === tab.id ? "bg-white/20 text-white" : "bg-gray-100 text-gray-400"
+                      activeTab === tab.id ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
                     )}>
                       {tab.count}
                     </span>
@@ -90,7 +90,7 @@ export default function WorkerJobsPage() {
                     <Loader2 className="animate-spin text-primary" size={48} />
                     <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse rounded-full" />
                   </div>
-                  <p className="text-gray-400 font-black uppercase tracking-[0.2em] text-[10px] mt-8">Fetching jobs...</p>
+                  <p className="text-gray-700 font-black uppercase tracking-[0.2em] text-[10px] mt-8">Fetching jobs...</p>
                 </div>
              ) : filteredJobs.length === 0 ? (
                 <div className="py-24 flex flex-col items-center justify-center bg-white rounded-[2.5rem] border border-slate-100 shadow-sm text-center">
@@ -98,7 +98,7 @@ export default function WorkerJobsPage() {
                     <Briefcase size={40} className="text-gray-200" />
                   </div>
                   <h3 className="text-xl font-black text-gray-900 mb-2">No {activeTab.toLowerCase()} jobs found</h3>
-                  <p className="text-gray-400 font-bold text-sm max-w-xs mx-auto leading-relaxed">
+                  <p className="text-gray-700 font-bold text-sm max-w-xs mx-auto leading-relaxed">
                     Once you have jobs in this status, they will appear here for you to manage.
                   </p>
                 </div>
@@ -130,7 +130,7 @@ export default function WorkerJobsPage() {
                                        job.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
                                        job.status === 'ACCEPTED' ? "bg-blue-50 text-blue-600 border-blue-100" :
                                        job.status === 'WORKER_REVIEW' ? "bg-red-50 text-red-600 border-red-100 animate-pulse" :
-                                       "bg-gray-50 text-gray-500 border-gray-100"
+                                       "bg-gray-50 text-gray-700 border-gray-100"
                                     )}>
                                       {job.status.replace(/_/g, ' ')}
                                     </span>
@@ -141,7 +141,7 @@ export default function WorkerJobsPage() {
                                     )}
                                   </div>
                                   <p className="text-gray-900 font-black text-sm mb-4">Client: {job.client?.name || 'Protected Identity'}</p>
-                                  <div className="flex flex-wrap items-center gap-6 text-[11px] text-gray-400 font-black uppercase tracking-widest">
+                                  <div className="flex flex-wrap items-center gap-6 text-[11px] text-gray-700 font-black uppercase tracking-widest">
                                     <span className="flex items-center gap-2"><MapPin size={14} className="text-primary" /> {job.location}</span>
                                     <span className="flex items-center gap-2"><Clock size={14} className="text-primary" /> {new Date(job.scheduledAt).toLocaleDateString()}</span>
                                   </div>
@@ -150,7 +150,7 @@ export default function WorkerJobsPage() {
 
                             <div className="flex md:flex-col justify-between items-end gap-6 min-w-[160px] border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-8">
                                <div className="text-right">
-                                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Fee</p>
+                                  <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-1">Total Fee</p>
                                   <p className="text-3xl font-black text-gray-900 tracking-tight">{formatGHS(job.priceAmount)}</p>
                                </div>
                                <Link 

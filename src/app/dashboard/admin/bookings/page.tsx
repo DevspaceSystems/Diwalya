@@ -41,6 +41,8 @@ export default function GlobalBookingsPage() {
   // Assignment State
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showInspectionFeeModal, setShowInspectionFeeModal] = useState(false);
+  const [inspectionFeeAmount, setInspectionFeeAmount] = useState('');
   const [workers, setWorkers] = useState<any[]>([]);
   const [inspectionDate, setInspectionDate] = useState('');
   const [accompanyingMember, setAccompanyingMember] = useState('');
@@ -140,6 +142,31 @@ export default function GlobalBookingsPage() {
     setProcessing(false);
   };
 
+  const handleSetInspectionFee = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedJob) return;
+    const fee = parseFloat(inspectionFeeAmount);
+    if (isNaN(fee) || fee <= 0) return alert('Invalid fee amount');
+
+    setProcessing(true);
+    try {
+      const { adminSetInspectionFee } = await import('@/app/actions/booking');
+      const res = await adminSetInspectionFee(selectedJob.id, fee);
+      if (res.success) {
+        alert('Inspection fee set! Client notified to pay.');
+        setShowInspectionFeeModal(false);
+        setInspectionFeeAmount('');
+        fetchBookings();
+      } else {
+        alert(res.error || 'Failed to set inspection fee');
+      }
+    } catch (err) {
+      alert('An error occurred.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleOpenFinalPayout = (job: any) => {
     setSelectedJob(job);
     const defaultAmount = (job.priceAmount || 0) * 0.95;
@@ -208,7 +235,7 @@ export default function GlobalBookingsPage() {
         <div className="flex justify-between items-end">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Global Bookings</h1>
-            <p className="text-slate-500 font-medium mt-1 uppercase text-[10px] tracking-widest font-black">All platform jobs</p>
+            <p className="text-slate-700 font-medium mt-1 uppercase text-[10px] tracking-widest font-black">All platform jobs</p>
           </div>
           <div className="flex gap-4">
              <select 
@@ -230,11 +257,11 @@ export default function GlobalBookingsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {loading ? (
-             <div className="col-span-full py-20 text-center font-black text-slate-400 animate-pulse uppercase tracking-widest text-xs">
+             <div className="col-span-full py-20 text-center font-black text-slate-700 animate-pulse uppercase tracking-widest text-xs">
                Syncing platform jobs...
              </div>
           ) : bookings.length === 0 ? (
-             <div className="col-span-full py-20 text-center font-black text-slate-400 uppercase tracking-widest text-xs">
+             <div className="col-span-full py-20 text-center font-black text-slate-700 uppercase tracking-widest text-xs">
                No bookings found.
              </div>
           ) : bookings.map((job) => (
@@ -242,11 +269,11 @@ export default function GlobalBookingsPage() {
               <div className="flex justify-between items-start mb-6">
                 <span className={cn(
                   "px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border",
-                  statusColors[job.status] || "bg-slate-50 text-slate-400"
+                  statusColors[job.status] || "bg-slate-50 text-slate-700"
                 )}>
                   {job.status.replace('_', ' ')}
                 </span>
-                <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 group-hover:text-primary transition-colors">
+                <span className="text-[10px] font-bold text-slate-700 flex items-center gap-1 group-hover:text-primary transition-colors">
                   <Clock size={12} /> {new Date(job.createdAt).toLocaleDateString()}
                 </span>
               </div>
@@ -254,7 +281,7 @@ export default function GlobalBookingsPage() {
               <div className="space-y-6 flex-grow">
                 <div>
                   <h3 className="text-xl font-black text-slate-900 leading-tight mb-2">{job.serviceType}</h3>
-                  <p className="text-xs text-slate-500 line-clamp-2 font-medium">{job.description}</p>
+                  <p className="text-xs text-slate-700 line-clamp-2 font-medium">{job.description}</p>
                 </div>
 
                 <div className="space-y-4 pt-4 border-t border-slate-50">
@@ -263,7 +290,7 @@ export default function GlobalBookingsPage() {
                       <User size={16} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</p>
+                      <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Client</p>
                       <p className="text-sm font-bold text-slate-800">{job.client.name}</p>
                     </div>
                   </div>
@@ -273,14 +300,14 @@ export default function GlobalBookingsPage() {
                       <Briefcase size={16} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Worker</p>
+                      <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Worker</p>
                       <p className="text-sm font-bold text-slate-800">{job.worker.workerProfile?.businessName || job.worker.name}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex-grow">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Financials</p>
+                        <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">Financials</p>
                         <div className="flex items-center gap-2">
                             <span className="text-xl font-black text-slate-900 leading-none">{formatGHS(job.priceAmount)}</span>
                             {job.paymentId && <div className="p-1 bg-emerald-100 text-emerald-600 rounded-lg" title="Paid"><CreditCard size={12}/></div>}
@@ -339,10 +366,26 @@ export default function GlobalBookingsPage() {
                       Schedule Visit
                     </button>
                   )}
-                 <button className="flex-grow py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
+                 <button 
+                   onClick={() => {
+                     if (job.status === 'ESTIMATE_PENDING_ADMIN_REVIEW') {
+                       handleReviewEstimate(job);
+                     } else if (job.status === 'IN_PROGRESS' && job.paymentId) {
+                       handleOpenFinalPayout(job);
+                     } else if (job.status === 'ACCEPTED' && job.paymentId) {
+                       setSelectedJob(job);
+                       setShowPayoutModal(true);
+                     } else if (job.status === 'INSPECTION_REQUESTED') {
+                       setSelectedJob(job);
+                       setShowInspectionFeeModal(true);
+                     } else {
+                       alert(`Job Status: ${job.status}\nID: ${job.id}\nService: ${job.serviceType}\nLocation: ${job.location}\nClient: ${job.client?.name}`);
+                     }
+                   }}
+                   className="flex-grow py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
                     View Details
                  </button>
-                 <button className="p-3 bg-slate-100 text-slate-400 hover:text-primary rounded-xl transition-all">
+                 <button className="p-3 bg-slate-100 text-slate-700 hover:text-primary rounded-xl transition-all">
                     <MessageSquare size={18} />
                  </button>
               </div>
@@ -360,9 +403,9 @@ export default function GlobalBookingsPage() {
                   <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                      <Coins className="text-emerald-500" /> Early Payout
                   </h3>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Ref: {selectedJob.id}</p>
+                  <p className="text-slate-700 text-[10px] font-black uppercase tracking-widest mt-1">Ref: {selectedJob.id}</p>
                 </div>
-                <button onClick={() => setShowPayoutModal(false)} className="w-10 h-10 bg-slate-50 text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors">
+                <button onClick={() => setShowPayoutModal(false)} className="w-10 h-10 bg-slate-50 text-slate-700 hover:text-red-500 rounded-full flex items-center justify-center transition-colors">
                   <X size={20} />
                 </button>
              </div>
@@ -377,7 +420,7 @@ export default function GlobalBookingsPage() {
 
              <form onSubmit={handlePartialPayout} className="space-y-4">
                 <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Payout Amount (GHS)</label>
+                   <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1">Payout Amount (GHS)</label>
                    <input 
                      type="number"
                      step="0.01"
@@ -390,7 +433,7 @@ export default function GlobalBookingsPage() {
                    />
                 </div>
                 <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Reason for early release</label>
+                   <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1">Reason for early release</label>
                    <input 
                      type="text"
                      value={payoutReason}
@@ -420,16 +463,16 @@ export default function GlobalBookingsPage() {
               <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-amber-50/50">
                  <div>
                     <h3 className="text-2xl font-black text-slate-900 tracking-tight">Schedule Inspection</h3>
-                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Inspection Paid: {formatGHS(100)}</p>
+                    <p className="text-slate-700 text-[10px] font-black uppercase tracking-widest mt-1">Inspection Paid: {formatGHS(100)}</p>
                  </div>
-                 <button onClick={() => setShowScheduleModal(false)} className="w-10 h-10 bg-white text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
+                 <button onClick={() => setShowScheduleModal(false)} className="w-10 h-10 bg-white text-slate-700 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
                    <X size={20} />
                  </button>
               </div>
 
               <form onSubmit={handleScheduleInspection} className="p-8 space-y-6">
                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Inspection Date & Time</label>
+                    <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Inspection Date & Time</label>
                     <input 
                       type="datetime-local"
                       required
@@ -440,7 +483,7 @@ export default function GlobalBookingsPage() {
                  </div>
 
                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Accompanying Member (Optional)</label>
+                    <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Accompanying Member (Optional)</label>
                     <input 
                       type="text"
                       placeholder="e.g. Ama from Diwalya HQ"
@@ -462,6 +505,54 @@ export default function GlobalBookingsPage() {
         </div>
       )}
 
+      {/* Set Inspection Fee Modal */}
+      {showInspectionFeeModal && selectedJob && (
+         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+            <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden p-8 scale-in-center">
+               <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                       Set Inspection Fee
+                    </h3>
+                    <p className="text-slate-700 text-[10px] font-black uppercase tracking-widest mt-1">Job Ref: {selectedJob.id}</p>
+                  </div>
+                  <button onClick={() => setShowInspectionFeeModal(false)} className="w-10 h-10 bg-slate-50 text-slate-700 hover:text-red-500 rounded-full flex items-center justify-center transition-colors">
+                    <X size={20} />
+                  </button>
+               </div>
+
+               <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl mb-6">
+                  <p className="text-[10px] font-bold text-amber-700 mt-1 leading-relaxed">
+                     The specialist requested a site visit. Set the inspection fee here. The client will be notified to pay this amount into escrow before the visit happens.
+                  </p>
+               </div>
+
+               <form onSubmit={handleSetInspectionFee} className="space-y-4">
+                  <div>
+                     <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1">Inspection Fee (GHS)</label>
+                     <input 
+                       type="number"
+                       step="0.01"
+                       value={inspectionFeeAmount}
+                       onChange={(e) => setInspectionFeeAmount(e.target.value)}
+                       className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-black text-slate-900 outline-none focus:ring-2 focus:ring-amber-500/20 transition-all text-xl"
+                       placeholder="e.g. 100"
+                       required
+                     />
+                  </div>
+                  
+                  <button 
+                    type="submit"
+                    disabled={processing}
+                    className="w-full py-4 bg-amber-500 text-white font-black rounded-2xl shadow-lg shadow-amber-500/20 hover:scale-[1.02] active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2"
+                  >
+                     {processing ? <Loader2 className="animate-spin" /> : 'Confirm Fee & Notify Client'}
+                  </button>
+               </form>
+            </div>
+         </div>
+      )}
+
       {/* Assign Worker Modal */}
       {showAssignModal && selectedJob && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
@@ -469,16 +560,16 @@ export default function GlobalBookingsPage() {
              <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                 <div>
                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Assign Specialist</h3>
-                   <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Select the best fit for this request</p>
+                   <p className="text-slate-700 text-[10px] font-black uppercase tracking-widest mt-1">Select the best fit for this request</p>
                 </div>
-                <button onClick={() => setShowAssignModal(false)} className="w-10 h-10 bg-white text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
+                <button onClick={() => setShowAssignModal(false)} className="w-10 h-10 bg-white text-slate-700 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
                   <X size={20} />
                 </button>
              </div>
 
              <div className="p-6 overflow-y-auto flex-grow space-y-3">
                 {workers.length === 0 ? (
-                  <div className="text-center py-10 text-slate-400 font-bold italic">No approved specialists found.</div>
+                  <div className="text-center py-10 text-slate-700 font-bold italic">No approved specialists found.</div>
                 ) : workers.map((worker) => (
                   <button
                     key={worker.id}
@@ -491,15 +582,15 @@ export default function GlobalBookingsPage() {
                          {worker.user?.profilePicture ? (
                            <img src={worker.user.profilePicture} alt={worker.user.name} className="w-full h-full object-cover" />
                          ) : (
-                           <div className="w-full h-full flex items-center justify-center font-black text-slate-400">{worker.user?.name?.charAt(0)}</div>
+                           <div className="w-full h-full flex items-center justify-center font-black text-slate-700">{worker.user?.name?.charAt(0)}</div>
                          )}
                       </div>
                       <div>
                         <h4 className="font-black text-slate-900 group-hover:text-primary transition-colors">{worker.businessName || worker.user?.name}</h4>
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{worker.category}</p>
+                        <p className="text-xs text-slate-700 font-bold uppercase tracking-widest">{worker.category}</p>
                       </div>
                     </div>
-                    <div className="bg-slate-50 px-4 py-2 rounded-xl text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:bg-primary group-hover:text-white transition-all">
+                    <div className="bg-slate-50 px-4 py-2 rounded-xl text-[10px] font-black text-slate-700 uppercase tracking-widest group-hover:bg-primary group-hover:text-white transition-all">
                        Select
                     </div>
                   </button>
@@ -517,7 +608,7 @@ export default function GlobalBookingsPage() {
                     <h3 className="text-2xl font-black text-slate-900 tracking-tight">Review Specialist Quote</h3>
                     <p className="text-purple-600 text-[10px] font-black uppercase tracking-widest mt-1">Job ID: {selectedJob.id}</p>
                  </div>
-                 <button onClick={() => setShowReviewModal(false)} className="w-10 h-10 bg-white text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
+                 <button onClick={() => setShowReviewModal(false)} className="w-10 h-10 bg-white text-slate-700 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
                    <X size={20} />
                  </button>
               </div>
@@ -525,11 +616,11 @@ export default function GlobalBookingsPage() {
               <div className="p-8 space-y-6">
                  <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-slate-50 rounded-2xl">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Labor Cost</p>
+                       <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">Labor Cost</p>
                        <p className="text-xl font-black text-slate-900">{formatGHS(currentEstimate.laborCost)}</p>
                     </div>
                     <div className="p-4 bg-slate-50 rounded-2xl">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Materials</p>
+                       <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">Materials</p>
                        <p className="text-xl font-black text-slate-900">{formatGHS(currentEstimate.materialCost)}</p>
                     </div>
                  </div>
@@ -537,18 +628,18 @@ export default function GlobalBookingsPage() {
                  <div className="p-6 bg-slate-900 text-white rounded-2xl">
                     <div className="flex justify-between items-end">
                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Quote</p>
+                          <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">Total Quote</p>
                           <p className="text-3xl font-black text-white">{formatGHS(currentEstimate.totalCost)}</p>
                        </div>
                        <div className="text-right">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Duration</p>
+                          <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1">Duration</p>
                           <p className="font-black">{currentEstimate.estimatedDuration}</p>
                        </div>
                     </div>
                  </div>
 
                  <div className="space-y-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Specialist Notes</p>
+                    <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1">Specialist Notes</p>
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-600 italic">
                        "{currentEstimate.workerNotes || 'No notes provided'}"
                     </div>
@@ -564,7 +655,7 @@ export default function GlobalBookingsPage() {
                     </button>
                     <button 
                       onClick={() => setShowReviewModal(false)}
-                      className="px-6 py-5 border-2 border-slate-100 text-slate-400 font-black rounded-2xl hover:bg-slate-50 transition-all uppercase tracking-widest text-[10px]"
+                      className="px-6 py-5 border-2 border-slate-100 text-slate-700 font-black rounded-2xl hover:bg-slate-50 transition-all uppercase tracking-widest text-[10px]"
                     >
                        Reject
                     </button>
@@ -582,7 +673,7 @@ export default function GlobalBookingsPage() {
                     <h3 className="text-2xl font-black text-slate-900 tracking-tight">Release Final Funds</h3>
                     <p className="text-emerald-600 text-[10px] font-black uppercase tracking-widest mt-1 tracking-tighter">Job ID: {selectedJob.id}</p>
                  </div>
-                 <button onClick={() => setShowFinalPayoutModal(false)} className="w-10 h-10 bg-white text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
+                 <button onClick={() => setShowFinalPayoutModal(false)} className="w-10 h-10 bg-white text-slate-700 hover:text-red-500 rounded-full flex items-center justify-center transition-colors shadow-sm">
                    <X size={20} />
                  </button>
               </div>
@@ -590,7 +681,7 @@ export default function GlobalBookingsPage() {
               <div className="p-8 space-y-6">
                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div className="flex justify-between items-center mb-1">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Escrow Amount</p>
+                       <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Total Escrow Amount</p>
                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Secured</p>
                     </div>
                     <p className="text-2xl font-black text-slate-900">{formatGHS(selectedJob.priceAmount)}</p>
@@ -598,9 +689,9 @@ export default function GlobalBookingsPage() {
 
                  <div className="space-y-4">
                     <div>
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Amount to Release (GHS)</label>
+                       <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Amount to Release (GHS)</label>
                        <div className="relative">
-                          <CreditCard className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                          <CreditCard className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-700" size={20} />
                           <input 
                             type="number" 
                             step="0.01"
@@ -610,7 +701,7 @@ export default function GlobalBookingsPage() {
                             className="w-full pl-14 pr-6 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-xl text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all"
                           />
                        </div>
-                       <p className="mt-2 text-[10px] font-bold text-slate-400 italic">
+                       <p className="mt-2 text-[10px] font-bold text-slate-700 italic">
                           Suggested (95%): {formatGHS(selectedJob.priceAmount * 0.95)}
                        </p>
                     </div>

@@ -571,15 +571,13 @@ export async function createInspectionRequest(data: {
 
 export async function proposeInspection(data: {
   jobId: string,
-  workerId: string,
-  inspectionFee: number
+  workerId: string
 }) {
   try {
     const { error } = await supabaseAdmin
       .from('Job')
       .update({ 
         status: 'INSPECTION_REQUESTED',
-        priceAmount: data.inspectionFee,
         type: 'INSPECTION'
       })
       .eq('id', data.jobId);
@@ -592,14 +590,14 @@ export async function proposeInspection(data: {
       await sendNotification({
         userId: job.clientId,
         title: 'Inspection Requested',
-        body: `Worker has requested a site inspection for your ${job.serviceType} request. Fee: ${formatGHS(data.inspectionFee)}.`,
+        body: `Worker has requested a site inspection for your ${job.serviceType} request. The admin will review and send you the inspection fee shortly.`,
         data: { jobId: data.jobId }
       });
     }
 
     await logActivity({
       type: 'SYSTEM_ALERT',
-      content: `Worker proposed an inspection fee of ${formatGHS(data.inspectionFee)}`,
+      content: `Worker requested an inspection for job ${data.jobId}`,
       userId: data.workerId,
       metadata: { jobId: data.jobId }
     });
@@ -607,6 +605,36 @@ export async function proposeInspection(data: {
     return { success: true };
   } catch (error: any) {
     console.error('Propose Inspection Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function adminSetInspectionFee(jobId: string, feeAmount: number) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('Job')
+      .update({ 
+        status: 'INSPECTION_PAYMENT_PENDING',
+        priceAmount: feeAmount
+      })
+      .eq('id', jobId);
+
+    if (error) throw error;
+
+    // Notify Client
+    const { data: job } = await supabaseAdmin.from('Job').select('clientId, serviceType').eq('id', jobId).single();
+    if (job) {
+      await sendNotification({
+        userId: job.clientId,
+        title: 'Inspection Fee Set',
+        body: `The admin has set the inspection fee for your ${job.serviceType} request to ${formatGHS(feeAmount)}. Please proceed to payment.`,
+        data: { jobId }
+      });
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Admin Set Inspection Fee Error:', error);
     return { success: false, error: error.message };
   }
 }
@@ -623,10 +651,10 @@ export async function submitJobEstimate(data: {
   try {
     const { data: estimate, error } = await supabaseAdmin
       .from('JobEstimate')
-      .insert({
+      .upsert({
         id: `EST-${Date.now()}`,
         ...data,
-      })
+      }, { onConflict: 'jobId' })
       .select()
       .single();
 
@@ -790,13 +818,6 @@ export async function getJobEstimate(jobId: string) {
 
 export async function declineEstimate(jobId: string) {
   try {
-    const { error: estErr } = await supabaseAdmin
-      .from('JobEstimate')
-      .update({ status: 'REJECTED', reviewedAt: new Date().toISOString() })
-      .eq('jobId', jobId);
-
-    if (estErr) throw estErr;
-
     const { error: jobErr } = await supabaseAdmin
       .from('Job')
       .update({ status: 'CANCELLED' })
@@ -1015,4 +1036,50 @@ export async function verifyInspection(jobId: string) {
     } catch (error: any) {
         return { success: false, error: error.message }
     }
+}
+
+export async function workerCancelJob(jobId: string, workerId: string, reason: string = 'Not specified') {
+  try {
+    const { data: job, error: fetchError } = await supabaseAdmin
+      .from('Job')
+      .select('workerId, clientId, serviceType')
+      .eq('id', jobId)
+      .single();
+
+    if (fetchError || !job) {
+      throw new Error('Job not found');
+    }
+
+    if (job.workerId !== workerId) {
+      throw new Error('Unauthorized');
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('Job')
+      .update({ status: 'CANCELLED' })
+      .eq('id', jobId);
+
+    if (updateError) throw updateError;
+
+    // Import inside to avoid circular deps
+    const { sendNotification } = await import('@/lib/notifications');
+    await sendNotification({
+      userId: job.clientId,
+      title: 'Job Request Declined',
+      body: `The specialist has declined your ${job.serviceType} request. Reason: "${reason}". They are no longer assigned to this job.`
+    });
+
+    const { logActivity } = await import('@/app/actions/activity');
+    logActivity({
+      userId: workerId,
+      type: 'JOB_CANCELLED_BY_WORKER',
+      content: `Worker declined the ${job.serviceType} request`,
+      metadata: { jobId }
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Worker Cancel Job Error:', error);
+    return { success: false, error: error.message };
+  }
 }

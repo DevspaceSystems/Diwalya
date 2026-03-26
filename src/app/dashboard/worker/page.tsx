@@ -71,7 +71,7 @@ export default function WorkerDashboard() {
       <div className="flex justify-between items-end mb-4">
           <div>
             <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Command Center</h2>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Overview & Real-time Insights</p>
+            <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mt-1">Overview & Real-time Insights</p>
           </div>
       </div>
 
@@ -83,7 +83,7 @@ export default function WorkerDashboard() {
                 <stat.icon size={24} />
             </div>
             <div>
-               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
+               <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
                <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.value}</p>
             </div>
           </div>
@@ -106,12 +106,12 @@ export default function WorkerDashboard() {
              {loading ? (
                <div className="py-20 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed border-gray-200">
                  <Loader2 className="animate-spin text-secondary mb-4" />
-                 <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Loading jobs...</p>
+                 <p className="text-slate-700 font-bold uppercase tracking-widest text-xs">Loading jobs...</p>
                </div>
              ) : jobs.length === 0 ? (
                 <div className="py-20 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed border-gray-200">
                   <Briefcase size={40} className="text-gray-200 mb-4" />
-                  <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No jobs yet</p>
+                  <p className="text-slate-700 font-bold uppercase tracking-widest text-xs">No jobs yet</p>
                 </div>
              ) : (
               jobs.map((job) => {
@@ -120,7 +120,7 @@ export default function WorkerDashboard() {
                   <div key={job.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:border-secondary/30 transition-all group overflow-hidden">
                     <div className="flex flex-col md:flex-row justify-between gap-6">
                       <div className="flex gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center text-gray-300">
+                        <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center text-gray-800">
                             {isMasked ? <ShieldCheck size={32} className="text-primary/30" /> : <Briefcase size={32} />}
                         </div>
 
@@ -129,7 +129,7 @@ export default function WorkerDashboard() {
                               <h4 className="font-black text-lg text-slate-900">
                                 {isMasked ? 'Client Identity Protected' : job.client.name}
                               </h4>
-                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
+                              <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest leading-none">
                                 {new Date(job.createdAt).toLocaleDateString()}
                               </span>
                             </div>
@@ -137,7 +137,7 @@ export default function WorkerDashboard() {
                               {job.serviceType}
                               {isMasked && <span className="text-[10px] bg-primary/10 px-2 py-0.5 rounded text-primary">ADMIN VERIFIED</span>}
                             </p>
-                            <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 font-bold">
+                            <div className="flex flex-wrap items-center gap-4 text-xs text-gray-700 font-bold">
                               <span className="flex items-center gap-1"><MapPin size={12} /> {job.location}</span>
                               <span className="flex items-center gap-1"><Clock size={12} /> {new Date(job.scheduledAt).toLocaleString()}</span>
                             </div>
@@ -171,7 +171,7 @@ export default function WorkerDashboard() {
                                 await workerRespondToJob(job.id, 'REJECT');
                                 window.location.reload();
                               }}
-                              className="px-4 py-3 bg-gray-50 text-slate-500 font-black rounded-xl hover:bg-red-50 hover:text-red-500 transition-all text-xs"
+                              className="px-4 py-3 bg-gray-50 text-slate-700 font-black rounded-xl hover:bg-red-50 hover:text-red-500 transition-all text-xs"
                             >
                               Decline
                             </button>
@@ -179,7 +179,7 @@ export default function WorkerDashboard() {
                         ) : (
                            <span className={cn(
                              "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border",
-                             job.status === 'ACCEPTED' ? "border-green-200 text-green-600 bg-green-50" : "border-gray-100 text-slate-500 bg-gray-50"
+                             job.status === 'ACCEPTED' ? "border-green-200 text-green-600 bg-green-50" : "border-gray-100 text-slate-700 bg-gray-50"
                            )}>
                              {job.status}
                            </span>

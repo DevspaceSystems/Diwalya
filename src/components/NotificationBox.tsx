@@ -41,7 +41,7 @@ export default function NotificationBox({ userId, onClose }: NotificationBoxProp
       case 'REPORT_SUBMITTED':
         return <ShieldAlert className="text-red-500" size={16} />;
       default:
-        return <Bell className="text-gray-400" size={16} />;
+        return <Bell className="text-gray-700" size={16} />;
     }
   };
 
@@ -49,14 +49,14 @@ export default function NotificationBox({ userId, onClose }: NotificationBoxProp
     <div className="absolute right-0 mt-4 w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in fade-in zoom-in duration-200 origin-top-right">
       <div className="p-6 border-b border-gray-50 flex items-center justify-between">
         <h3 className="text-lg font-black text-gray-900 tracking-tight">Recent Alerts</h3>
-        <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-xl text-gray-400">
+        <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-xl text-gray-700">
            <X size={18} />
         </button>
       </div>
 
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         {loading ? (
-          <div className="p-12 text-center text-gray-400 font-bold uppercase text-[10px] tracking-widest animate-pulse">
+          <div className="p-12 text-center text-gray-700 font-bold uppercase text-[10px] tracking-widest animate-pulse">
             Syncing updates...
           </div>
         ) : notifications.length === 0 ? (
@@ -64,7 +64,7 @@ export default function NotificationBox({ userId, onClose }: NotificationBoxProp
              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-200">
                 <Bell size={24} />
              </div>
-             <p className="text-gray-400 font-bold text-sm">All clear! No new alerts.</p>
+             <p className="text-gray-700 font-bold text-sm">All clear! No new alerts.</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
@@ -77,7 +77,7 @@ export default function NotificationBox({ userId, onClose }: NotificationBoxProp
                   <div className="flex-grow">
                     <p className="text-sm font-bold text-gray-900 leading-tight mb-1">{notif.content}</p>
                     <div className="flex items-center justify-between">
-                       <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
+                       <span className="text-[10px] text-gray-700 font-medium flex items-center gap-1">
                          <Clock size={10} /> {new Date(notif.createdAt).toLocaleDateString()}
                        </span>
                        <button className="text-[10px] font-black text-primary uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
@@ -93,7 +93,7 @@ export default function NotificationBox({ userId, onClose }: NotificationBoxProp
       </div>
 
       <div className="p-4 bg-gray-50/50 text-center border-t border-gray-50">
-         <button className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-primary transition-colors">
+         <button className="text-[10px] font-black text-gray-700 uppercase tracking-widest hover:text-primary transition-colors">
             Clear All Notifications
          </button>
       </div>

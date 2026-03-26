@@ -103,7 +103,7 @@ export default function AdminInspectionsPage() {
             <ClipboardCheck className="text-primary" />
             Inspections
           </h1>
-          <p className="text-slate-500 font-medium text-sm">Manage all platform inspection requests.</p>
+          <p className="text-slate-700 font-medium text-sm">Manage all platform inspection requests.</p>
         </div>
         <div className="flex gap-2 bg-white p-1 rounded-2xl border border-slate-100 shadow-sm">
           {[['', 'All'], ['PENDING', 'Pending'], ['IN_PROGRESS', 'Confirmed'], ['COMPLETED', 'Verified']].map(([val, label]) => (
@@ -112,7 +112,7 @@ export default function AdminInspectionsPage() {
               onClick={() => setFilter(val)}
               className={cn(
                 'px-4 py-2 rounded-xl text-xs font-black transition-all',
-                filter === val ? 'bg-primary text-white shadow-md' : 'text-slate-400 hover:text-slate-700'
+                filter === val ? 'bg-primary text-white shadow-md' : 'text-slate-700 hover:text-slate-700'
               )}
             >{label}</button>
           ))}
@@ -132,7 +132,7 @@ export default function AdminInspectionsPage() {
             </div>
             <div>
               <p className="text-2xl font-black text-slate-900">{value}</p>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</p>
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest">{label}</p>
             </div>
           </div>
         ))}
@@ -144,7 +144,7 @@ export default function AdminInspectionsPage() {
       ) : inspections.length === 0 ? (
         <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-slate-200">
           <ClipboardCheck className="text-slate-200 mx-auto mb-4" size={56} />
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">No inspections found</p>
+          <p className="text-slate-700 font-bold uppercase tracking-widest text-sm">No inspections found</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -155,7 +155,7 @@ export default function AdminInspectionsPage() {
                   {/* Status & Service */}
                   <div className="flex-grow min-w-0">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <span className={cn('text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border', STATUS_COLORS[insp.status] || 'bg-slate-50 text-slate-500 border-slate-100')}>
+                      <span className={cn('text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border', STATUS_COLORS[insp.status] || 'bg-slate-50 text-slate-700 border-slate-100')}>
                         {insp.status.replace('_', ' ')}
                       </span>
                       {insp.isInspectionVerified && (
@@ -176,7 +176,7 @@ export default function AdminInspectionsPage() {
                     </div>
                     <h3 className="text-lg font-black text-slate-900">{insp.serviceType}</h3>
 
-                    <div className="flex flex-wrap gap-4 mt-3 text-xs font-bold text-slate-500">
+                    <div className="flex flex-wrap gap-4 mt-3 text-xs font-bold text-slate-700">
                       <span className="flex items-center gap-1"><User size={13} /> Client: {insp.client?.name}</span>
                       <span className="flex items-center gap-1"><UserCheck size={13} /> Worker: {insp.worker?.name || <span className="text-orange-500">Unassigned</span>}</span>
                       <span className="flex items-center gap-1"><MapPin size={13} /> {insp.location}</span>
@@ -185,14 +185,14 @@ export default function AdminInspectionsPage() {
                       )}
                     </div>
                     {insp.inspectionNotes && (
-                      <p className="mt-2 text-xs text-slate-400 bg-slate-50 rounded-lg px-3 py-2 font-medium">{insp.inspectionNotes}</p>
+                      <p className="mt-2 text-xs text-slate-700 bg-slate-50 rounded-lg px-3 py-2 font-medium">{insp.inspectionNotes}</p>
                     )}
                   </div>
 
                   {/* Fee */}
                   <div className="text-right shrink-0">
                     <p className="text-2xl font-black text-slate-900">{formatGHS(insp.priceAmount || 0)}</p>
-                    <div className="text-xs text-slate-400 font-bold mt-1 space-y-0.5">
+                    <div className="text-xs text-slate-700 font-bold mt-1 space-y-0.5">
                       <p>Worker: {formatGHS(insp.inspectionWorkerAmount || 0)}</p>
                       <p>Platform: {formatGHS(insp.inspectionAdminAmount || 0)}</p>
                     </div>
@@ -238,15 +238,15 @@ export default function AdminInspectionsPage() {
                   )}>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full md:w-auto">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-slate-400">Labor</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-slate-700">Labor</p>
                         <p className="text-sm font-black text-slate-900">{formatGHS(insp.estimate.laborCost)}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-slate-400">Materials</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-slate-700">Materials</p>
                         <p className="text-sm font-black text-slate-900">{formatGHS(insp.estimate.materialCost)}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-slate-400">Duration</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-slate-700">Duration</p>
                         <p className="text-sm font-black text-slate-900">{insp.estimate.estimatedDuration}</p>
                       </div>
                       <div>
@@ -256,7 +256,7 @@ export default function AdminInspectionsPage() {
                     </div>
                     {insp.estimate.workerNotes && (
                       <div className="w-full md:w-auto md:max-w-xs md:border-l md:border-slate-200 md:pl-6">
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-slate-400">Worker Notes</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-slate-700">Worker Notes</p>
                         <p className="text-[11px] font-medium text-slate-600 italic">"{insp.estimate.workerNotes}"</p>
                       </div>
                     )}
@@ -265,7 +265,7 @@ export default function AdminInspectionsPage() {
               </div>
 
               {/* Timeline */}
-              <div className="border-t border-slate-50 px-6 py-3 flex flex-wrap gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/30">
+              <div className="border-t border-slate-50 px-6 py-3 flex flex-wrap gap-6 text-[10px] font-bold text-slate-700 uppercase tracking-widest bg-slate-50/30">
                 <span className="flex items-center gap-1.5"><Clock size={12} /> Filed: {new Date(insp.createdAt).toLocaleDateString()}</span>
                 {insp.workerConfirmedAt && <span className="text-indigo-400 flex items-center gap-1.5"><CheckCircle2 size={12} /> Confirmed: {new Date(insp.workerConfirmedAt).toLocaleDateString()}</span>}
                 {insp.adminVerifiedAt && <span className="text-emerald-500 flex items-center gap-1.5"><ShieldCheck size={12} /> Verified: {new Date(insp.adminVerifiedAt).toLocaleDateString()}</span>}
@@ -288,7 +288,7 @@ export default function AdminInspectionsPage() {
             </h2>
             <div className="space-y-6">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 block">Available Workers</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-700 mb-2 block">Available Workers</label>
                 <select
                   value={assignForm.workerId}
                   onChange={(e) => setAssignForm({ ...assignForm, workerId: e.target.value })}
@@ -301,7 +301,7 @@ export default function AdminInspectionsPage() {
                 </select>
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 block">Team Member Escort (Optional)</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-700 mb-2 block">Team Member Escort (Optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Ama from Diwalya"
@@ -311,7 +311,7 @@ export default function AdminInspectionsPage() {
                 />
               </div>
               <div className="flex gap-4 pt-4">
-                <button onClick={() => setAssignModal(null)} className="flex-1 py-4 text-slate-400 rounded-2xl text-sm font-black hover:bg-slate-50 transition-all">
+                <button onClick={() => setAssignModal(null)} className="flex-1 py-4 text-slate-700 rounded-2xl text-sm font-black hover:bg-slate-50 transition-all">
                   Cancel
                 </button>
                 <button
@@ -341,11 +341,11 @@ export default function AdminInspectionsPage() {
             
             <div className="bg-slate-900 p-8 rounded-3xl mb-8 text-white">
               <div className="space-y-4">
-                <div className="flex justify-between items-center text-slate-400 font-bold text-xs uppercase tracking-widest">
+                <div className="flex justify-between items-center text-slate-700 font-bold text-xs uppercase tracking-widest">
                   <span>Labor Breakdown</span>
                   <span className="text-white text-base">{formatGHS(reviewModal.job.estimate.laborCost)}</span>
                 </div>
-                <div className="flex justify-between items-center text-slate-400 font-bold text-xs uppercase tracking-widest">
+                <div className="flex justify-between items-center text-slate-700 font-bold text-xs uppercase tracking-widest">
                   <span>Material Costs</span>
                   <span className="text-white text-base">{formatGHS(reviewModal.job.estimate.materialCost)}</span>
                 </div>
@@ -356,7 +356,7 @@ export default function AdminInspectionsPage() {
                 </div>
               </div>
               
-              <div className="mt-6 flex items-center gap-3 text-xs font-bold text-slate-300 bg-white/5 p-3 rounded-xl border border-white/5">
+              <div className="mt-6 flex items-center gap-3 text-xs font-bold text-slate-600 bg-white/5 p-3 rounded-xl border border-white/5">
                 <Clock size={14} className="text-primary" /> 
                 Timeline: {reviewModal.job.estimate.estimatedDuration}
               </div>
@@ -368,7 +368,7 @@ export default function AdminInspectionsPage() {
                   onClick={() => setReviewForm({ ...reviewForm, approved: true })}
                   className={cn(
                     "flex-1 py-4 rounded-2xl border-2 font-black text-xs uppercase tracking-widest flex flex-col items-center gap-2 transition-all",
-                    reviewForm.approved ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-lg shadow-emerald-500/10" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
+                    reviewForm.approved ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-lg shadow-emerald-500/10" : "bg-white border-slate-100 text-slate-700 hover:border-slate-200"
                   )}
                 >
                   <CheckCircle size={20} /> Approve
@@ -377,7 +377,7 @@ export default function AdminInspectionsPage() {
                   onClick={() => setReviewForm({ ...reviewForm, approved: false })}
                   className={cn(
                     "flex-1 py-4 rounded-2xl border-2 font-black text-xs uppercase tracking-widest flex flex-col items-center gap-2 transition-all",
-                    !reviewForm.approved ? "bg-red-50 border-red-500 text-red-700 shadow-lg shadow-red-500/10" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
+                    !reviewForm.approved ? "bg-red-50 border-red-500 text-red-700 shadow-lg shadow-red-500/10" : "bg-white border-slate-100 text-slate-700 hover:border-slate-200"
                   )}
                 >
                   <XCircle size={20} /> Reject
@@ -385,7 +385,7 @@ export default function AdminInspectionsPage() {
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 block">Internal Admin Notes</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-700 mb-2 block">Internal Admin Notes</label>
                 <textarea
                   placeholder="Explain your decision to the worker..."
                   value={reviewForm.adminNotes}
@@ -396,7 +396,7 @@ export default function AdminInspectionsPage() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <button onClick={() => setReviewModal(null)} className="flex-1 py-4 text-slate-400 rounded-2xl text-sm font-black hover:bg-slate-50 transition-all">
+                <button onClick={() => setReviewModal(null)} className="flex-1 py-4 text-slate-700 rounded-2xl text-sm font-black hover:bg-slate-50 transition-all">
                   Cancel
                 </button>
                 <button

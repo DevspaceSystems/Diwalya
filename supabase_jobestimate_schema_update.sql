@@ -1,0 +1,23 @@
+-- FIX JobEstimate SCHEMA TO MATCH BACKEND CODE
+-- Run this script in your Supabase SQL Editor
+
+ALTER TABLE "JobEstimate"
+ADD COLUMN IF NOT EXISTS "laborCost" DOUBLE PRECISION DEFAULT 0,
+ADD COLUMN IF NOT EXISTS "materialCost" DOUBLE PRECISION DEFAULT 0,
+ADD COLUMN IF NOT EXISTS "totalCost" DOUBLE PRECISION DEFAULT 0,
+ADD COLUMN IF NOT EXISTS "estimatedDuration" TEXT,
+ADD COLUMN IF NOT EXISTS "workerNotes" TEXT;
+
+-- (Optional) Drop old columns that are no longer used by the application code
+ALTER TABLE "JobEstimate" DROP COLUMN IF EXISTS "estimatedCost";
+ALTER TABLE "JobEstimate" DROP COLUMN IF EXISTS "estimatedDays";
+ALTER TABLE "JobEstimate" DROP COLUMN IF EXISTS "notes";
+
+-- FIX JobStatus ENUM: Add missing status values
+-- Run each line separately if one fails (Supabase may not support IF NOT EXISTS for enums)
+ALTER TYPE "JobStatus" ADD VALUE IF NOT EXISTS 'ESTIMATE_PENDING_ADMIN_REVIEW';
+ALTER TYPE "JobStatus" ADD VALUE IF NOT EXISTS 'ESTIMATE_SUBMITTED';
+ALTER TYPE "JobStatus" ADD VALUE IF NOT EXISTS 'INSPECTION_REQUESTED';
+ALTER TYPE "JobStatus" ADD VALUE IF NOT EXISTS 'WORKER_REVIEW';
+ALTER TYPE "JobStatus" ADD VALUE IF NOT EXISTS 'ADMIN_REVIEW';
+ALTER TYPE "JobStatus" ADD VALUE IF NOT EXISTS 'RESCHEDULE_REQUESTED';

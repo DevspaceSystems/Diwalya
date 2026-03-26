@@ -48,7 +48,7 @@ export default function WorkerProfilePage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
-        <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Loading Profile...</p>
+        <p className="text-sm font-black text-slate-700 uppercase tracking-widest">Loading Profile...</p>
       </div>
     </div>
   );
@@ -59,7 +59,7 @@ export default function WorkerProfilePage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
             <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Your Public Profile</h2>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">This is how clients see you on the platform</p>
+            <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mt-1">This is how clients see you on the platform</p>
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
             <Link 
@@ -84,14 +84,21 @@ export default function WorkerProfilePage() {
         
         <div className="p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center md:items-start relative z-10">
           <div className="relative shrink-0">
-            <div className="w-40 h-40 md:w-48 md:h-48 rounded-[2.5rem] bg-gray-50 border-4 border-white overflow-hidden shadow-2xl relative">
-              <SupabaseImage 
-                src={profile?.profilePicture} 
-                alt={user?.user_metadata?.full_name || 'Worker'} 
-                width={192}
-                height={192}
-                className="w-full h-full object-cover" 
-              />
+            <div className="w-40 h-40 md:w-48 md:h-48 rounded-[2.5rem] bg-gray-100 border-4 border-white overflow-hidden shadow-2xl relative flex items-center justify-center">
+              {profile?.profilePicture ? (
+                <SupabaseImage 
+                  src={profile.profilePicture} 
+                  alt={profile?.displayName || user?.user_metadata?.full_name || 'Worker'} 
+                  width={192}
+                  height={192}
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                <span className="text-4xl font-black text-primary select-none">
+                  {(profile?.displayName || user?.user_metadata?.full_name || 'WK')
+                    .split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                </span>
+              )}
             </div>
             {profile?.isVerified && (
               <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white p-2.5 rounded-2xl shadow-lg border-4 border-white">
@@ -117,7 +124,7 @@ export default function WorkerProfilePage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+            <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] font-black text-slate-700 uppercase tracking-[0.2em]">
               <div className="flex items-center gap-2 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
                 <MapPin size={16} className="text-primary" /> {profile?.location || 'Ghana'}
               </div>
@@ -151,15 +158,15 @@ export default function WorkerProfilePage() {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-default group">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-200">Response</p>
+                <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1 group-hover:text-slate-200">Response</p>
                 <p className="font-black text-xl italic text-blue-400">Under 1hr</p>
               </div>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-default group">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-200">Success</p>
+                <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1 group-hover:text-slate-200">Success</p>
                 <p className="font-black text-xl text-emerald-400">98%</p>
               </div>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-default group">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-200">Repeat</p>
+                <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-1 group-hover:text-slate-200">Repeat</p>
                 <p className="font-black text-xl text-amber-400">12+</p>
               </div>
               <div className="p-4 bg-primary text-white rounded-2xl shadow-lg shadow-blue-500/20">
@@ -184,7 +191,7 @@ export default function WorkerProfilePage() {
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                 </span>
               </div>
-              <p className="text-slate-500 text-sm font-medium leading-relaxed">
+              <p className="text-slate-700 text-sm font-medium leading-relaxed">
                 Most active between **8:00 AM** and **6:00 PM** daily. Ready for urgent inspections and estimates.
               </p>
             </div>
@@ -200,7 +207,7 @@ export default function WorkerProfilePage() {
                 <ImageIcon className="text-primary" size={28} /> 
                 Showcase Portfolio
               </h3>
-              <Link href="/dashboard/worker/portfolio" className="bg-gray-50 px-4 py-2 rounded-xl text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary hover:bg-primary/5 transition-all border border-gray-100">
+              <Link href="/dashboard/worker/portfolio" className="bg-gray-50 px-4 py-2 rounded-xl text-[10px] font-black text-slate-700 uppercase tracking-widest hover:text-primary hover:bg-primary/5 transition-all border border-gray-100">
                 Manage Samples
               </Link>
             </div>
@@ -227,7 +234,7 @@ export default function WorkerProfilePage() {
                 <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-gray-200 mb-4">
                   <LucideImage size={32} />
                 </div>
-                <p className="text-slate-400 font-bold text-sm tracking-tight mb-4">You haven't uploaded any work samples yet.</p>
+                <p className="text-slate-700 font-bold text-sm tracking-tight mb-4">You haven't uploaded any work samples yet.</p>
                 <Link href="/dashboard/worker/portfolio" className="px-6 py-3 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-primary uppercase tracking-widest hover:bg-primary hover:text-white transition-all">
                   Get Started
                 </Link>

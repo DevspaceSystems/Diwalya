@@ -97,7 +97,7 @@ export default function WorkerWalletPage() {
       <div className="flex justify-between items-end mb-8">
           <div>
             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Earnings & Wallet</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Manage your payouts & transactions</p>
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">Manage your payouts & transactions</p>
           </div>
       </div>
 
@@ -106,7 +106,7 @@ export default function WorkerWalletPage() {
          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
 
          <div className="relative z-10">
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-sm mb-2">Available Balance</p>
+            <p className="text-slate-700 font-bold uppercase tracking-widest text-sm mb-2">Available Balance</p>
             <h2 className="text-6xl font-black mb-10">{formatGHS(data?.balance)}</h2>
             
             <div className="flex flex-wrap gap-4">
@@ -118,7 +118,7 @@ export default function WorkerWalletPage() {
                </button>
                <div className="px-6 py-4 bg-white/10 rounded-2xl border border-white/10 flex items-center gap-3">
                   <TrendingUp className="text-green-400" size={20} />
-                  <span className="font-bold">+₵0.00 this week</span>
+                  <span className="font-bold">+{formatGHS(0)} this week</span>
                </div>
             </div>
          </div>
@@ -128,7 +128,7 @@ export default function WorkerWalletPage() {
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
          <div className="p-6 border-b border-gray-50 flex justify-between items-center">
             <h3 className="font-black text-gray-900 text-lg">Recent Transactions</h3>
-            <Clock className="text-gray-300" size={20} />
+            <Clock className="text-gray-800" size={20} />
          </div>
          
          <div className="divide-y divide-gray-50">
@@ -143,7 +143,7 @@ export default function WorkerWalletPage() {
                       </div>
                       <div>
                          <h4 className="font-bold text-gray-900">{tx.purpose.replace('_', ' ')}</h4>
-                         <p className="text-xs text-gray-400 font-bold">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                         <p className="text-xs text-gray-700 font-bold">{new Date(tx.createdAt).toLocaleDateString()}</p>
                       </div>
                    </div>
                    <p className={`text-lg font-black ${
@@ -154,7 +154,7 @@ export default function WorkerWalletPage() {
                 </div>
               ))
             ) : (
-              <div className="p-12 text-center text-gray-400 italic font-medium">
+              <div className="p-12 text-center text-gray-700 italic font-medium">
                  No transactions recorded yet. Your earnings will appear here.
               </div>
             )}
@@ -167,7 +167,7 @@ export default function WorkerWalletPage() {
            <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl animate-in zoom-in-95 duration-200">
               <div className="p-8">
                  <h3 className="text-2xl font-black text-gray-900 mb-2">Withdraw Funds</h3>
-                 <p className="text-gray-500 text-sm mb-8 font-medium">Funds will be sent to your account within 24 hours.</p>
+                 <p className="text-gray-700 text-sm mb-8 font-medium">Funds will be sent to your account within 24 hours.</p>
 
                  {error && (
                     <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-2xl text-sm flex items-center gap-2 border border-red-100">
@@ -177,7 +177,7 @@ export default function WorkerWalletPage() {
 
                  <form onSubmit={handleWithdraw} className="space-y-6">
                     <div>
-                       <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Amount (₵)</label>
+                       <label className="block text-xs font-black text-gray-700 uppercase tracking-widest mb-2">Amount (₵)</label>
                        <input 
                          type="number" 
                          required 
@@ -191,7 +191,7 @@ export default function WorkerWalletPage() {
                     </div>
 
                     <div>
-                       <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Withdrawal Method</label>
+                       <label className="block text-xs font-black text-gray-700 uppercase tracking-widest mb-2">Withdrawal Method</label>
                        <div className="grid grid-cols-2 gap-3">
                           <button 
                             type="button"
@@ -249,7 +249,7 @@ export default function WorkerWalletPage() {
                        <button 
                          type="button"
                          onClick={() => setShowWithdraw(false)}
-                         className="flex-grow py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all shadow-sm"
+                         className="flex-grow py-4 bg-gray-50 text-gray-700 font-bold rounded-2xl hover:bg-gray-100 transition-all shadow-sm"
                        >
                          Cancel
                        </button>

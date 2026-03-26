@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { 
   Briefcase, Calendar, MapPin, Clock, ChevronRight, 
   Filter, AlertCircle, CheckCircle2, XCircle, ShieldAlert, 
-  Flag, Send, Loader2, FileText, Calculator
+  Flag, Send, Loader2, FileText, Calculator, Eye
 } from 'lucide-react';
 import { createReport } from '@/app/actions/report';
 import { getClientJobs, declineEstimate, completeJobAndReleaseFunds } from '@/app/actions/booking';
@@ -26,6 +26,8 @@ export default function BookingsPage() {
   const [activeChat, setActiveChat] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [declineJobId, setDeclineJobId] = useState<string | null>(null);
+  const [declineReason, setDeclineReason] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -69,12 +71,19 @@ export default function BookingsPage() {
     setIsSubmitting(false);
   };
 
-  const handleDecline = async (jobId: string) => {
-    if (!confirm('Are you sure you want to decline this estimate?')) return;
-    setIsProcessing(jobId);
-    await declineEstimate(jobId);
-    const res = await getClientJobs(user.id);
-    if (res.success && res.data) setBookings(res.data);
+  const handleDecline = async () => {
+    if (!declineJobId || !declineReason.trim()) return;
+    setIsProcessing(declineJobId);
+    const res = await declineEstimate(declineJobId);
+    if (res.success) {
+      setMessage({ type: 'success', text: `Estimate declined: "${declineReason}". The job has been cancelled.` });
+      const resJobs = await getClientJobs(user.id);
+      if (resJobs.success && resJobs.data) setBookings(resJobs.data);
+    } else {
+      setMessage({ type: 'error', text: res.error || 'Failed to decline. Please try again.' });
+    }
+    setDeclineJobId(null);
+    setDeclineReason('');
     setIsProcessing(null);
   };
 
@@ -131,6 +140,12 @@ export default function BookingsPage() {
       case 'ACCEPTED':
       case 'IN_PROGRESS':
         return 'bg-green-100 text-green-700 border-green-200';
+      case 'ESTIMATE_SUBMITTED':
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200 animate-pulse';
+      case 'ESTIMATE_PENDING_ADMIN_REVIEW':
+        return 'bg-purple-100 text-purple-700 border-purple-200 animate-pulse';
+      case 'INSPECTION_PAYMENT_PENDING':
+        return 'bg-amber-100 text-amber-700 border-amber-200 animate-pulse';
       case 'PENDING':
       case 'ADMIN_REVIEW':
       case 'WORKER_REVIEW':
@@ -150,9 +165,13 @@ export default function BookingsPage() {
       case 'IN_PROGRESS':
       case 'COMPLETED':
         return <CheckCircle2 size={14} />;
+      case 'ESTIMATE_SUBMITTED':
+        return <Calculator size={14} />;
       case 'PENDING':
       case 'ADMIN_REVIEW':
       case 'WORKER_REVIEW':
+      case 'ESTIMATE_PENDING_ADMIN_REVIEW':
+      case 'INSPECTION_PAYMENT_PENDING':
         return <AlertCircle size={14} />;
       case 'CANCELLED':
         return <XCircle size={14} />;
@@ -175,7 +194,7 @@ export default function BookingsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-1">My Bookings</h1>
-            <p className="text-gray-500 font-medium">Keep track of your service requests and their status</p>
+            <p className="text-gray-700 font-medium">Keep track of your service requests and their status</p>
           </div>
           
           <div className="flex bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm overflow-x-auto no-scrollbar">
@@ -186,7 +205,7 @@ export default function BookingsPage() {
                 className={`px-6 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
                   activeFilter === f 
                   ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  : 'text-gray-700 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 {f.charAt(0) + f.slice(1).toLowerCase()}
@@ -222,17 +241,17 @@ export default function BookingsPage() {
                     <p className="text-primary font-black text-lg mb-4">{booking.serviceType}</p>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-3">
-                      <div className="flex items-center gap-2.5 text-sm text-gray-500 font-bold">
-                        <Calendar size={18} className="text-gray-400" />
+                      <div className="flex items-center gap-2.5 text-sm text-gray-700 font-bold">
+                        <Calendar size={18} className="text-gray-700" />
                         {new Date(booking.scheduledAt).toLocaleDateString()}
                       </div>
-                      <div className="flex items-center gap-2.5 text-sm text-gray-500 font-bold">
-                        <Clock size={18} className="text-gray-400" />
+                      <div className="flex items-center gap-2.5 text-sm text-gray-700 font-bold">
+                        <Clock size={18} className="text-gray-700" />
                         {new Date(booking.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                       {['ACCEPTED', 'IN_PROGRESS', 'COMPLETED'].includes(booking.status) ? (
-                        <div className="flex items-center gap-2.5 text-sm text-gray-500 font-bold col-span-full">
-                          <MapPin size={18} className="text-gray-400" />
+                        <div className="flex items-center gap-2.5 text-sm text-gray-700 font-bold col-span-full">
+                          <MapPin size={18} className="text-gray-700" />
                           {booking.location}
                         </div>
                       ) : (
@@ -247,7 +266,7 @@ export default function BookingsPage() {
                 <div className="flex flex-col justify-between items-end border-t md:border-t-0 pt-6 md:pt-0 border-gray-50">
                   <div className="text-right mb-6 md:mb-0">
                     <p className="text-3xl font-black text-gray-900 leading-none">{formatGHS(booking.priceAmount || 0)}</p>
-                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
+                    <p className="text-[10px] text-gray-700 font-black uppercase tracking-widest mt-1">
                       {booking.type === 'INSPECTION' ? 'Inspection Fee' : 'Service Fee'}
                     </p>
                   </div>
@@ -271,8 +290,8 @@ export default function BookingsPage() {
                 </div>
               </div>
 
-              {/* Estimate Details */}
-              {booking.estimate && booking.estimate.status === 'APPROVED' && (
+              {/* Estimate Details — shown when admin approves and status flips to ESTIMATE_SUBMITTED */}
+              {booking.status === 'ESTIMATE_SUBMITTED' && booking.estimate && (
                 <div className="mt-6 p-5 bg-emerald-50 rounded-2xl border border-emerald-100 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
                   <h4 className="text-sm font-black text-emerald-800 mb-4 flex items-center gap-2">
@@ -318,13 +337,13 @@ export default function BookingsPage() {
                            onSuccess={(ref: any) => handlePaymentSuccess(ref, booking.id, booking.estimate.totalCost)}
                            onClose={() => console.log('Closed')}
                          />
-                         <button 
-                           onClick={() => handleDecline(booking.id)}
-                           disabled={isProcessing === booking.id}
-                           className="flex-[0.5] py-3 bg-white text-emerald-700 border border-emerald-200 text-xs font-black rounded-xl hover:bg-emerald-50 transition-colors disabled:opacity-50"
-                         >
-                           Decline
-                         </button>
+                          <button 
+                            onClick={() => setDeclineJobId(booking.id)}
+                            disabled={isProcessing === booking.id}
+                            className="flex-[0.5] py-3 bg-white text-red-500 border border-red-200 text-xs font-black rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
+                          >
+                            Decline
+                          </button>
                        </>
                     )}
                     {booking.status === 'IN_PROGRESS' && (
@@ -340,11 +359,51 @@ export default function BookingsPage() {
                 </div>
               )}
 
-              {/* Status helper text */}
+              {/* Inspection Fee Details — shown when admin sets fee and status flips to INSPECTION_PAYMENT_PENDING */}
+              {booking.status === 'INSPECTION_PAYMENT_PENDING' && (
+                <div className="mt-6 p-5 bg-amber-50 rounded-2xl border border-amber-100 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500" />
+                  <h4 className="text-sm font-black text-amber-800 mb-2 flex items-center gap-2">
+                    <Eye size={16} className="text-amber-600" />
+                    Inspection Fee Required
+                  </h4>
+                  <p className="text-xs text-amber-900 mb-4 font-medium leading-relaxed">
+                    The specialist requested a site visit. Use the button below to pay the inspection fee into secure escrow so they can schedule the visit and provide your final quote.
+                  </p>
+                  
+                  <div className="flex gap-3 mt-4 border-t border-amber-100/50 pt-4">
+                     <PaystackButton
+                       text={isProcessing === booking.id ? "Processing..." : `Pay ${formatGHS(booking.priceAmount || 0)} into Escrow`}
+                       className="flex-[2] py-3 bg-amber-500 text-white text-xs font-black rounded-xl hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/20 disabled:opacity-50 text-center"
+                       reference={(new Date()).getTime().toString() + '_' + booking.id}
+                       email={user?.email || ''}
+                       amount={Math.round((booking.priceAmount || 0) * 100)}
+                       publicKey={process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || ''}
+                       onSuccess={(ref: any) => handlePaymentSuccess(ref, booking.id, booking.priceAmount || 0)}
+                       onClose={() => console.log('Closed')}
+                     />
+                     <button 
+                       onClick={() => setDeclineJobId(booking.id)}
+                       disabled={isProcessing === booking.id}
+                       className="flex-[1] py-3 bg-white text-red-500 border border-red-200 text-xs font-black rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
+                     >
+                       Decline
+                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Status helper messages */}
               {(booking.status === 'PENDING' || booking.status === 'ADMIN_REVIEW' || booking.status === 'WORKER_REVIEW') && (
                 <div className="mt-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50 flex items-center gap-3 text-sm text-blue-700 font-bold">
                    <AlertCircle size={18} />
                    Awaiting worker confirmation. You'll be notified once accepted.
+                </div>
+              )}
+              {booking.status === 'ESTIMATE_PENDING_ADMIN_REVIEW' && (
+                <div className="mt-6 p-4 bg-purple-50/50 rounded-2xl border border-purple-100/50 flex items-center gap-3 text-sm text-purple-700 font-bold">
+                   <AlertCircle size={18} />
+                   Specialist quote received — pending admin review before being sent to you.
                 </div>
               )}
               {booking.status === 'ACCEPTED' && !booking.estimate && (
@@ -363,7 +422,7 @@ export default function BookingsPage() {
               <Briefcase size={48} className="text-gray-200" />
             </div>
             <h2 className="text-2xl font-black text-gray-900 mb-2">No bookings found</h2>
-            <p className="text-gray-500 font-medium mb-10 max-w-xs mx-auto">It looks like you don't have any bookings in this category.</p>
+            <p className="text-gray-700 font-medium mb-10 max-w-xs mx-auto">It looks like you don't have any bookings in this category.</p>
             <Link 
               href="/search" 
               className="inline-flex bg-primary hover:bg-primary-light text-white px-10 py-4 rounded-[1.5rem] font-black shadow-xl shadow-primary/20 transition-all active:scale-95 uppercase tracking-widest text-sm"
@@ -385,7 +444,7 @@ export default function BookingsPage() {
               </div>
               <button 
                 onClick={() => setReportingJob(null)}
-                className="w-10 h-10 rounded-full hover:bg-white flex items-center justify-center text-gray-400 transition-colors"
+                className="w-10 h-10 rounded-full hover:bg-white flex items-center justify-center text-gray-700 transition-colors"
               >
                 <XCircle size={24} />
               </button>
@@ -402,9 +461,9 @@ export default function BookingsPage() {
               )}
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Reason</label>
+                <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest px-2">Reason</label>
                 <select 
-                  className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-red-500/20 outline-none appearance-none cursor-pointer"
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black text-black focus:ring-2 focus:ring-red-500/20 outline-none appearance-none cursor-pointer"
                   value={reportForm.reason}
                   onChange={(e) => setReportForm({ ...reportForm, reason: e.target.value })}
                 >
@@ -417,11 +476,11 @@ export default function BookingsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Description</label>
+                <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest px-2">Description</label>
                 <textarea 
                   required
                   rows={4}
-                  className="w-full p-6 bg-gray-50 border border-gray-100 rounded-[2rem] text-sm font-medium focus:ring-2 focus:ring-red-500/20 outline-none resize-none"
+                  className="w-full p-6 bg-slate-50 border border-slate-200 rounded-[2rem] text-sm font-black text-black placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/20 outline-none resize-none"
                   placeholder="Tell us what happened..."
                   value={reportForm.description}
                   onChange={(e) => setReportForm({ ...reportForm, description: e.target.value })}
@@ -436,10 +495,66 @@ export default function BookingsPage() {
                 {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <><Send size={18} /> File Official Report</>}
               </button>
               
-              <p className="text-[10px] text-center text-gray-400 font-bold px-6 leading-relaxed">
+              <p className="text-[10px] text-center text-gray-700 font-bold px-6 leading-relaxed">
                 Platform admins will review this report within 24 hours. False reports may lead to account suspension.
               </p>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Decline Reason Modal */}
+      {declineJobId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="p-8 bg-red-50 border-b border-red-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-gray-900">Decline Estimate</h2>
+                <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mt-1">This will cancel the job</p>
+              </div>
+              <button
+                onClick={() => { setDeclineJobId(null); setDeclineReason(''); }}
+                className="w-10 h-10 rounded-full hover:bg-white flex items-center justify-center text-gray-700 transition-colors"
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+
+            <div className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest px-1">
+                  Reason for declining <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black text-black focus:ring-2 focus:ring-red-500/20 outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">-- Select a reason --</option>
+                  <option value="Price too high">Price is too high</option>
+                  <option value="Found another provider">Found another provider</option>
+                  <option value="Job no longer needed">Job is no longer needed</option>
+                  <option value="Timeline doesn't work">Timeline doesn't work for me</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setDeclineJobId(null); setDeclineReason(''); }}
+                  className="flex-1 py-4 bg-slate-100 text-black font-black rounded-2xl hover:bg-slate-200 transition-all text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDecline}
+                  disabled={!declineReason || isProcessing === declineJobId}
+                  className="flex-[2] py-4 bg-red-500 text-white font-black rounded-2xl shadow-lg shadow-red-500/20 hover:scale-[1.02] active:scale-95 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  {isProcessing === declineJobId ? <Loader2 className="animate-spin" size={18} /> : 'Confirm Decline'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

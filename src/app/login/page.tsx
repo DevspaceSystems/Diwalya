@@ -95,7 +95,7 @@ export default function LoginPage() {
         <h2 className="text-center text-3xl font-extrabold text-gray-900">
           Welcome Back
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-gray-800">
           Or{' '}
           <Link href="/signup" className="font-medium text-primary hover:text-primary-light">
             create a new account
@@ -114,7 +114,7 @@ export default function LoginPage() {
               className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
                 role === 'CLIENT' 
                 ? 'border-primary bg-primary/5 text-primary' 
-                : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
+                : 'border-gray-100 bg-gray-50 text-gray-700 hover:border-gray-200'
               }`}
             >
               <User className="mb-2" size={24} />
@@ -126,7 +126,7 @@ export default function LoginPage() {
               className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
                 role === 'WORKER' 
                 ? 'border-secondary bg-secondary/5 text-secondary' 
-                : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
+                : 'border-gray-100 bg-gray-50 text-gray-700 hover:border-gray-200'
               }`}
             >
               <Briefcase className="mb-2" size={24} />
@@ -147,7 +147,7 @@ export default function LoginPage() {
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-gray-700" />
                 </div>
                 <input
                   id="email"
@@ -169,7 +169,7 @@ export default function LoginPage() {
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-gray-700" />
                 </div>
                 <input
                   id="password"
@@ -185,7 +185,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-700 hover:text-primary transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>

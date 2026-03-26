@@ -54,7 +54,7 @@ export default function AdminSpecialRequestsPage() {
       <div className="mb-10 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black text-gray-900 mb-2">Special Labor Requests</h1>
-          <p className="text-gray-500 font-medium tracking-tight">Manage manual matching requests from platform users.</p>
+          <p className="text-gray-700 font-medium tracking-tight">Manage manual matching requests from platform users.</p>
         </div>
         <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm">
           {['ALL', 'PENDING', 'CONTACTED', 'ASSIGNED'].map((f) => (
@@ -63,7 +63,7 @@ export default function AdminSpecialRequestsPage() {
               onClick={() => setFilter(f)}
               className={cn(
                 "px-4 py-2 rounded-xl text-xs font-black transition-all",
-                filter === f ? "bg-primary text-white shadow-md shadow-primary/20" : "text-gray-400 hover:text-gray-600"
+                filter === f ? "bg-primary text-white shadow-md shadow-primary/20" : "text-gray-700 hover:text-gray-600"
               )}
             >
               {f}
@@ -75,12 +75,12 @@ export default function AdminSpecialRequestsPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
            <Loader2 className="animate-spin text-primary mb-4" size={40} />
-           <p className="text-gray-400 font-bold">Loading requests...</p>
+           <p className="text-gray-700 font-bold">Loading requests...</p>
         </div>
       ) : filteredRequests.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
            <ClipboardList className="text-gray-200 mb-4" size={60} />
-           <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">No requests found</p>
+           <p className="text-gray-700 font-bold uppercase tracking-widest text-sm">No requests found</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
@@ -96,14 +96,14 @@ export default function AdminSpecialRequestsPage() {
                     </div>
                     <div>
                       <h3 className="text-gray-900">{req.user.name}</h3>
-                      <p className="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-1">Requester</p>
+                      <p className="text-[10px] text-gray-700 uppercase tracking-widest leading-none mt-1">Requester</p>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <a href={`tel:${req.user.phone}`} className="flex items-center gap-2 text-xs text-gray-600 hover:text-primary transition-colors">
+                    <a href={`tel:${req.user.phone}`} className="flex items-center gap-2 text-xs text-gray-800 hover:text-primary transition-colors">
                       <Phone size={14} /> {req.user.phone || 'No phone'}
                     </a>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-2 text-xs text-gray-700">
                       <Clock size={14} /> {new Date(req.createdAt).toLocaleDateString()}
                     </div>
                   </div>
@@ -124,7 +124,7 @@ export default function AdminSpecialRequestsPage() {
                       {req.status}
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                  <p className="text-gray-800 text-sm leading-relaxed mb-6">
                     {req.description}
                   </p>
                   <div className="flex flex-wrap gap-6 text-xs">
@@ -160,7 +160,7 @@ export default function AdminSpecialRequestsPage() {
                   </button>
                   <button 
                     onClick={() => handleStatusUpdate(req.id, 'CANCELLED')}
-                    className="w-full py-3 border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 rounded-xl text-xs font-black hover:bg-red-50 transition-all"
+                    className="w-full py-3 border border-gray-100 text-gray-700 hover:text-red-500 hover:border-red-100 rounded-xl text-xs font-black hover:bg-red-50 transition-all"
                   >
                     Dismiss Request
                   </button>

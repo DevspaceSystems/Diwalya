@@ -54,7 +54,7 @@ export default function SupabaseImage({
   if (error || !processedSrc) {
     return (
       <div className={cn(
-        "flex items-center justify-center bg-slate-100 text-slate-400 font-bold overflow-hidden",
+        "flex items-center justify-center bg-slate-100 text-slate-700 font-bold overflow-hidden",
         className
       )} style={{ width, height }}>
         {fallbackType === 'initials' ? (

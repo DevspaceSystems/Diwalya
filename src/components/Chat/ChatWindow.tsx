@@ -30,11 +30,11 @@ export default function ChatWindow({ jobId, senderId, recipientId, recipientName
           data = res.data;
         }
       } else if (recipientId) {
-        // Fetch direct messages
+        // Fetch direct messages (no job attached)
         const { supabase } = await import('@/lib/supabase');
         const { data: directMsgs } = await supabase
           .from('ChatMessage')
-          .select('*, sender:User(name, role, profilePicture)')
+          .select('*')
           .or(`and(senderId.eq.${senderId},recipientId.eq.${recipientId}),and(senderId.eq.${recipientId},recipientId.eq.${senderId})`)
           .is('jobId', null)
           .order('createdAt', { ascending: true });

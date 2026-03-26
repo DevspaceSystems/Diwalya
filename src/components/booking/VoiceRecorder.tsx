@@ -67,7 +67,7 @@ export default function VoiceRecorder({ onRecordingComplete }: VoiceRecorderProp
   return (
     <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 mt-4 animate-in fade-in slide-in-from-top-2">
       <div className="flex items-center justify-between">
-        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Voice Description (Optional)</label>
+        <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Voice Description (Optional)</label>
         {isRecording && (
           <div className="flex items-center gap-2">
              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -111,7 +111,7 @@ export default function VoiceRecorder({ onRecordingComplete }: VoiceRecorderProp
           </div>
         )}
       </div>
-      <p className="text-[9px] text-gray-400 font-bold mt-3 uppercase tracking-widest italic">
+      <p className="text-[9px] text-gray-700 font-bold mt-3 uppercase tracking-widest italic">
         {isRecording ? "Recording in progress..." : audioURL ? "Review your voice message before submitting" : "Can't type? Just record your message"}
       </p>
     </div>

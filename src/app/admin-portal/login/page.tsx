@@ -63,7 +63,7 @@ export default function SecureAdminLogin() {
         <h2 className="text-center text-2xl font-black text-white tracking-widest uppercase">
           Secure Portal Access
         </h2>
-        <p className="mt-2 text-center text-sm font-medium text-slate-500">
+        <p className="mt-2 text-center text-sm font-medium text-slate-700">
           Authorized personnel only.
         </p>
       </div>
@@ -82,12 +82,12 @@ export default function SecureAdminLogin() {
             {step === 'credentials' && (
               <div className="space-y-5 animate-in slide-in-from-bottom-2 fade-in">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                  <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">
                     Admin Username
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-slate-500 group-focus-within:text-primary transition-colors" />
+                      <User className="h-5 w-5 text-slate-700 group-focus-within:text-primary transition-colors" />
                     </div>
                     <input
                       type="text"
@@ -101,12 +101,12 @@ export default function SecureAdminLogin() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                  <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-2">
                      Passphrase
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-slate-500 group-focus-within:text-primary transition-colors" />
+                      <Lock className="h-5 w-5 text-slate-700 group-focus-within:text-primary transition-colors" />
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
@@ -119,7 +119,7 @@ export default function SecureAdminLogin() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-700 hover:text-white transition-colors"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -134,10 +134,10 @@ export default function SecureAdminLogin() {
                     <KeyRound size={28} className="text-primary" />
                  </div>
                  <div className="text-center w-full">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest">
                        Two-Factor Authentication
                     </label>
-                    <p className="text-sm font-medium text-slate-500 mt-1 mb-6">Enter the 6-digit code from your authenticator app.</p>
+                    <p className="text-sm font-medium text-slate-700 mt-1 mb-6">Enter the 6-digit code from your authenticator app.</p>
                     <input
                       type="text"
                       required

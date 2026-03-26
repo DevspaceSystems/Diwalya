@@ -117,7 +117,7 @@ export default function ClientSettingsPage() {
               {profilePicture ? (
                 <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <User size={40} className="text-slate-300" />
+                <User size={40} className="text-slate-600" />
               )}
             </div>
             <button
@@ -132,7 +132,7 @@ export default function ClientSettingsPage() {
           </div>
           <div className="text-center">
             <p className="font-black text-slate-900 text-lg">{name}</p>
-            <p className="text-xs text-slate-400 font-bold">{user?.email}</p>
+            <p className="text-xs text-slate-700 font-bold">{user?.email}</p>
             <button
               type="button"
               onClick={() => picInputRef.current?.click()}
@@ -145,12 +145,12 @@ export default function ClientSettingsPage() {
 
         {/* Profile Form */}
         <form onSubmit={handleSave} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 space-y-5">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Personal Info</p>
+          <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Personal Info</p>
 
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Full Name</label>
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-1 block">Full Name</label>
             <div className="relative">
-              <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+              <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
               <input
                 type="text"
                 value={name}
@@ -162,22 +162,22 @@ export default function ClientSettingsPage() {
           </div>
 
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Email Address</label>
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-1 block">Email Address</label>
             <div className="relative">
-              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
               <input
                 type="email"
                 value={user?.email || ''}
                 disabled
-                className="w-full p-4 pl-10 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-400 text-sm outline-none cursor-not-allowed"
+                className="w-full p-4 pl-10 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 text-sm outline-none cursor-not-allowed"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Phone Number</label>
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-1 block">Phone Number</label>
             <div className="relative">
-              <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+              <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
               <input
                 type="tel"
                 value={phone}

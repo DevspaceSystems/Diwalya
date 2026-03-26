@@ -48,7 +48,7 @@ export default function AdminNotificationsPage() {
           </div>
           Push Notifications
         </h1>
-        <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest mt-3 ml-1 flex items-center gap-2">
+        <p className="text-slate-700 font-black uppercase text-[10px] tracking-widest mt-3 ml-1 flex items-center gap-2">
           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
           In-App + Firebase Cloud Messaging
         </p>
@@ -61,7 +61,7 @@ export default function AdminNotificationsPage() {
 
           {/* Template Selector */}
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Notification Template</label>
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Notification Template</label>
             <div className="grid grid-cols-1 gap-2">
               {PUSH_TEMPLATES.map(t => (
                 <button
@@ -77,7 +77,7 @@ export default function AdminNotificationsPage() {
                   <Bell size={16} />
                   <div className="flex-1">
                     <p className="text-sm font-bold">{t.label}</p>
-                    {t.id !== 'CUSTOM' && <p className="text-[10px] text-slate-400 truncate">{t.body.slice(0, 50)}...</p>}
+                    {t.id !== 'CUSTOM' && <p className="text-[10px] text-slate-700 truncate">{t.body.slice(0, 50)}...</p>}
                   </div>
                   {selectedTemplate === t.id && <CheckCircle2 size={16} className="ml-auto text-emerald-500 shrink-0" />}
                 </button>
@@ -89,7 +89,7 @@ export default function AdminNotificationsPage() {
           {selectedTemplate === 'CUSTOM' && (
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Notification Title</label>
+                <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Notification Title</label>
                 <input
                   type="text"
                   value={customTitle}
@@ -100,7 +100,7 @@ export default function AdminNotificationsPage() {
                 />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Notification Body</label>
+                <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Notification Body</label>
                 <textarea
                   value={customBody}
                   onChange={e => setCustomBody(e.target.value)}
@@ -114,7 +114,7 @@ export default function AdminNotificationsPage() {
 
           {/* Recipient Group */}
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Target Audience</label>
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-2 block">Target Audience</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { value: 'ALL', label: 'Everyone', icon: '👥' },
@@ -164,7 +164,7 @@ export default function AdminNotificationsPage() {
           <div className="bg-slate-900 rounded-[2.5rem] p-8 w-full relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none"></div>
             <div className="relative z-10">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Preview</p>
+              <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-6">Preview</p>
 
               {/* Notification Preview Card */}
               <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-5">
@@ -184,11 +184,11 @@ export default function AdminNotificationsPage() {
               <div className="mt-8 grid grid-cols-2 gap-4">
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
                   <p className="text-emerald-400 font-black text-xl">In-App</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Bell Dropdown</p>
+                  <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mt-1">Bell Dropdown</p>
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
                   <p className="text-primary font-black text-xl">FCM</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Mobile Push</p>
+                  <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mt-1">Mobile Push</p>
                 </div>
               </div>
             </div>

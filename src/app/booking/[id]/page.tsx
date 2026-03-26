@@ -130,7 +130,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
         {step === 1 && (
           <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4">
             <h1 className="text-3xl font-black text-gray-900 mb-2">Book a Service</h1>
-            <p className="text-gray-600 mb-8 font-medium">Tell us about the job you need help with.</p>
+            <p className="text-gray-800 mb-8 font-medium">Tell us about the job you need help with.</p>
 
             <form onSubmit={handleCreateJob} className="space-y-6">
               <div>
@@ -151,7 +151,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
                 <div>
                   <label className="block text-sm font-black text-gray-700 uppercase tracking-widest mb-2">Service Date</label>
                   <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700" size={20} />
                     <input 
                         type="date" 
                         required 
@@ -164,7 +164,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
                 <div>
                   <label className="block text-sm font-black text-gray-700 uppercase tracking-widest mb-2">Preferred Time</label>
                   <div className="relative">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700" size={20} />
                     <select 
                         required 
                         value={time}
@@ -182,7 +182,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
               <div>
                 <label className="block text-sm font-black text-gray-700 uppercase tracking-widest mb-2">Job Location</label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700" size={20} />
                   <input 
                     type="text" 
                     required 
@@ -212,14 +212,14 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
               <CheckCircle2 size={64} />
             </div>
             <h1 className="text-4xl font-black text-gray-900 mb-4">Request Sent!</h1>
-            <p className="text-gray-600 text-lg mb-10 leading-relaxed font-medium">
+            <p className="text-gray-800 text-lg mb-10 leading-relaxed font-medium">
               Your booking has been confirmed and payment received. The worker will be notified of your request immediately.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/dashboard/client" className="inline-block bg-primary text-white px-8 py-4 rounded-2xl font-black text-lg shadow-lg hover:scale-[1.05] transition-all">
                 Go to Dashboard
               </Link>
-              <Link href="/" className="inline-block bg-gray-50 text-gray-600 px-8 py-4 rounded-2xl font-bold">
+              <Link href="/" className="inline-block bg-gray-50 text-gray-800 px-8 py-4 rounded-2xl font-bold">
                 Back to Home
               </Link>
             </div>

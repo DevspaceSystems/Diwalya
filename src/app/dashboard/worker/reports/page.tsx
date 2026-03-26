@@ -80,7 +80,7 @@ export default function WorkerReportsPage() {
       <div className="flex justify-between items-end mb-4">
           <div>
             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Support & Reports</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Get help and track your tickets</p>
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">Get help and track your tickets</p>
           </div>
           <button 
             onClick={() => setShowNewTicket(true)}
@@ -129,7 +129,7 @@ export default function WorkerReportsPage() {
            <div className="py-24 flex flex-col items-center justify-center bg-white rounded-[2.5rem] border border-slate-100 shadow-sm text-center">
               <AlertCircle size={48} className="text-slate-100 mb-4" />
               <h4 className="text-lg font-black text-slate-900">No active tickets</h4>
-              <p className="text-slate-400 font-bold text-sm">Facing an issue? Submit a ticket above.</p>
+              <p className="text-slate-700 font-bold text-sm">Facing an issue? Submit a ticket above.</p>
            </div>
          ) : (
            <div className="grid gap-4">
@@ -149,17 +149,17 @@ export default function WorkerReportsPage() {
                              )}>
                                 {ticket.status}
                              </span>
-                             <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                             <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
                                 Ref: #{ticket.id.slice(0, 8)}
                              </span>
                           </div>
                           <h4 className="text-xl font-black text-slate-900 mb-2">{ticket.subject}</h4>
-                          <p className="text-slate-500 font-medium text-sm leading-relaxed line-clamp-2">{ticket.description}</p>
+                          <p className="text-slate-700 font-medium text-sm leading-relaxed line-clamp-2">{ticket.description}</p>
                        </div>
                        
                        <div className="flex md:flex-col justify-between items-end gap-4 min-w-[140px]">
                           <div className="text-right">
-                             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Created On</p>
+                             <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Created On</p>
                              <p className="text-xs font-black text-slate-900">{new Date(ticket.createdAt).toLocaleDateString()}</p>
                           </div>
                           <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-1">
@@ -180,12 +180,12 @@ export default function WorkerReportsPage() {
               <form onSubmit={handleSubmit} className="p-10 space-y-8">
                  <div>
                     <h3 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Report an Issue</h3>
-                    <p className="text-slate-400 font-medium">Explain the problem and we'll get back to you soon.</p>
+                    <p className="text-slate-700 font-medium">Explain the problem and we'll get back to you soon.</p>
                  </div>
 
                  <div className="space-y-6">
                     <div>
-                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Issue Category</label>
+                       <label className="block text-[10px] font-black text-slate-700 uppercase tracking-widest mb-3">Issue Category</label>
                        <div className="grid grid-cols-2 gap-3">
                           {['TECHNICAL', 'JOB_DISPUTE', 'PAYMENT', 'PROFILE'].map((cat) => (
                              <button
@@ -194,7 +194,7 @@ export default function WorkerReportsPage() {
                                onClick={() => setCategory(cat)}
                                className={cn(
                                  "py-3 px-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all",
-                                 category === cat ? "border-primary bg-primary/5 text-primary" : "border-slate-50 text-slate-400 hover:border-slate-100"
+                                 category === cat ? "border-primary bg-primary/5 text-primary" : "border-slate-50 text-slate-700 hover:border-slate-100"
                                )}
                              >
                                 {cat.replace('_', ' ')}
@@ -227,7 +227,7 @@ export default function WorkerReportsPage() {
                     <button 
                       type="button"
                       onClick={() => setShowNewTicket(false)}
-                      className="flex-grow py-5 bg-slate-50 text-slate-500 font-black rounded-2xl hover:bg-slate-100 transition-all text-xs uppercase tracking-widest"
+                      className="flex-grow py-5 bg-slate-50 text-slate-700 font-black rounded-2xl hover:bg-slate-100 transition-all text-xs uppercase tracking-widest"
                     >
                       Cancel
                     </button>

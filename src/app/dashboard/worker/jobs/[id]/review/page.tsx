@@ -8,7 +8,7 @@ import {
   Clock, 
   AlertCircle,
   Loader2,
-  DollarSign,
+  Banknote,
   Briefcase,
   MapPin,
   Calendar,
@@ -18,7 +18,8 @@ import {
   Volume2,
   ChevronRight,
   ClipboardList,
-  Eye
+  Eye,
+  XCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -39,7 +40,8 @@ export default function WorkerJobReviewPage() {
   const [inspectionFee, setInspectionFee] = useState(100);
   const [submitting, setSubmitting] = useState(false);
   const [proposingInspection, setProposingInspection] = useState(false);
-  const [decision, setDecision] = useState<'NONE' | 'QUOTE' | 'INSPECTION'>('NONE');
+  const [decision, setDecision] = useState<'NONE' | 'QUOTE' | 'INSPECTION' | 'DECLINE'>('NONE');
+  const [declineReason, setDeclineReason] = useState('');
 
   useEffect(() => {
     fetchJobDetails();
@@ -94,15 +96,12 @@ export default function WorkerJobReviewPage() {
   };
 
   const handleProposeInspection = async () => {
-    if (!inspectionFee || inspectionFee <= 0) return alert('Please enter a valid fee');
-    
     setProposingInspection(true);
     try {
       const { proposeInspection } = await import('@/app/actions/booking');
       const res = await proposeInspection({
         jobId,
-        workerId: job.workerId,
-        inspectionFee
+        workerId: job.workerId
       });
 
       if (res.success) {
@@ -115,6 +114,26 @@ export default function WorkerJobReviewPage() {
       alert('An error occurred');
     } finally {
       setProposingInspection(false);
+    }
+  };
+
+  const handleDeclineRequest = async () => {
+    if (!declineReason) return alert('Please select a reason for declining.');
+    setSubmitting(true);
+    try {
+      const { workerCancelJob } = await import('@/app/actions/booking');
+      const res = await workerCancelJob(jobId, job.workerId, declineReason);
+
+      if (res.success) {
+        alert('Job request declined successfully.');
+        router.push('/dashboard/worker/jobs');
+      } else {
+        alert(res.error || 'Failed to decline request');
+      }
+    } catch (err: any) {
+      alert('An error occurred');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -149,23 +168,23 @@ export default function WorkerJobReviewPage() {
           <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl">
              <Briefcase className="text-secondary mb-4" size={32} />
              <h3 className="text-2xl font-black mb-1">{job.serviceType}</h3>
-             <p className="text-slate-400 text-sm font-bold mb-6 italic leading-relaxed">"{job.description}"</p>
+             <p className="text-slate-700 text-sm font-bold mb-6 italic leading-relaxed">"{job.description}"</p>
              
              <div className="space-y-4 pt-4 border-t border-slate-800 text-[10px] font-black uppercase tracking-widest">
-                <div className="flex items-center gap-2 text-slate-400"><MapPin size={14} className="text-primary" /> {job.location}</div>
-                <div className="flex items-center gap-2 text-slate-400"><Calendar size={14} className="text-primary" /> {new Date(job.scheduledAt).toLocaleDateString()}</div>
+                <div className="flex items-center gap-2 text-slate-700"><MapPin size={14} className="text-primary" /> {job.location}</div>
+                <div className="flex items-center gap-2 text-slate-700"><Calendar size={14} className="text-primary" /> {new Date(job.scheduledAt).toLocaleDateString()}</div>
              </div>
           </div>
 
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 italic">Client Information</p>
+             <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-4 italic">Client Information</p>
              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-primary font-black text-xl">
                    {job.client?.name?.charAt(0) || '?'}
                 </div>
                 <div>
                    <p className="font-black text-gray-900 text-sm">{job.client?.name || 'Protected User'}</p>
-                   <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Verified Client</p>
+                   <p className="text-[9px] font-black text-gray-700 uppercase tracking-tighter">Verified Client</p>
                 </div>
              </div>
           </div>
@@ -189,11 +208,24 @@ export default function WorkerJobReviewPage() {
              </div>
            )}
 
-           {decision === 'NONE' ? (
+           {job.status === 'CANCELLED' ? (
+             <div className="bg-red-50 p-10 rounded-[3rem] border border-red-100 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-xl">
+                 <div className="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-6">
+                    <XCircle size={40} />
+                 </div>
+                 <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Job Cancelled</h3>
+                 <p className="text-sm text-slate-600 font-bold max-w-sm mb-6 leading-relaxed">
+                    This job request was cancelled by the client. You can no longer submit an estimate or manage this job.
+                 </p>
+                 <Link href="/dashboard/worker/jobs" className="px-8 py-4 bg-white text-slate-900 font-black rounded-2xl hover:bg-slate-50 transition-all text-sm shadow-sm border border-slate-100">
+                    Return to Dashboard
+                 </Link>
+             </div>
+           ) : decision === 'NONE' ? (
              <div className="grid grid-cols-1 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="text-center mb-4">
                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">How would you like to proceed?</h3>
-                   <p className="text-sm text-slate-400 font-bold mt-1">Select the best option based on the job details.</p>
+                   <p className="text-sm text-slate-700 font-bold mt-1">Select the best option based on the job details.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -202,10 +234,10 @@ export default function WorkerJobReviewPage() {
                      className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 hover:border-primary transition-all text-left group hover:shadow-2xl hover:shadow-primary/10"
                    >
                       <div className="w-16 h-16 bg-primary/5 text-primary rounded-[2rem] flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-all">
-                         <DollarSign size={32} />
+                         <Banknote size={32} />
                       </div>
                       <h4 className="text-xl font-black text-slate-900 mb-2">Direct Pricing</h4>
-                      <p className="text-xs text-slate-400 font-bold leading-relaxed mb-6">I understand the job requirements and can provide a fixed price immediately.</p>
+                      <p className="text-xs text-slate-700 font-bold leading-relaxed mb-6">I understand the job requirements and can provide a fixed price immediately.</p>
                       <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
                          Set Price <ChevronRight size={14} />
                       </div>
@@ -219,10 +251,67 @@ export default function WorkerJobReviewPage() {
                          <Eye size={32} />
                       </div>
                       <h4 className="text-xl font-black text-slate-900 mb-2">Site Inspection</h4>
-                      <p className="text-xs text-slate-400 font-bold leading-relaxed mb-6">This job is complex. I need to visit the site before I can give a final price.</p>
+                      <p className="text-xs text-slate-700 font-bold leading-relaxed mb-6">This job is complex. I need to visit the site before I can give a final price.</p>
                       <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-500">
                          Request Access <ChevronRight size={14} />
                       </div>
+                   </button>
+                </div>
+
+                 <div className="mt-4">
+                    <button 
+                      onClick={() => setDecision('DECLINE')}
+                      className="w-full bg-red-50 p-6 rounded-[2rem] border-2 border-red-100 hover:border-red-500 hover:bg-red-100 transition-all text-center group hover:shadow-2xl hover:shadow-red-500/10"
+                    >
+                      <h4 className="text-xl font-black text-red-600 mb-2 flex items-center justify-center gap-2">
+                         <XCircle size={24} className="group-hover:scale-110 transition-transform" /> Decline Request
+                      </h4>
+                      <p className="text-xs text-red-400 font-bold">I am not available or cannot fulfill this request at this time.</p>
+                    </button>
+                 </div>
+              </div>
+           ) : decision === 'DECLINE' ? (
+             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                <button 
+                  onClick={() => setDecision('NONE')}
+                  className="text-[10px] font-black text-slate-700 uppercase tracking-widest hover:text-red-500 transition-all mb-4 flex items-center gap-1"
+                >
+                   <ArrowLeft size={12} /> Back to options
+                </button>
+                <div className="bg-white p-10 rounded-[3rem] border border-red-100 shadow-2xl text-center space-y-6">
+                   <div className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center text-red-500 mx-auto">
+                     <XCircle size={40} />
+                   </div>
+                   <div>
+                     <h3 className="text-2xl font-black text-slate-900 tracking-tight">Decline this Request?</h3>
+                     <p className="text-sm text-slate-700 font-bold mt-2 leading-relaxed max-w-sm mx-auto">
+                        This will permanently remove the job from your list and notify the client to search for another specialist.
+                     </p>
+                   </div>
+                                       <div className="text-left space-y-2 mt-2">
+                      <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1">
+                        Reason for declining <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={declineReason}
+                        onChange={(e) => setDeclineReason(e.target.value)}
+                        className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl text-sm font-black text-black focus:ring-2 focus:ring-red-500/20 outline-none cursor-pointer"
+                      >
+                        <option value="">-- Select a reason --</option>
+                        <option value="Not available at requested time">Not available at requested time</option>
+                        <option value="Job is outside my service area">Job is outside my service area</option>
+                        <option value="Job is outside my specialty">Job is outside my specialty</option>
+                        <option value="Insufficient job details provided">Insufficient job details provided</option>
+                        <option value="Cannot meet requested timeline">Cannot meet requested timeline</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+<button 
+                     onClick={handleDeclineRequest}
+                     disabled={submitting || !declineReason}
+                     className="w-full py-5 bg-red-500 text-white font-black rounded-2xl hover:bg-red-600 active:scale-95 transition-all uppercase tracking-widest text-sm shadow-xl shadow-red-500/20 disabled:opacity-40 flex items-center justify-center gap-3 "
+                   >
+                     {submitting ? <Loader2 className="animate-spin" size={24} /> : 'Confirm Decline'}
                    </button>
                 </div>
              </div>
@@ -230,7 +319,7 @@ export default function WorkerJobReviewPage() {
              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                <button 
                  onClick={() => setDecision('NONE')}
-                 className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-all mb-4 flex items-center gap-1"
+                 className="text-[10px] font-black text-slate-700 uppercase tracking-widest hover:text-primary transition-all mb-4 flex items-center gap-1"
                >
                   <ArrowLeft size={12} /> Back to options
                </button>
@@ -239,14 +328,14 @@ export default function WorkerJobReviewPage() {
                     <h3 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                       <ClipboardList size={24} className="text-primary" /> Provide Your Quote
                     </h3>
-                    <p className="text-sm text-gray-400 font-bold mt-1">Set your price based on the job requirements.</p>
+                    <p className="text-sm text-gray-700 font-bold mt-1">Set your price based on the job requirements.</p>
                   </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Labor Cost (GHS)</label>
+                  <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1 mb-2 block">Labor Cost (GHS)</label>
                   <div className="relative">
-                    <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 text-primary" size={20} />
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-primary font-bold text-lg">₵</div>
                     <input 
                       type="number" 
                       required
@@ -259,9 +348,9 @@ export default function WorkerJobReviewPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Materials (GHS)</label>
+                  <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1 mb-2 block">Materials (GHS)</label>
                   <div className="relative">
-                    <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-700 font-bold text-lg">₵</div>
                     <input 
                       type="number" 
                       min="0"
@@ -275,22 +364,30 @@ export default function WorkerJobReviewPage() {
 
               <div className="space-y-6">
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Estimated Work Duration</label>
-                  <select 
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    className="w-full px-6 py-5 bg-gray-50 border border-gray-100 rounded-2xl font-black text-gray-900 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all appearance-none cursor-pointer"
-                  >
-                    <option>1-2 Hours</option>
-                    <option>Half Day</option>
-                    <option>1 Day</option>
-                    <option>2-3 Days</option>
-                    <option>Flexible / Ongoing</option>
-                  </select>
+                  <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1 mb-2 block">Estimated Work Duration</label>
+                  <div className="relative">
+                    <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-primary" size={20} />
+                    <input 
+                      type="text"
+                      required
+                      list="duration-options"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      placeholder="e.g. 1-2 Hours, 1 Day..."
+                      className="w-full pl-14 pr-6 py-5 bg-gray-50 border border-gray-100 rounded-2xl font-black text-lg text-gray-900 focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                    />
+                    <datalist id="duration-options">
+                      <option value="1-2 Hours" />
+                      <option value="Half Day" />
+                      <option value="1 Day" />
+                      <option value="2-3 Days" />
+                      <option value="Flexible / Ongoing" />
+                    </datalist>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Breakdown / Final Notes</label>
+                  <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1 mb-2 block">Breakdown / Final Notes</label>
                   <textarea 
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -308,7 +405,7 @@ export default function WorkerJobReviewPage() {
                 </div>
                 <div className="flex justify-between items-end">
                    <p className="text-4xl font-black text-gray-900 tracking-tight">{formatGHS(laborCost + materialCost)}</p>
-                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic mb-1">Net Payout: {formatGHS((laborCost + materialCost) * 0.95)}</p>
+                   <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest italic mb-1">Net Payout: {formatGHS((laborCost + materialCost) * 0.95)}</p>
                 </div>
               </div>
 
@@ -327,43 +424,46 @@ export default function WorkerJobReviewPage() {
              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                <button 
                  onClick={() => setDecision('NONE')}
-                 className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-all mb-4 flex items-center gap-1"
+                 className="text-[10px] font-black text-slate-700 uppercase tracking-widest hover:text-primary transition-all mb-6 flex items-center gap-1"
                >
                   <ArrowLeft size={12} /> Back to options
                </button>
-               {/* Inspection Choice */}
-               <div className="bg-amber-50 rounded-[3rem] p-10 border border-amber-100 text-center space-y-8">
-                  <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-amber-500 mx-auto shadow-sm">
-                    <Eye size={32} />
-                  </div>
-                  <div>
-                    <h4 className="text-2xl font-black text-amber-900 mb-2">Request Site Inspection</h4>
-                    <p className="text-sm text-amber-700/70 font-bold leading-relaxed max-w-sm mx-auto">
-                       Use this if you need to physically evaluate the project before providing a final labor and materials cost.
-                    </p>
-                  </div>
-                  
-                  <div className="max-w-[240px] mx-auto bg-white p-6 rounded-[2rem] border border-amber-200">
-                    <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-3 block">Proposed Inspection Fee</label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400" size={16} />
-                      <input 
-                        type="number"
-                        value={inspectionFee}
-                        onChange={(e) => setInspectionFee(Number(e.target.value))}
-                        className="w-full pl-10 pr-4 py-4 bg-amber-50/50 border border-amber-100 rounded-xl font-black text-2xl text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
-                      />
-                    </div>
-                    <p className="text-[9px] font-bold text-amber-400 uppercase mt-3 tracking-wider italic">Paid by client via escrow</p>
-                  </div>
+               {/* Inspection Request Card */}
+               <div className="bg-white rounded-[3rem] p-10 border-2 border-amber-200 text-center space-y-8 shadow-lg">
+                   <div className="w-20 h-20 bg-amber-100 rounded-[2rem] flex items-center justify-center text-amber-600 mx-auto">
+                     <Eye size={40} />
+                   </div>
 
-                  <button 
-                    onClick={handleProposeInspection}
-                    disabled={proposingInspection}
-                    className="w-full max-w-md py-6 bg-amber-500 text-white font-black rounded-2xl hover:bg-amber-600 transition-all uppercase tracking-widest text-sm shadow-xl shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-3 mx-auto"
-                  >
-                     {proposingInspection ? <Loader2 className="animate-spin" size={24} /> : <><Send size={24} /> Request Site Inspection</>}
-                  </button>
+                   <div className="space-y-3">
+                     <h4 className="text-2xl font-black text-slate-900">Request Site Inspection</h4>
+                     <p className="text-sm text-slate-600 font-medium leading-relaxed max-w-sm mx-auto">
+                        You need to visit the site before giving a final price. The admin will review your request, set the inspection fee, and notify the client.
+                     </p>
+                   </div>
+
+                   <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 text-left space-y-3">
+                     <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">What happens next</p>
+                     <div className="flex items-start gap-3">
+                       <div className="w-6 h-6 rounded-full bg-amber-500 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">1</div>
+                       <p className="text-sm font-bold text-slate-700">Admin reviews your inspection request</p>
+                     </div>
+                     <div className="flex items-start gap-3">
+                       <div className="w-6 h-6 rounded-full bg-amber-500 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">2</div>
+                       <p className="text-sm font-bold text-slate-700">Admin sets the inspection fee &amp; notifies the client</p>
+                     </div>
+                     <div className="flex items-start gap-3">
+                       <div className="w-6 h-6 rounded-full bg-amber-500 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">3</div>
+                       <p className="text-sm font-bold text-slate-700">Client pays &amp; you visit the site to give a final quote</p>
+                     </div>
+                   </div>
+
+                   <button 
+                     onClick={handleProposeInspection}
+                     disabled={proposingInspection}
+                     className="w-full py-5 bg-amber-500 text-white font-black rounded-2xl hover:bg-amber-600 active:scale-95 transition-all uppercase tracking-widest text-sm shadow-xl shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-3"
+                   >
+                      {proposingInspection ? <Loader2 className="animate-spin" size={24} /> : <><Send size={20} /> Send Inspection Request</>}
+                   </button>
                </div>
              </div>
            )}

@@ -189,7 +189,7 @@ export default function WorkerLayout({ children }: { children: React.ReactNode }
                 <div className="rounded-xl">
                    <img src="/diwalya-logo.png" alt="Diwalya" className="h-6" />
                 </div>
-                <button onClick={() => setSidebarOpen(false)} className="text-slate-500 hover:bg-gray-100 p-2 rounded-xl transition-colors">
+                <button onClick={() => setSidebarOpen(false)} className="text-slate-700 hover:bg-gray-100 p-2 rounded-xl transition-colors">
                    <X size={24} />
                 </button>
              </div>

@@ -7,7 +7,7 @@ import {
   Calculator, 
   Clock, 
   Construction, 
-  DollarSign, 
+  Banknote,
   FileText, 
   Loader2, 
   CheckCircle2, 
@@ -104,7 +104,7 @@ export default function WorkerEstimatePage() {
           <CheckCircle2 size={40} />
         </div>
         <h1 className="text-3xl font-black text-slate-900 mb-2">Estimate Submitted!</h1>
-        <p className="text-slate-500 max-w-md">Your estimate has been sent to the admin for review. You'll be notified once it's approved.</p>
+        <p className="text-slate-700 max-w-md">Your estimate has been sent to the admin for review. You'll be notified once it's approved.</p>
         <Link href="/dashboard/worker" className="mt-8 text-primary font-bold flex items-center gap-2">
           <ArrowLeft size={18} /> Back to Dashboard
         </Link>
@@ -119,7 +119,7 @@ export default function WorkerEstimatePage() {
           <Calculator size={32} />
         </div>
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">Submit Job Estimate</h1>
-        <p className="text-slate-500 font-medium mt-1">Provide a detailed breakdown of the costs for this job.</p>
+        <p className="text-slate-700 font-medium mt-1">Provide a detailed breakdown of the costs for this job.</p>
       </div>
 
       {error && (
@@ -131,7 +131,7 @@ export default function WorkerEstimatePage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 space-y-6">
           <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-            <DollarSign className="text-primary" size={20} />
+            <Banknote className="text-primary" size={20} />
             Cost Breakdown
           </h2>
 
@@ -139,7 +139,7 @@ export default function WorkerEstimatePage() {
             <div>
               <label className="text-xs font-black text-slate-700 uppercase tracking-widest block mb-2">Labor Cost (₵)</label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₵</div>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-700 font-bold">₵</div>
                 <input
                   required
                   type="number"
@@ -156,7 +156,7 @@ export default function WorkerEstimatePage() {
             <div>
               <label className="text-xs font-black text-slate-700 uppercase tracking-widest block mb-2">Material Cost (₵)</label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₵</div>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-700 font-bold">₵</div>
                 <input
                   required
                   type="number"
@@ -173,7 +173,7 @@ export default function WorkerEstimatePage() {
 
           <div className="p-6 bg-slate-900 rounded-2xl flex justify-between items-center text-white">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Estimated Total Cost</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-700">Estimated Total Cost</p>
               <p className="text-3xl font-black">{formatGHS(totalCost)}</p>
             </div>
             <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
@@ -191,7 +191,7 @@ export default function WorkerEstimatePage() {
           <div>
             <label className="text-xs font-black text-slate-700 uppercase tracking-widest block mb-2">Estimated Duration</label>
             <div className="relative">
-              <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-700" size={18} />
               <input
                 required
                 type="text"
@@ -206,7 +206,7 @@ export default function WorkerEstimatePage() {
           <div>
             <label className="text-xs font-black text-slate-700 uppercase tracking-widest block mb-2">Additional Notes (Optional)</label>
             <div className="relative">
-              <FileText className="absolute left-4 top-4 text-slate-400" size={18} />
+              <FileText className="absolute left-4 top-4 text-slate-700" size={18} />
               <textarea
                 rows={4}
                 placeholder="Break down materials or explain the work scope..."
@@ -228,7 +228,7 @@ export default function WorkerEstimatePage() {
         </button>
       </form>
 
-      <p className="mt-8 text-center text-xs text-slate-400 font-medium leading-relaxed px-10">
+      <p className="mt-8 text-center text-xs text-slate-700 font-medium leading-relaxed px-10">
         Your estimate will be reviewed by the Diwalya admin team to ensure fairness and accuracy before being sent to the client.
       </p>
     </div>

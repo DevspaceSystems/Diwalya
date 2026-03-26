@@ -50,18 +50,18 @@ export default function ClientDashboard() {
           <Link href="/dashboard/client" className="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20">
             <LayoutDashboard size={20} /> Dashboard
           </Link>
-          <Link href="/search" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-white/5 rounded-xl font-bold transition-all">
+          <Link href="/search" className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-white/5 rounded-xl font-bold transition-all">
             <Search size={20} /> Find Workers
           </Link>
-          <Link href="/dashboard/client/jobs" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-white/5 rounded-xl font-bold transition-all">
+          <Link href="/dashboard/client/jobs" className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-white/5 rounded-xl font-bold transition-all">
             <Briefcase size={20} /> My Bookings
           </Link>
-          <Link href="/dashboard/client/wallet" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-white/5 rounded-xl font-bold transition-all">
+          <Link href="/dashboard/client/wallet" className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-white/5 rounded-xl font-bold transition-all">
             <Wallet size={20} /> Escrow Wallet
           </Link>
         </nav>
         <div className="p-4 border-t border-slate-800">
-          <Link href="/dashboard/client/settings" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-white/5 rounded-xl font-bold transition-all">
+          <Link href="/dashboard/client/settings" className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-white/5 rounded-xl font-bold transition-all">
             <Settings size={20} /> Account Settings
           </Link>
         </div>
@@ -72,7 +72,7 @@ export default function ClientDashboard() {
         <header className="bg-white border-b h-20 flex items-center justify-between px-8 sticky top-0 z-40">
           <div>
             <h1 className="text-2xl font-black text-gray-900 leading-none">Client Dashboard</h1>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Hello, {user?.user_metadata?.full_name || 'Mark'}!</p>
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">Hello, {user?.user_metadata?.full_name || 'Mark'}!</p>
           </div>
           <div className="flex items-center gap-6">
             <NotificationBell />
@@ -87,7 +87,7 @@ export default function ClientDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             {stats.map((stat) => (
               <div key={stat.label} className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm transition-shadow hover:shadow-md">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">{stat.label}</p>
+                <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-2">{stat.label}</p>
                 <p className={`text-4xl font-black ${stat.color}`}>{stat.value}</p>
               </div>
             ))}
@@ -105,13 +105,13 @@ export default function ClientDashboard() {
                 {loading ? (
                    <div className="py-20 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-dashed border-gray-200">
                      <Loader2 className="animate-spin text-primary mb-4" />
-                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Fetching your bookings...</p>
+                     <p className="text-xs font-bold text-gray-700 uppercase tracking-widest">Fetching your bookings...</p>
                    </div>
                 ) : jobs.length === 0 ? (
                   <div className="py-20 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-dashed border-gray-200 text-center px-8">
                      <Briefcase size={40} className="text-gray-100 mb-4" />
                      <p className="text-lg font-black text-gray-900 mb-2">No active bookings</p>
-                     <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-6">Start your first project in minutes.</p>
+                     <p className="text-xs text-gray-700 font-bold uppercase tracking-widest mb-6">Start your first project in minutes.</p>
                      <Link href="/search" className="px-8 py-4 bg-primary text-white font-black rounded-2xl">Find Experts Now</Link>
                   </div>
                 ) : (
@@ -137,7 +137,7 @@ export default function ClientDashboard() {
                        
                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                           <div className="flex items-center gap-6">
-                             <div className="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center text-gray-400 shrink-0 font-black text-2xl overflow-hidden border-2 border-gray-50">
+                             <div className="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center text-gray-700 shrink-0 font-black text-2xl overflow-hidden border-2 border-gray-50">
                                 {job.worker?.profilePicture ? (
                                   <img src={job.worker.profilePicture} alt={job.worker.name} className="w-full h-full object-cover" />
                                 ) : (
@@ -146,7 +146,7 @@ export default function ClientDashboard() {
                              </div>
                              <div>
                                 <h4 className="font-black text-gray-900 text-xl tracking-tight leading-none mb-2">{job.serviceType}</h4>
-                                <p className="text-xs font-bold text-gray-400 flex items-center gap-4 mb-4 uppercase tracking-widest">
+                                <p className="text-xs font-bold text-gray-700 flex items-center gap-4 mb-4 uppercase tracking-widest">
                                    <span>Pro: {job.worker?.name}</span>
                                    <span className="flex items-center gap-1 font-black"><Clock size={12} /> {new Date(job.createdAt).toLocaleDateString()}</span>
                                 </p>
@@ -156,7 +156,7 @@ export default function ClientDashboard() {
                                      job.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
                                      job.status === 'ESTIMATE_SUBMITTED' ? "bg-blue-50 text-blue-600 border-blue-100" :
                                      job.status === 'IN_PROGRESS' ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                     "bg-gray-50 text-gray-400 border-gray-100"
+                                     "bg-gray-50 text-gray-700 border-gray-100"
                                    )}>
                                       {job.status.replace(/_/g, ' ')}
                                    </span>
@@ -183,7 +183,7 @@ export default function ClientDashboard() {
                                   {job.status === 'ESTIMATE_SUBMITTED' ? 'Review Quote' : 
                                    job.status === 'COMPLETED' ? 'Confirm & Release' : 'Track Progress'}
                                 </Link>
-                                <button className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                                <button className="p-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
                                    <MessageSquare size={18} />
                                 </button>
                              </div>
@@ -200,11 +200,11 @@ export default function ClientDashboard() {
               <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
                  <div className="relative z-10">
                     <h3 className="text-2xl font-black mb-2 tracking-tight">Support Policy</h3>
-                    <p className="text-slate-400 text-sm font-bold leading-relaxed mb-6">Your payments are held in escrow for your safety. Only release funds if you are 100% satisfied.</p>
+                    <p className="text-slate-700 text-sm font-bold leading-relaxed mb-6">Your payments are held in escrow for your safety. Only release funds if you are 100% satisfied.</p>
                     <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-4">
                        <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-400 font-black text-[10px]">24h</div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Mediation Window</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">Mediation Window</p>
                        </div>
                     </div>
                  </div>
@@ -218,7 +218,7 @@ export default function ClientDashboard() {
                       <Search size={24} />
                    </div>
                    <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scheduled</p>
+                      <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Scheduled</p>
                       <p className="font-black text-gray-900 text-sm italic tracking-tight leading-none mt-1">Tomorrow, 10:00 AM</p>
                    </div>
                 </div>

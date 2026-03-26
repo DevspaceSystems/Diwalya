@@ -86,7 +86,7 @@ export default function WorkerSetupPage() {
                 )} 
               />
             ))}
-            <span className="ml-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Step 0{step}/03</span>
+            <span className="ml-4 text-[10px] font-black text-slate-700 uppercase tracking-[0.2em]">Step 0{step}/03</span>
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export default function WorkerSetupPage() {
                 <Star size={24} />
               </div>
               <h1 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Professional Setup</h1>
-              <p className="text-slate-500 font-bold leading-relaxed">Let's craft your identity on the platform to attract high-value clients.</p>
+              <p className="text-slate-700 font-bold leading-relaxed">Let's craft your identity on the platform to attract high-value clients.</p>
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); setStep(2); }} className="space-y-8">
@@ -111,14 +111,14 @@ export default function WorkerSetupPage() {
                     <Upload size={20} />
                   </button>
                 </div>
-                <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mt-6">Upload High-Res Portrait</p>
+                <p className="text-center text-[10px] font-black text-slate-700 uppercase tracking-widest mt-6">Upload High-Res Portrait</p>
               </div>
 
               <div className="grid gap-6">
                 <div>
-                  <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-2">Core Expertise</label>
+                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-[0.2em] mb-3 ml-2">Core Expertise</label>
                   <div className="relative group/field">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/field:text-secondary transition-colors">
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-700 group-focus-within/field:text-secondary transition-colors">
                       <Briefcase size={22} />
                     </div>
                     <select 
@@ -147,7 +147,7 @@ export default function WorkerSetupPage() {
                       </optgroup>
                       <option value="other">Other Unique Skill...</option>
                     </select>
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300">
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
                       <ChevronRight size={18} className="rotate-90" />
                     </div>
                   </div>
@@ -155,7 +155,7 @@ export default function WorkerSetupPage() {
 
                 {selectedCategory === 'other' && (
                   <div className="animate-in fade-in slide-in-from-top-2 duration-500">
-                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-2">Specify Profession</label>
+                    <label className="block text-[11px] font-black text-slate-700 uppercase tracking-[0.2em] mb-3 ml-2">Specify Profession</label>
                     <input 
                       type="text" 
                       required 
@@ -168,9 +168,9 @@ export default function WorkerSetupPage() {
                 )}
 
                 <div>
-                  <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-2">Service Radius / City</label>
+                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-[0.2em] mb-3 ml-2">Service Radius / City</label>
                   <div className="relative group/field">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/field:text-secondary transition-colors">
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-700 group-focus-within/field:text-secondary transition-colors">
                       <MapPin size={22} />
                     </div>
                     <input 
@@ -200,7 +200,7 @@ export default function WorkerSetupPage() {
                 <ShieldCheck size={24} />
               </div>
               <h1 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Trust & Safety</h1>
-              <p className="text-slate-500 font-bold leading-relaxed">Earn the <span className="text-blue-600 font-black italic">Verified Specialist</span> badge to unlock premium bookings.</p>
+              <p className="text-slate-700 font-bold leading-relaxed">Earn the <span className="text-blue-600 font-black italic">Verified Specialist</span> badge to unlock premium bookings.</p>
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); setStep(3); }} className="space-y-8">
@@ -215,15 +215,15 @@ export default function WorkerSetupPage() {
               </div>
 
               <div className="border-4 border-dashed border-slate-50 rounded-[3rem] p-16 text-center hover:border-secondary/30 transition-all duration-500 cursor-pointer group bg-slate-50/30 hover:bg-white">
-                  <div className="w-20 h-20 bg-white text-slate-300 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary group-hover:text-white group-hover:scale-110 shadow-sm transition-all duration-500">
+                  <div className="w-20 h-20 bg-white text-slate-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary group-hover:text-white group-hover:scale-110 shadow-sm transition-all duration-500">
                     <Upload size={36} />
                   </div>
-                  <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Drop files or click to scan</p>
-                  <p className="text-[10px] text-slate-300 font-bold mt-3 uppercase tracking-widest tracking-tighter">Maximum size 50MB (RAW, JPG, PDF)</p>
+                  <p className="font-black text-slate-700 uppercase tracking-widest text-xs">Drop files or click to scan</p>
+                  <p className="text-[10px] text-slate-600 font-bold mt-3 uppercase tracking-widest tracking-tighter">Maximum size 50MB (RAW, JPG, PDF)</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                 <button onClick={() => setStep(1)} type="button" className="flex-grow py-6 px-8 bg-slate-50 text-slate-400 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-100 transition-colors">Previous</button>
+                 <button onClick={() => setStep(1)} type="button" className="flex-grow py-6 px-8 bg-slate-50 text-slate-700 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-100 transition-colors">Previous</button>
                  <button type="submit" className="flex-[2] bg-slate-900 text-white py-6 px-8 rounded-[2rem] font-black text-lg flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/10 hover:bg-slate-800 hover:-translate-y-1 transition-all duration-300 group">
                    Schedule Availability <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
                  </button>
@@ -240,7 +240,7 @@ export default function WorkerSetupPage() {
                 <CheckCircle2 size={24} />
               </div>
               <h1 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Time Logic</h1>
-              <p className="text-slate-500 font-bold leading-relaxed">Establish your operational hours to manage client expectations automatically.</p>
+              <p className="text-slate-700 font-bold leading-relaxed">Establish your operational hours to manage client expectations automatically.</p>
             </div>
 
             <form onSubmit={handleFinish} className="space-y-10">
@@ -261,13 +261,13 @@ export default function WorkerSetupPage() {
 
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                   <div>
-                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Operation Starts</label>
+                    <label className="block text-[11px] font-black text-slate-700 uppercase tracking-[0.2em] mb-4 ml-2">Operation Starts</label>
                     <div className="relative">
                       <input type="time" defaultValue="08:00" className="w-full px-6 py-6 bg-slate-50/50 border border-slate-100 rounded-[2rem] focus:ring-4 focus:ring-secondary/5 focus:border-secondary focus:bg-white focus:outline-none transition-all font-black text-xl text-slate-900" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Operation Ends</label>
+                    <label className="block text-[11px] font-black text-slate-700 uppercase tracking-[0.2em] mb-4 ml-2">Operation Ends</label>
                     <div className="relative">
                       <input type="time" defaultValue="18:00" className="w-full px-6 py-6 bg-slate-50/50 border border-slate-100 rounded-[2rem] focus:ring-4 focus:ring-secondary/5 focus:border-secondary focus:bg-white focus:outline-none transition-all font-black text-xl text-slate-900" />
                     </div>
@@ -289,7 +289,7 @@ export default function WorkerSetupPage() {
                </div>
 
                <div className="flex flex-col sm:flex-row gap-4">
-                  <button onClick={() => setStep(2)} type="button" className="flex-grow py-6 px-8 bg-slate-50 text-slate-400 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-100 transition-colors">Previous</button>
+                  <button onClick={() => setStep(2)} type="button" className="flex-grow py-6 px-8 bg-slate-50 text-slate-700 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-100 transition-colors">Previous</button>
                   <button 
                     type="submit" 
                     disabled={loading} 
@@ -309,7 +309,7 @@ export default function WorkerSetupPage() {
               <CheckCircle2 size={72} />
             </div>
             <h1 className="text-5xl font-black text-slate-900 mb-6 tracking-tight">Configuration Complete</h1>
-            <p className="text-slate-500 text-lg font-bold mb-14 leading-relaxed max-w-sm mx-auto">
+            <p className="text-slate-700 text-lg font-bold mb-14 leading-relaxed max-w-sm mx-auto">
               Your specialist credentials have been submitted for priority verification. Experience the platform now.
             </p>
             <Link href="/dashboard/worker" className="inline-block bg-slate-900 text-white px-14 py-6 rounded-[2rem] font-black text-xl shadow-2xl shadow-slate-900/20 hover:scale-[1.05] hover:bg-slate-800 transition-all duration-500">

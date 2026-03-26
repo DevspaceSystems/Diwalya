@@ -131,7 +131,7 @@ export default function Navbar() {
                     {!isSearchPage && (
                       <>
                         <Link href="/bookings" className={cn("text-gray-600 hover:text-primary font-medium transition-colors", pathname === '/bookings' && "text-primary font-bold")}>Bookings</Link>
-                        <Link href="/signup" className="text-gray-600 hover:text-primary font-medium transition-colors">Join as Worker</Link>
+                        <Link href="/signup" className="text-gray-800 hover:text-primary font-medium transition-colors">Join as Worker</Link>
                         <div className="flex items-center space-x-4 ml-4">
                           <Link href="/login" className="text-primary font-semibold hover:text-primary-light transition-colors">Log in</Link>
                           <Link href="/signup" className="bg-primary hover:bg-primary-light text-white px-6 py-2.5 rounded-full font-semibold shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0">Sign up</Link>
@@ -171,7 +171,7 @@ export default function Navbar() {
                   <div className="relative">
                     <button 
                       onClick={() => setShowNotifications(!showNotifications)}
-                      className="relative p-2 text-gray-400 hover:text-primary transition-colors group"
+                      className="relative p-2 text-gray-700 hover:text-primary transition-colors group"
                     >
                       <Bell size={22} />
                       <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white group-hover:animate-ping"></span>
@@ -188,7 +188,7 @@ export default function Navbar() {
                     >
                       <div className="text-right hidden lg:block">
                         <p className="text-xs font-bold text-gray-900 leading-tight">{user.user_metadata?.full_name || 'My Account'}</p>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{role}</p>
+                        <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">{role}</p>
                       </div>
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden border-2 border-transparent hover:border-primary/20 transition-all">
                         {(dbUser?.profilePicture || user.user_metadata?.profilePicture) ? (
@@ -205,7 +205,7 @@ export default function Navbar() {
                           <User size={20} className="text-primary/60" />
                         )}
                       </div>
-                      <ChevronDown size={16} className={cn("text-gray-400 transition-transform duration-200", isProfileOpen && "rotate-180")} />
+                      <ChevronDown size={16} className={cn("text-gray-700 transition-transform duration-200", isProfileOpen && "rotate-180")} />
                     </button>
 
                     {isProfileOpen && (
@@ -214,10 +214,10 @@ export default function Navbar() {
                         <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in duration-200 origin-top-right">
                           <div className="px-4 py-3 border-b border-gray-50 mb-1">
                             <p className="text-sm font-bold text-gray-900 truncate">{user.user_metadata?.full_name}</p>
-                            <p className="text-[10px] text-gray-500 truncate font-medium">{user.email}</p>
+                            <p className="text-[10px] text-gray-700 truncate font-medium">{user.email}</p>
                           </div>
                           <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
-                            <User size={18} className="text-gray-400" /> My Profile
+                            <User size={18} className="text-gray-700" /> My Profile
                           </Link>
                           {(role === 'ADMIN' || role === 'SUPER_ADMIN') && (
                             <Link href="/dashboard/admin" className="flex items-center gap-3 px-4 py-2.5 text-sm text-primary font-bold hover:bg-primary/5 transition-colors">
@@ -226,16 +226,16 @@ export default function Navbar() {
                           )}
                           {role === 'CLIENT' && (
                             <Link href="/bookings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
-                              <Briefcase size={18} className="text-gray-400" /> My Bookings
+                              <Briefcase size={18} className="text-gray-700" /> My Bookings
                             </Link>
                           )}
                           {role === 'WORKER' && (
                             <Link href="/dashboard/worker/wallet" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors">
-                              <Wallet size={18} className="text-gray-400" /> My Wallet
+                              <Wallet size={18} className="text-gray-700" /> My Wallet
                             </Link>
                           )}
                           <Link href="/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors border-t border-gray-50 mt-1 pt-2">
-                            <Settings size={18} className="text-gray-400" /> Settings
+                            <Settings size={18} className="text-gray-700" /> Settings
                           </Link>
                           <button 
                             onClick={handleSignOut}
@@ -255,7 +255,7 @@ export default function Navbar() {
           {/* Mobile Notification Button (if any) */}
           <div className="md:hidden flex items-center gap-3">
             {user && (
-              <button className="relative p-2 text-gray-400 hover:text-primary transition-colors">
+              <button className="relative p-2 text-gray-700 hover:text-primary transition-colors">
                 <Bell size={22} />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>

@@ -59,33 +59,33 @@ export default function VerificationCenterPage() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Verification Center</h1>
-          <p className="text-slate-500 font-medium mt-1 uppercase text-[10px] tracking-widest font-black">Worker Approval Queue</p>
+          <p className="text-slate-700 font-medium mt-1 uppercase text-[10px] tracking-widest font-black">Worker Approval Queue</p>
         </div>
 
         <div className="space-y-6">
           {loading ? (
-             <div className="py-20 text-center font-black text-slate-400 animate-pulse">Syncing verification requests...</div>
+             <div className="py-20 text-center font-black text-slate-700 animate-pulse">Syncing verification requests...</div>
           ) : requests.length === 0 ? (
              <div className="bg-white rounded-[2.5rem] p-20 text-center border border-slate-200">
                <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
                  <CheckCircle2 size={40} />
                </div>
                <h3 className="text-xl font-black text-slate-900">All caught up!</h3>
-               <p className="text-slate-500 font-medium mt-2">No pending worker verifications.</p>
+               <p className="text-slate-700 font-medium mt-2">No pending worker verifications.</p>
              </div>
           ) : requests.map((req) => (
             <div key={req.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col md:flex-row hover:shadow-xl transition-all group">
               <div className="p-8 flex-grow space-y-8">
                 <div className="flex justify-between items-start">
                    <div className="flex items-center gap-5">
-                      <div className="w-16 h-16 bg-slate-100 rounded-3xl flex items-center justify-center font-black text-2xl text-slate-400 overflow-hidden">
+                      <div className="w-16 h-16 bg-slate-100 rounded-3xl flex items-center justify-center font-black text-2xl text-slate-700 overflow-hidden">
                         {req.user.profilePicture ? <img src={req.user.profilePicture} className="w-full h-full object-cover" /> : req.user.name[0]}
                       </div>
                       <div>
                         <h3 className="text-2xl font-black text-slate-900 tracking-tight">{req.businessName || req.user.name}</h3>
                         <div className="flex items-center gap-4 mt-1">
-                           <span className="text-xs font-bold text-slate-400 flex items-center gap-1"><User size={14}/> {req.user.name}</span>
-                           <span className="text-xs font-bold text-slate-400 flex items-center gap-1"><Briefcase size={14}/> {req.category}</span>
+                           <span className="text-xs font-bold text-slate-700 flex items-center gap-1"><User size={14}/> {req.user.name}</span>
+                           <span className="text-xs font-bold text-slate-700 flex items-center gap-1"><Briefcase size={14}/> {req.category}</span>
                         </div>
                       </div>
                    </div>
@@ -93,13 +93,13 @@ export default function VerificationCenterPage() {
                       <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 text-yellow-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-yellow-100 mb-2">
                         <Clock size={12} /> Pending Review
                       </div>
-                      <p className="text-[10px] font-bold text-slate-400">{new Date(req.user.createdAt).toLocaleDateString()}</p>
+                      <p className="text-[10px] font-bold text-slate-700">{new Date(req.user.createdAt).toLocaleDateString()}</p>
                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   <div className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Location & Experience</p>
+                    <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-3">Location & Experience</p>
                     <div className="space-y-3">
                        <p className="text-sm font-bold flex items-center gap-2 text-slate-700 font-black"><MapPin size={16} className="text-primary"/> {req.location}</p>
                        <p className="text-sm font-bold flex items-center gap-2 text-slate-700 font-black"><Clock size={16} className="text-primary"/> {req.experienceYears} Years Exp.</p>
@@ -107,7 +107,7 @@ export default function VerificationCenterPage() {
                   </div>
                   
                   <div className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 col-span-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Worker Bio</p>
+                    <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-3">Worker Bio</p>
                     <p className="text-xs text-slate-600 leading-relaxed font-medium line-clamp-3 italic">"{req.bio || 'No bio provided'}"</p>
                   </div>
                 </div>

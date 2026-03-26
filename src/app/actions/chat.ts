@@ -5,12 +5,15 @@ import { revalidatePath } from 'next/cache'
 
 /**
  * Regex to detect common bypass attempts:
- * - Phone numbers (Ghanaian format)
+ * - Phone numbers (Ghanaian format: must be exactly 10 digits starting with 02x, 03x, or 05x)
  * - Emails
  * - External links
- * - Keywords: "call me", "whatsapp", "pay cash", "offline"
+ * - Clear bypass keywords
+ *
+ * NOTE: No 'g' flag — using global flag with .test() causes alternating true/false results
+ * due to lastIndex state on the regex object, which caused every other message to be blocked.
  */
-const BYPASS_REGEX = /(?:\+?233|0)[235][0-9]{8}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|https?:\/\/[^\s]+|call me|whatsapp|pay cash|offline|outside/gi;
+const BYPASS_REGEX = /(?:(?:\+?233|0)[235]\d{8}(?!\d))|(?:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|(?:https?:\/\/[^\s]+)|(?:\bcall me\b|\bwhatsapp\b|\bpay cash\b)/i;
 
 export async function sendMessage(data: {
   jobId?: string
@@ -37,18 +40,21 @@ export async function sendMessage(data: {
       }
 
       return { 
-        success: false, 
-        error: 'Message blocked: For your protection, sharing phone numbers, emails, or links is not allowed before booking completion. A warning has been logged to your account.' 
+        success: false,
+        blocked: true,
+        error: 'Message blocked: For your protection, sharing phone numbers, emails, or links is not allowed before booking completion.'
       };
     }
 
     // 2. Save Message
+    const isForAdmin = data.recipientId === 'admin' || (!data.recipientId && !data.jobId);
+    
     const { data: message, error } = await supabaseAdmin
       .from('ChatMessage')
       .insert({
         jobId: data.jobId || null,
         senderId: data.senderId,
-        recipientId: data.recipientId || (data.jobId ? null : 'admin'),
+        recipientId: isForAdmin ? null : data.recipientId,
         content: data.content,
         isFlagged: false
       })
@@ -56,6 +62,38 @@ export async function sendMessage(data: {
       .single();
 
     if (error) throw error;
+
+    // 3. Send Push Notification to Recipient
+    try {
+      let targetUserId = isForAdmin ? 'admin' : data.recipientId;
+      if (!targetUserId && data.jobId) {
+        // If we don't have explicit recipient, find the other party in the job
+        const { data: job } = await supabaseAdmin.from('Job').select('clientId, workerId').eq('id', data.jobId).single();
+        if (job) {
+          targetUserId = (job.clientId === data.senderId) ? job.workerId : job.clientId;
+        }
+      }
+
+      const { data: sender } = await supabaseAdmin.from('User').select('name').eq('id', data.senderId).single();
+      const { sendNotification, notifyAdmins } = await import('@/lib/notifications');
+
+      if (targetUserId === 'admin') {
+         await notifyAdmins({
+           title: `Support Message from ${sender?.name || 'User'}`,
+           body: data.content,
+           data: { source: 'admin_chat' }
+         });
+      } else if (targetUserId) {
+        await sendNotification({
+          userId: targetUserId,
+          title: `New message from ${sender?.name || 'Someone'}`,
+          body: data.content.length > 60 ? data.content.substring(0, 57) + '...' : data.content
+        });
+      }
+    } catch (notifErr) {
+      console.error('Failed to send chat notification:', notifErr);
+      // Suppress notification errors so the message still succeeds
+    }
 
     if (data.jobId) {
       revalidatePath(`/dashboard/chat/${data.jobId}`);

@@ -82,7 +82,7 @@ export default function SignupPage() {
             <Image src="/diwalya-logo.png" alt="Diwalya Logo" width={180} height={45} className="mx-auto mb-6 cursor-pointer" />
           </Link>
           <h2 className="text-3xl font-black text-gray-900 tracking-tight">Create your account</h2>
-          <p className="mt-2 text-sm text-gray-500 font-bold">Choose your role to get started</p>
+          <p className="mt-2 text-sm text-gray-700 font-bold">Choose your role to get started</p>
         </div>
 
         {/* Role Selection */}
@@ -136,10 +136,10 @@ export default function SignupPage() {
           
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Full Name</label>
+              <label className="text-[10px] font-black text-gray-700 uppercase tracking-[0.2em] ml-2">Full Name</label>
               <div className="relative mt-1">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-gray-700" />
                 </div>
                 <input
                   required
@@ -152,10 +152,10 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Email Address</label>
+              <label className="text-[10px] font-black text-gray-700 uppercase tracking-[0.2em] ml-2">Email Address</label>
               <div className="relative mt-1">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-gray-700" />
                 </div>
                 <input
                   type="email"
@@ -169,10 +169,10 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Password</label>
+              <label className="text-[10px] font-black text-gray-700 uppercase tracking-[0.2em] ml-2">Password</label>
               <div className="relative mt-1">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-gray-700" />
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -187,7 +187,7 @@ export default function SignupPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                  {showPassword ? <EyeOff className="h-5 w-5 text-gray-700" /> : <Eye className="h-5 w-5 text-gray-700" />}
                 </button>
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function SignupPage() {
 
           <div className="flex items-center">
             <input required type="checkbox" className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer" />
-            <label className="ml-3 block text-sm text-gray-500 font-bold">
+            <label className="ml-3 block text-sm text-gray-700 font-bold">
               I agree to the <span className="text-primary hover:underline cursor-pointer">Terms</span> and <span className="text-primary hover:underline cursor-pointer">Privacy Policy</span>
             </label>
           </div>
@@ -222,7 +222,7 @@ export default function SignupPage() {
           </div>
         </form>
 
-        <p className="mt-8 text-center text-sm text-gray-500 font-bold">
+        <p className="mt-8 text-center text-sm text-gray-700 font-bold">
           Already have an account?{' '}
           <Link href="/login" className="text-primary hover:text-primary-light transition-colors">
             Log in instead
@@ -230,7 +230,7 @@ export default function SignupPage() {
         </p>
       </div>
       
-      <div className="mt-8 flex items-center justify-center gap-2 text-gray-400 font-black text-[10px] uppercase tracking-[0.2em]">
+      <div className="mt-8 flex items-center justify-center gap-2 text-gray-700 font-black text-[10px] uppercase tracking-[0.2em]">
         <ShieldCheck size={16} className="text-primary" />
         Data is encrypted and secure with 256-bit SSL
       </div>

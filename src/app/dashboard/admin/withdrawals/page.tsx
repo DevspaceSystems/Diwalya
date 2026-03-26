@@ -81,7 +81,7 @@ export default function AdminWithdrawalsPage() {
          <Loader2 className="animate-spin text-primary" size={32} />
        </div>
        <h2 className="text-xl font-black text-slate-900 tracking-tight">Syncing Withdrawal Queue</h2>
-       <p className="text-slate-400 font-medium text-xs mt-2 uppercase tracking-widest font-mono">Connecting to financial ledger...</p>
+       <p className="text-slate-700 font-medium text-xs mt-2 uppercase tracking-widest font-mono">Connecting to financial ledger...</p>
     </div>
   );
 
@@ -90,7 +90,7 @@ export default function AdminWithdrawalsPage() {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Fund Disbursal</h1>
-          <p className="text-slate-500 font-medium uppercase text-[10px] tracking-widest font-black mt-2 ml-1 flex items-center gap-2">
+          <p className="text-slate-700 font-medium uppercase text-[10px] tracking-widest font-black mt-2 ml-1 flex items-center gap-2">
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
             Global Withdrawal Management
           </p>
@@ -125,11 +125,11 @@ export default function AdminWithdrawalsPage() {
            <table className="w-full text-left">
               <thead className="bg-slate-50 border-b border-slate-100">
                  <tr>
-                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Worker / Recipient</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Amount</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Method</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest border-l border-slate-100">Details</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-700 uppercase tracking-widest">Worker / Recipient</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-700 uppercase tracking-widest">Amount</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-700 uppercase tracking-widest">Method</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-700 uppercase tracking-widest border-l border-slate-100">Details</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-700 uppercase tracking-widest text-right">Actions</th>
                  </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -142,12 +142,12 @@ export default function AdminWithdrawalsPage() {
                              </div>
                              <div>
                                 <p className="font-black text-slate-900 leading-none mb-1">{req.user.name}</p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{req.user.email}</p>
+                                <p className="text-[10px] text-slate-700 font-bold uppercase tracking-tight">{req.user.email}</p>
                              </div>
                           </div>
                        </td>
                        <td className="px-8 py-8">
-                          <p className="font-black text-emerald-600 text-2xl tracking-tighter">₵{req.amount.toFixed(2)}</p>
+                          <p className="font-black text-emerald-600 text-2xl tracking-tighter">{formatGHS(req.amount)}</p>
                           <span className={`mt-1 inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
                             req.status === 'PENDING' ? 'bg-orange-50 text-orange-600 border-orange-100' :
                             req.status === 'APPROVED' || req.status === 'PROCESSED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
@@ -161,14 +161,14 @@ export default function AdminWithdrawalsPage() {
                              {req.method === 'MOMO' ? <Smartphone size={18} className="text-primary" /> : <Building2 size={18} className="text-blue-500" />}
                              <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-0.5">{req.method}</p>
-                                <p className="text-[9px] font-bold text-slate-400 italic">FIN-LINK</p>
+                                <p className="text-[9px] font-bold text-slate-700 italic">FIN-LINK</p>
                              </div>
                           </div>
                        </td>
                        <td className="px-8 py-8 border-l border-slate-50 bg-slate-50/30">
                           <div className="space-y-1">
                              <p className="text-xs font-black text-slate-900">{req.accountName}</p>
-                             <p className="text-[11px] font-bold text-slate-500 font-mono tracking-tight">{req.accountNumber}</p>
+                             <p className="text-[11px] font-bold text-slate-700 font-mono tracking-tight">{req.accountNumber}</p>
                              {req.bankName && (
                                <div className="flex items-center gap-1.5 mt-2">
                                   <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
@@ -198,10 +198,10 @@ export default function AdminWithdrawalsPage() {
                           ) : (
                             <div className="flex flex-col items-end pr-2 opacity-50">
                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mb-2">
-                                  <CheckCircle size={16} className="text-slate-400" />
+                                  <CheckCircle size={16} className="text-slate-700" />
                                 </div>
-                               <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{req.status}</p>
-                               <p className="text-[9px] text-slate-400 mt-0.5">{new Date(req.updatedAt).toLocaleDateString()}</p>
+                               <p className="text-[10px] text-slate-700 font-black uppercase tracking-widest">{req.status}</p>
+                               <p className="text-[9px] text-slate-700 mt-0.5">{new Date(req.updatedAt).toLocaleDateString()}</p>
                             </div>
                           )}
                        </td>
@@ -215,7 +215,7 @@ export default function AdminWithdrawalsPage() {
                                <Clock size={40} />
                             </div>
                             <h4 className="text-lg font-black text-slate-900 tracking-tight">Queue Empty</h4>
-                            <p className="text-slate-400 font-medium text-sm mt-1 leading-relaxed">No withdrawal requests are currently pending processing.</p>
+                            <p className="text-slate-700 font-medium text-sm mt-1 leading-relaxed">No withdrawal requests are currently pending processing.</p>
                             <button onClick={fetchRequests} className="mt-8 text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Manual Sync</button>
                           </div>
                        </td>

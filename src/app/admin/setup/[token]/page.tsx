@@ -90,7 +90,7 @@ export default function AdminTokenSetupPage() {
           <ShieldAlert size={40} />
         </div>
         <h1 className="text-3xl font-black text-white mb-2 tracking-tighter">Link Deactivated</h1>
-        <p className="text-slate-500 max-w-sm mb-8 font-medium">{messages[tokenStatus as keyof typeof messages]}</p>
+        <p className="text-slate-700 max-w-sm mb-8 font-medium">{messages[tokenStatus as keyof typeof messages]}</p>
         <Link href="/login" className="px-8 py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all border border-white/5">
           Back to Login
         </Link>
@@ -105,7 +105,7 @@ export default function AdminTokenSetupPage() {
           <CheckCircle2 size={56} />
         </div>
         <h1 className="text-4xl font-black text-white mb-4 tracking-tighter">Root Initialized</h1>
-        <p className="text-slate-500 max-w-sm mb-8 text-lg font-medium">Your Super Admin account is now active. Launching Command Center...</p>
+        <p className="text-slate-700 max-w-sm mb-8 text-lg font-medium">Your Super Admin account is now active. Launching Command Center...</p>
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function AdminTokenSetupPage() {
         <h2 className="text-4xl font-black text-white tracking-tighter mb-4 leading-none">
           Genesis Access
         </h2>
-        <p className="text-slate-500 font-bold max-w-[320px] mx-auto leading-relaxed text-sm">
+        <p className="text-slate-700 font-bold max-w-[320px] mx-auto leading-relaxed text-sm">
           Initialize the primary Super Admin account using this secure token.
         </p>
       </div>
@@ -136,7 +136,7 @@ export default function AdminTokenSetupPage() {
             )}
             
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-4 block">Identity Label</label>
+              <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-4 block">Identity Label</label>
               <div className="relative group/field focus-within:scale-[1.01] transition-transform duration-300">
                 <input
                   type="text"
@@ -150,7 +150,7 @@ export default function AdminTokenSetupPage() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-4 block">Root Email</label>
+              <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-4 block">Root Email</label>
               <div className="relative group/field focus-within:scale-[1.01] transition-transform duration-300">
                 <input
                   type="email"
@@ -165,7 +165,7 @@ export default function AdminTokenSetupPage() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-4 block">Genesis Password</label>
+              <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest px-4 block">Genesis Password</label>
               <div className="relative group/field focus-within:scale-[1.01] transition-transform duration-300">
                 <input
                   type={showPassword ? "text" : "password"}

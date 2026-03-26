@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { logJobProgress, completeJobAndReleaseFunds, completeInspection, getJob } from '@/app/actions/booking';
+import { cn, formatGHS } from '@/lib/utils';
 import { sendNotification } from '@/lib/notifications';
 import { supabase } from '@/lib/supabase';
 import MediaUpload from '@/components/ui/MediaUpload';
@@ -203,7 +204,7 @@ export default function WorkerProgressPage() {
     <div className="flex flex-col items-center justify-center p-24 text-center">
       <AlertCircle size={48} className="text-red-500 mb-4" />
       <h2 className="text-2xl font-black text-gray-900 mb-2">Job Not Found</h2>
-      <p className="text-gray-500 mb-6 font-bold">The job you are looking for does not exist or you do not have permission to view it.</p>
+      <p className="text-gray-700 mb-6 font-bold">The job you are looking for does not exist or you do not have permission to view it.</p>
       <Link href="/dashboard/worker" className="px-6 py-3 bg-primary text-white font-black rounded-xl">Back to Dashboard</Link>
     </div>
   );
@@ -222,13 +223,13 @@ export default function WorkerProgressPage() {
       <div className="space-y-10">
         {/* Job Summary Card */}
         <div className="bg-slate-900 p-8 rounded-[2rem] text-white shadow-xl">
-           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Active Service</p>
+           <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-2">Active Service</p>
            <h2 className="text-3xl font-black mb-4 tracking-tight">{job.serviceType}</h2>
            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
+              <div className="flex items-center gap-2 text-slate-700 text-xs font-bold">
                  <Clock size={14} /> Scheduled: {new Date(job.scheduledAt).toLocaleString()}
               </div>
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
+              <div className="flex items-center gap-2 text-slate-700 text-xs font-bold">
                  <CheckCircle2 size={14} className="text-primary" /> Client: {job.client?.name || 'Unknown'}
               </div>
            </div>
@@ -238,7 +239,7 @@ export default function WorkerProgressPage() {
         {job.status !== 'COMPLETED' && (
           <form onSubmit={handleLogProgress} className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Work Update Log</label>
+                <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1">Work Update Log</label>
                 <textarea 
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -248,7 +249,7 @@ export default function WorkerProgressPage() {
                 />
              </div>
              <div className="space-y-4">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Media Evidence (Proof of Work)</p>
+                <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest ml-1">Media Evidence (Proof of Work)</p>
                 <MediaUpload
                    label="Upload Photos/Videos"
                    accept="image/*,video/*"
@@ -258,7 +259,7 @@ export default function WorkerProgressPage() {
                    existingUrls={mediaUrl ? [mediaUrl] : []}
                    onUploadComplete={(urls: string[]) => setMediaUrl(urls[0] || '')}
                 />
-                <p className="text-[9px] text-gray-400 font-bold ml-1 uppercase tracking-widest italic flex items-center gap-1">
+                <p className="text-[9px] text-gray-700 font-bold ml-1 uppercase tracking-widest italic flex items-center gap-1">
                    <AlertCircle size={10} className="text-primary" /> Supports proof of work for faster payment release
                 </p>
              </div>
@@ -276,7 +277,7 @@ export default function WorkerProgressPage() {
         <div className="space-y-6">
            <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-3">
              Project Timeline 
-             <span className="w-6 h-6 bg-gray-100 flex items-center justify-center rounded-full text-[10px] text-gray-400">
+             <span className="w-6 h-6 bg-gray-100 flex items-center justify-center rounded-full text-[10px] text-gray-700">
                {timelineEvents.length}
              </span>
            </h3>
@@ -285,7 +286,7 @@ export default function WorkerProgressPage() {
               {timelineEvents.length === 0 ? (
                 <div className="py-10 text-center bg-gray-50 rounded-[2rem] ml-[-32px]">
                    <Clock size={32} className="text-gray-200 mx-auto mb-2" />
-                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest tracking-tighter">No Activity Logged</p>
+                   <p className="text-xs font-bold text-gray-700 uppercase tracking-widest tracking-tighter">No Activity Logged</p>
                 </div>
               ) : (
                 timelineEvents.map((event, idx) => (
@@ -302,7 +303,7 @@ export default function WorkerProgressPage() {
                                   <Wallet size={10} /> EARLY FUNDS DISBURSED
                                 </p>
                                <h4 className="text-2xl font-black text-emerald-900 tracking-tight leading-none mb-1">
-                                 +GHS {event.amount.toFixed(2)}
+                                 +{formatGHS(event.amount)}
                                </h4>
                                <p className="text-xs font-bold text-emerald-700 leading-relaxed">
                                   {event.reason}
@@ -317,7 +318,7 @@ export default function WorkerProgressPage() {
                        <>
                          <div className="absolute left-[-21px] top-1 w-4 h-4 rounded-full bg-white border-4 border-primary shadow-sm z-10"></div>
                          <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
-                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                             <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mb-2">
                                 {new Date(event.createdAt).toLocaleDateString()} @ {new Date(event.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                              </p>
                              <p className="text-sm font-bold text-gray-900 leading-relaxed mb-4">{event.content}</p>

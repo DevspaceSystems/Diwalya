@@ -49,14 +49,14 @@ export function AdminHeader() {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsMobileMenuOpen(true)}
-            className="lg:hidden p-2 hover:bg-gray-50 rounded-xl text-slate-500"
+            className="lg:hidden p-2 hover:bg-gray-50 rounded-xl text-slate-700"
           >
              <div className="w-6 h-0.5 bg-slate-600 mb-1" />
              <div className="w-6 h-0.5 bg-slate-600 mb-1" />
              <div className="w-6 h-0.5 bg-slate-600" />
           </button>
           <div className="flex items-center gap-4 bg-gray-100/50 px-4 py-2 rounded-2xl border border-gray-100 min-w-[200px] md:min-w-[300px] focus-within:border-primary/30 transition-all">
-            <Search className="text-gray-400" size={18} />
+            <Search className="text-gray-700" size={18} />
             <input type="text" placeholder="Search..." className="bg-transparent w-full focus:outline-none text-sm font-medium" />
           </div>
         </div>

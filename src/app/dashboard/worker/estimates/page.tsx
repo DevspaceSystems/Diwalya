@@ -45,13 +45,13 @@ export default function WorkerEstimatesPage() {
     <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight">Estimate Management</h1>
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Track your submitted cost proposals</p>
+        <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-0.5">Track your submitted cost proposals</p>
       </div>
 
       {loading ? (
         <div className="py-24 flex flex-col items-center justify-center bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
           <Loader2 className="animate-spin text-primary mb-4" size={40} />
-          <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Fetching your estimates...</p>
+          <p className="text-gray-700 font-black uppercase tracking-widest text-[10px]">Fetching your estimates...</p>
         </div>
       ) : estimates.length === 0 ? (
         <div className="py-24 flex flex-col items-center justify-center bg-white rounded-[2.5rem] border border-slate-100 shadow-sm text-center">
@@ -59,7 +59,7 @@ export default function WorkerEstimatesPage() {
             <Calculator size={40} className="text-gray-200" />
           </div>
           <h3 className="text-xl font-black text-gray-900 mb-2">No Estimates Yet</h3>
-          <p className="text-gray-400 font-bold text-sm max-w-xs mx-auto leading-relaxed">
+          <p className="text-gray-700 font-bold text-sm max-w-xs mx-auto leading-relaxed">
             Choose an inspection job and submit your first estimate to see it here.
           </p>
         </div>
@@ -78,28 +78,28 @@ export default function WorkerEstimatesPage() {
                            "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2",
                            est.status === 'ESTIMATE_SUBMITTED' ? "bg-amber-50 text-amber-600 border border-amber-100" :
                            est.status === 'ACCEPTED' ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                           "bg-gray-50 text-slate-400 border border-gray-100"
+                           "bg-gray-50 text-slate-700 border border-gray-100"
                         )}>
                            {est.status === 'ESTIMATE_SUBMITTED' ? <Clock size={12} /> : <CheckCircle2 size={12} />}
                            {est.status === 'ESTIMATE_SUBMITTED' ? 'Awaiting Review' : 'Estimate Approved'}
                         </span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">
                            Submitted: {new Date(est.createdAt).toLocaleDateString()}
                         </span>
                      </div>
 
                      <h3 className="text-2xl font-black text-slate-900 mb-2">{est.serviceType} Project</h3>
-                     <p className="text-slate-500 font-bold mb-6 flex items-center gap-2">
+                     <p className="text-slate-700 font-bold mb-6 flex items-center gap-2">
                        <MapPin size={16} className="text-primary" /> {est.location}
                      </p>
 
                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Labor Cost</p>
+                           <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest mb-1">Labor Cost</p>
                            <p className="font-black text-slate-900">{formatGHS(est.priceAmount * 0.4)}</p>
                         </div>
                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Materials</p>
+                           <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest mb-1">Materials</p>
                            <p className="font-black text-slate-900">{formatGHS(est.priceAmount * 0.6)}</p>
                         </div>
                         <div className="p-4 bg-primary text-white rounded-2xl shadow-lg shadow-blue-500/10">

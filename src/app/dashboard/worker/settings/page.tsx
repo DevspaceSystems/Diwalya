@@ -121,7 +121,7 @@ export default function WorkerSettingsPage() {
       <div className="flex justify-between items-end mb-8 px-6">
           <div>
             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Profile Settings</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Management</p>
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">Management</p>
           </div>
           {success && (
             <div className="flex items-center gap-2 text-emerald-600 font-black text-sm bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 animate-in fade-in slide-in-from-top-2">
@@ -133,7 +133,7 @@ export default function WorkerSettingsPage() {
       <div className="py-12 px-6 max-w-2xl mx-auto space-y-8">
         {/* Profile Picture */}
         <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Profile Photo</p>
+          <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-4">Profile Photo</p>
           <div className="flex items-center gap-6">
             <div className="relative">
               <div className="w-24 h-24 rounded-[1.5rem] bg-slate-100 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
@@ -151,7 +151,7 @@ export default function WorkerSettingsPage() {
                     }}
                   />
                 ) : (
-                  <User size={36} className="text-slate-300" />
+                  <User size={36} className="text-slate-600" />
                 )}
               </div>
               <button
@@ -166,7 +166,7 @@ export default function WorkerSettingsPage() {
             </div>
             <div>
               <p className="font-black text-slate-900">{user?.user_metadata?.full_name || 'Worker'}</p>
-              <p className="text-xs text-slate-400 font-bold mt-1">{user?.email}</p>
+              <p className="text-xs text-slate-700 font-bold mt-1">{user?.email}</p>
               <button
                 type="button"
                 onClick={() => picInputRef.current?.click()}
@@ -181,7 +181,7 @@ export default function WorkerSettingsPage() {
         {/* Profile Form */}
         <form onSubmit={handleSave} className="space-y-6">
           <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 space-y-5">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Business Information</p>
+            <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Business Information</p>
 
             {[
               { key: 'businessName', label: 'Business / Trade Name', placeholder: 'e.g. Kwame Electrical Services' },
@@ -190,7 +190,7 @@ export default function WorkerSettingsPage() {
               { key: 'availability', label: 'Availability', placeholder: 'e.g. Mon-Sat, 8am-6pm' },
             ].map(field => (
               <div key={field.key}>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">{field.label}</label>
+                <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-1 block">{field.label}</label>
                 <input
                   type="text"
                   value={(form as any)[field.key]}
@@ -203,7 +203,7 @@ export default function WorkerSettingsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Years of Experience</label>
+                <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-1 block">Years of Experience</label>
                 <input
                   type="number"
                   min="0"
@@ -215,7 +215,7 @@ export default function WorkerSettingsPage() {
             </div>
 
             <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Professional Bio</label>
+              <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-1 block">Professional Bio</label>
               <textarea
                 value={form.bio}
                 onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
@@ -229,7 +229,7 @@ export default function WorkerSettingsPage() {
           <div className="bg-slate-900 p-8 rounded-[2rem] text-white flex items-center justify-between group overflow-hidden relative">
              <div className="relative z-10">
                 <h4 className="font-black text-lg mb-1">Portfolio Management</h4>
-                <p className="text-slate-400 text-xs font-bold">Showcase your work on a dedicated page</p>
+                <p className="text-slate-700 text-xs font-bold">Showcase your work on a dedicated page</p>
                 <Link href="/dashboard/worker/portfolio" className="mt-4 inline-flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">
                    View & Edit Portfolio <ArrowRight size={14} />
                 </Link>

@@ -93,7 +93,7 @@ export default function AdminDiwalyaLoginPage() {
         <h2 className="text-4xl font-black text-white tracking-tighter mb-4 leading-none">
           Master Login
         </h2>
-        <p className="text-slate-500 font-bold max-w-[280px] mx-auto leading-relaxed text-sm">
+        <p className="text-slate-700 font-bold max-w-[280px] mx-auto leading-relaxed text-sm">
           Authorized personnel only. Accessing the global control dashboard.
         </p>
       </div>

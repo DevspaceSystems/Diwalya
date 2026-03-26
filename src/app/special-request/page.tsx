@@ -71,7 +71,7 @@ export default function SpecialRequestPage() {
           <CheckCircle2 size={40} />
         </div>
         <h1 className="text-3xl font-black text-gray-900 mb-2">Request Submitted!</h1>
-        <p className="text-gray-500 max-w-md mb-8">
+        <p className="text-gray-700 max-w-md mb-8">
           Our team has received your request. We'll find the best professional for you and contact you shortly.
         </p>
         <button 
@@ -89,7 +89,7 @@ export default function SpecialRequestPage() {
       <div className="max-w-xl mx-auto px-6">
         <div className="mb-10 text-center">
           <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Need a Hand?</h1>
-          <p className="text-gray-500 font-medium">Tell us what you need, and we'll find the perfect pro for you.</p>
+          <p className="text-gray-700 font-medium">Tell us what you need, and we'll find the perfect pro for you.</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
@@ -111,7 +111,7 @@ export default function SpecialRequestPage() {
             <div className="space-y-2">
               <label className="text-sm font-black text-gray-700 uppercase tracking-widest ml-1">Type of Work</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-700">
                   <Wrench size={18} />
                 </div>
                 <input 
@@ -128,7 +128,7 @@ export default function SpecialRequestPage() {
             <div className="space-y-2">
               <label className="text-sm font-black text-gray-700 uppercase tracking-widest ml-1">Describe Your Needs</label>
               <div className="relative">
-                <div className="absolute top-4 left-4 text-gray-400">
+                <div className="absolute top-4 left-4 text-gray-700">
                   <MessageSquare size={18} />
                 </div>
                 <textarea 
@@ -146,7 +146,7 @@ export default function SpecialRequestPage() {
               <div className="space-y-2">
                 <label className="text-sm font-black text-gray-700 uppercase tracking-widest ml-1">Location</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-700">
                     <MapPin size={18} />
                   </div>
                   <input 
@@ -163,7 +163,7 @@ export default function SpecialRequestPage() {
               <div className="space-y-2">
                 <label className="text-sm font-black text-gray-700 uppercase tracking-widest ml-1">Preferred Time</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-700">
                     <Calendar size={18} />
                   </div>
                   <input 
@@ -180,7 +180,7 @@ export default function SpecialRequestPage() {
             <div className="space-y-2">
               <label className="text-sm font-black text-gray-700 uppercase tracking-widest ml-1">Budget (Optional)</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-700">
                   <Coins size={18} />
                 </div>
                 <input 

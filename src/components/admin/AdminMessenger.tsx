@@ -103,7 +103,7 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
              <CheckCircle2 size={40} />
            </div>
            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Broadcast Dispatched!</h2>
-           <p className="text-slate-500 font-medium mt-2">Your messages have been queued for multi-channel delivery.</p>
+           <p className="text-slate-700 font-medium mt-2">Your messages have been queued for multi-channel delivery.</p>
            <button 
              onClick={onClose}
              className="mt-8 w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-105 transition-all"
@@ -120,7 +120,7 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
       <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden relative animate-in slide-in-from-bottom-8 duration-500 my-8">
         <button 
           onClick={onClose}
-          className="absolute top-8 right-8 p-3 hover:bg-slate-100 rounded-2xl transition-all text-slate-400"
+          className="absolute top-8 right-8 p-3 hover:bg-slate-100 rounded-2xl transition-all text-slate-700"
         >
           <X size={24} />
         </button>
@@ -128,7 +128,7 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
         <div className="p-12 space-y-10">
           <div>
             <h2 className="text-3xl font-black text-slate-900 tracking-tight">Admin Messenger Pro</h2>
-            <p className="text-slate-500 font-medium uppercase text-[10px] tracking-widest font-black mt-1">Unified Email & Push Broadcast</p>
+            <p className="text-slate-700 font-medium uppercase text-[10px] tracking-widest font-black mt-1">Unified Email & Push Broadcast</p>
           </div>
 
           <div className="space-y-8">
@@ -141,7 +141,7 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
                     onClick={() => setTarget(t)}
                     className={cn(
                       "flex-grow py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
-                      target === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                      target === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-700 hover:text-slate-600"
                     )}
                   >
                     {t}
@@ -165,7 +165,7 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
             {/* Template & Channels */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Select Template</label>
+                 <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-4">Select Template</label>
                  <div className="relative">
                    <select 
                      value={templateKey}
@@ -176,18 +176,18 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
                        <option key={key} value={key}>{key.replace('_', ' ').toLowerCase()}</option>
                      ))}
                    </select>
-                   <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                   <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-700 pointer-events-none" size={18} />
                  </div>
               </div>
 
               <div className="space-y-3">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Channels</label>
+                 <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-4">Channels</label>
                  <div className="flex gap-3">
                     <button 
                       onClick={() => setChannels(prev => ({ ...prev, email: !prev.email }))}
                       className={cn(
                         "flex-grow flex items-center justify-center gap-2 py-4 rounded-3xl border transition-all",
-                        channels.email ? "bg-indigo-50 border-indigo-200 text-indigo-600 font-black" : "bg-slate-50 border-slate-100 text-slate-400 font-bold"
+                        channels.email ? "bg-indigo-50 border-indigo-200 text-indigo-600 font-black" : "bg-slate-50 border-slate-100 text-slate-700 font-bold"
                       )}
                     >
                       <Mail size={16} /> Email
@@ -196,7 +196,7 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
                       onClick={() => setChannels(prev => ({ ...prev, push: !prev.push }))}
                       className={cn(
                         "flex-grow flex items-center justify-center gap-2 py-4 rounded-3xl border transition-all",
-                        channels.push ? "bg-emerald-50 border-emerald-200 text-emerald-600 font-black" : "bg-slate-50 border-slate-100 text-slate-400 font-bold"
+                        channels.push ? "bg-emerald-50 border-emerald-200 text-emerald-600 font-black" : "bg-slate-50 border-slate-100 text-slate-700 font-bold"
                       )}
                     >
                       <Bell size={16} /> Push
@@ -209,7 +209,7 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
             {channels.push && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="relative">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300"><ImageIcon size={16} /></span>
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-600"><ImageIcon size={16} /></span>
                   <input 
                     type="text" 
                     placeholder="Image URL (Optional)"
@@ -219,7 +219,7 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
                   />
                 </div>
                 <div className="relative">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300"><LinkIcon size={16} /></span>
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-600"><LinkIcon size={16} /></span>
                   <input 
                     type="text" 
                     placeholder="Click Action (URL/Page)"
@@ -250,7 +250,7 @@ export default function AdminMessenger({ onClose, targetUserId, targetUserName }
                     rows={6}
                     className="w-full px-8 py-6 bg-white border border-slate-100 rounded-[2rem] font-medium text-slate-600 focus:ring-2 focus:ring-primary focus:outline-none shadow-sm transition-all placeholder:text-slate-200 resize-none"
                   />
-                  <div className="absolute right-6 bottom-6 flex items-center gap-2 text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                  <div className="absolute right-6 bottom-6 flex items-center gap-2 text-[10px] font-black text-slate-600 uppercase tracking-widest">
                     <FileText size={12} /> Personalized with Variable Support
                   </div>
                </div>

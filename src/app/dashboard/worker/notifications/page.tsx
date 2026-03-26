@@ -100,7 +100,7 @@ export default function WorkerNotificationsPage() {
       <div className="flex justify-between items-end mb-4">
           <div>
             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Notifications</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Stay updated with your activities</p>
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-1">Stay updated with your activities</p>
           </div>
           <button 
             onClick={markAllRead}
@@ -120,7 +120,7 @@ export default function WorkerNotificationsPage() {
                 "px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
                 filter === f 
                   ? "bg-white border-primary text-primary shadow-sm" 
-                  : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
+                  : "bg-white border-gray-100 text-gray-700 hover:border-gray-200"
               )}
             >
               {f.replace(/_/g, ' ')}
@@ -139,7 +139,7 @@ export default function WorkerNotificationsPage() {
                 <Bell size={32} className="text-gray-200" />
               </div>
               <h3 className="text-xl font-black text-gray-900 mb-2">Clean Slate!</h3>
-              <p className="text-gray-400 font-bold text-sm">No notifications found in this category.</p>
+              <p className="text-gray-700 font-bold text-sm">No notifications found in this category.</p>
             </div>
          ) : (
             filteredNotifications.map((n) => (
@@ -165,16 +165,16 @@ export default function WorkerNotificationsPage() {
                  <div className="flex-grow min-w-0">
                     <div className="flex justify-between items-start gap-4">
                        <h4 className="font-black text-slate-900 leading-tight mb-1">{n.title}</h4>
-                       <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest whitespace-nowrap">
+                       <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest whitespace-nowrap">
                           {new Date(n.createdAt).toLocaleDateString()}
                        </span>
                     </div>
-                    <p className="text-sm text-slate-500 font-medium leading-relaxed">{n.message}</p>
+                    <p className="text-sm text-slate-700 font-medium leading-relaxed">{n.message}</p>
                  </div>
 
                  <button 
                    onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
-                   className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all self-center opacity-0 group-hover:opacity-100"
+                   className="p-3 text-slate-600 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all self-center opacity-0 group-hover:opacity-100"
                  >
                     <Trash2 size={18} />
                  </button>

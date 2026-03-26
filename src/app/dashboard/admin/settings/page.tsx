@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getSettings, updateSettings } from '@/app/actions/settings';
 import { supabase } from '@/lib/supabase';
 import { Save, Settings2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { formatGHS } from '@/lib/utils';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState({
@@ -73,7 +74,7 @@ export default function AdminSettingsPage() {
           <Settings2 className="text-primary" />
           System Settings
         </h1>
-        <p className="text-slate-500 font-medium">Configure global platform parameters and fees.</p>
+        <p className="text-slate-700 font-medium">Configure global platform parameters and fees.</p>
       </div>
 
       {message.text && (
@@ -95,7 +96,7 @@ export default function AdminSettingsPage() {
               <label className="block text-sm font-black text-slate-700 uppercase tracking-widest mb-2">
                 Fixed Inspection Fee (₵)
               </label>
-              <p className="text-xs text-slate-500 mb-3 font-medium">The total amount the client pays for an inspection visit.</p>
+              <p className="text-xs text-slate-700 mb-3 font-medium">The total amount the client pays for an inspection visit.</p>
               <input 
                 type="number" 
                 min="0"
@@ -111,7 +112,7 @@ export default function AdminSettingsPage() {
               <label className="block text-sm font-black text-slate-700 uppercase tracking-widest mb-2">
                 Worker Share (₵)
               </label>
-              <p className="text-xs text-slate-500 mb-3 font-medium">The portion of the inspection fee that goes to the worker's wallet.</p>
+              <p className="text-xs text-slate-700 mb-3 font-medium">The portion of the inspection fee that goes to the worker's wallet.</p>
               <input 
                 type="number" 
                 min="0"
@@ -128,15 +129,15 @@ export default function AdminSettingsPage() {
               <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest mb-3">Distribution Summary</h3>
               <div className="flex justify-between items-center text-sm font-bold text-slate-700 mb-2">
                 <span>Client Pays:</span>
-                <span className="text-slate-900 font-black">₵{settings.inspectionFee.toFixed(2)}</span>
+                <span className="text-slate-900 font-black">{formatGHS(settings.inspectionFee)}</span>
               </div>
               <div className="flex justify-between items-center text-sm font-bold text-slate-700 mb-2">
                 <span>Worker Receives:</span>
-                <span className="text-emerald-600 font-black">₵{settings.inspectionWorkerShare.toFixed(2)}</span>
+                <span className="text-emerald-600 font-black">{formatGHS(settings.inspectionWorkerShare)}</span>
               </div>
               <div className="flex justify-between items-center text-sm font-bold text-slate-700 pt-2 border-t border-blue-100">
                 <span>Platform Keeps:</span>
-                <span className="text-primary font-black">₵{Math.max(0, platformShare).toFixed(2)}</span>
+                <span className="text-primary font-black">{formatGHS(Math.max(0, platformShare))}</span>
               </div>
             </div>
           </div>
