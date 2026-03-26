@@ -66,7 +66,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
       const filePath = `descriptions/${fileName}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('diwalya-audio')
+        .from('diwalya-media')
         .upload(filePath, audioBlob);
 
       if (uploadError) {
@@ -78,7 +78,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('diwalya-audio')
+        .from('diwalya-media')
         .getPublicUrl(filePath);
       
       audioUrl = publicUrl;
