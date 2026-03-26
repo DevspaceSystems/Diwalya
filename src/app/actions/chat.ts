@@ -52,6 +52,7 @@ export async function sendMessage(data: {
     const { data: message, error } = await supabaseAdmin
       .from('ChatMessage')
       .insert({
+        id: crypto.randomUUID(),
         jobId: data.jobId || null,
         senderId: data.senderId,
         recipientId: isForAdmin ? null : data.recipientId,
@@ -75,6 +76,7 @@ export async function sendMessage(data: {
       }
 
       const { data: sender } = await supabaseAdmin.from('User').select('name').eq('id', data.senderId).single();
+      const { data: recipient } = targetUserId !== 'admin' ? await supabaseAdmin.from('User').select('role').eq('id', targetUserId).single() : { data: null };
       const { sendNotification, notifyAdmins } = await import('@/lib/notifications');
 
       if (targetUserId === 'admin') {
@@ -84,10 +86,21 @@ export async function sendMessage(data: {
            data: { source: 'admin_chat' }
          });
       } else if (targetUserId) {
+        let redirectUrl = '/';
+        if (data.jobId) {
+           redirectUrl = `/dashboard/chat/${data.jobId}`;
+        } else if (recipient?.role === 'WORKER') {
+           redirectUrl = `/dashboard/worker/messages`;
+        } else {
+           // For clients without a job, they chat on the worker's profile
+           redirectUrl = `/worker/${data.senderId}`;
+        }
+
         await sendNotification({
           userId: targetUserId,
           title: `New message from ${sender?.name || 'Someone'}`,
-          body: data.content.length > 60 ? data.content.substring(0, 57) + '...' : data.content
+          body: data.content.length > 60 ? data.content.substring(0, 57) + '...' : data.content,
+          data: { url: redirectUrl }
         });
       }
     } catch (notifErr) {

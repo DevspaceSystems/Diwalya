@@ -39,7 +39,7 @@ export default function WorkerMessagesPage() {
     // Fetch all messages involving this user
     const { data, error } = await supabase
       .from('ChatMessage')
-      .select('*, job:Job(id, serviceType, client:User(id, name, profilePicture))')
+      .select('*, job:Job(id, serviceType, client:User!clientId(id, name, profilePicture))')
       .or(`senderId.eq.${userId},recipientId.eq.${userId}`)
       .order('createdAt', { ascending: false });
 

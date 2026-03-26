@@ -121,9 +121,45 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
         })
         .subscribe();
 
+      let chatChannel: any = null;
+
+      // Load Chat History if logged in and looking at another user
+      if (currentUser && currentUser.id !== id) {
+        const { data: history } = await supabase
+          .from('ChatMessage')
+          .select('*')
+          .or(`and(senderId.eq.${currentUser.id},recipientId.eq.${id}),and(senderId.eq.${id},recipientId.eq.${currentUser.id})`)
+          .is('jobId', null)
+          .order('createdAt', { ascending: true });
+        
+        if (history) {
+          setChatLog(history.map(msg => ({ 
+            text: msg.content, 
+            isUser: msg.senderId === currentUser.id, 
+            failed: false 
+          })));
+        }
+
+        // Real-time Chat Subscription (Incoming replies from worker)
+        chatChannel = supabase
+          .channel('realtime_chat_profile')
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'ChatMessage',
+            filter: `recipientId=eq.${currentUser.id}`
+          }, (payload) => {
+            if (payload.new.senderId === id && !payload.new.jobId) {
+               setChatLog(prev => [...prev, { text: payload.new.content, isUser: false }]);
+            }
+          })
+          .subscribe();
+      }
+
       return () => {
         supabase.removeChannel(loveChannel);
         supabase.removeChannel(reviewChannel);
+        if (chatChannel) supabase.removeChannel(chatChannel);
       };
     }
     loadWorker();
