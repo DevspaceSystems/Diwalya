@@ -15,6 +15,7 @@ export async function createWorkerProfile(userId: string, data: {
   category: string
   profilePicture: string
   ghanaCardUrl: string
+  phone: string
 }) {
   try {
     // 1. Ensure User record exists (upsert instead of update)
@@ -57,7 +58,9 @@ export async function createWorkerProfile(userId: string, data: {
         name: existingUser?.name || authData?.user?.user_metadata?.full_name || 'Worker',
         slug: existingUser?.slug || generateUniqueSlug(existingUser?.name || authData?.user?.user_metadata?.full_name || 'Worker'),
         email: email,
-        role: 'WORKER',
+        phone: data.phone,
+        // Role is NOT set to 'WORKER' yet. We keep their current role (e.g. 'CLIENT' or 'USER')
+        // until the WorkerProfile is successfully created.
         updatedAt: new Date().toISOString()
       }, { onConflict: 'id' });
 
@@ -70,6 +73,7 @@ export async function createWorkerProfile(userId: string, data: {
     await supabaseAdmin.auth.admin.updateUserById(userId, {
       user_metadata: {
         profilePicture: data.profilePicture,
+        phone: data.phone,
         role: 'WORKER'
       }
     });
@@ -92,6 +96,18 @@ export async function createWorkerProfile(userId: string, data: {
       .single();
 
     if (error) throw error;
+
+    // 2b. FINALIZE: Now upgrade the User role to 'WORKER' to make them officially a professional
+    console.log(`[createWorkerProfile] Profile created. Finalizing role upgrade for ${userId}...`);
+    const { error: roleError } = await supabaseAdmin
+      .from('User')
+      .update({ role: 'WORKER' })
+      .eq('id', userId);
+
+    if (roleError) {
+      console.error('[createWorkerProfile] Final Role Upgrade Error:', roleError);
+      throw new Error(`Critical: Profile created but failed to finalize role. ${roleError.message}`);
+    }
 
     revalidatePath('/dashboard/worker')
 

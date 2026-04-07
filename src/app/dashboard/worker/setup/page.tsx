@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Camera, MapPin, Briefcase, FileText, ArrowRight, CheckCircle2, Loader2, Upload, ChevronRight, Star, ShieldCheck } from 'lucide-react';
+import { Camera, MapPin, Briefcase, FileText, ArrowRight, CheckCircle2, Loader2, Upload, ChevronRight, Star, ShieldCheck, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { updateUserProfile } from '@/app/actions/user';
@@ -35,6 +35,7 @@ export default function WorkerSetupPage() {
   const [location, setLocation] = useState('');
   const [bio, setBio] = useState('Skilled professional ready to provide high-quality services.');
   const [experience, setExperience] = useState(2);
+  const [phone, setPhone] = useState('');
 
   const handleFinish = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +45,7 @@ export default function WorkerSetupPage() {
     try {
       const res = await updateUserProfile(user.id, {
         name: user.user_metadata?.full_name || 'User',
+        phone: phone,
         role: 'WORKER',
         profilePicture: profilePicture || user.user_metadata?.profilePicture,
         workerData: {
@@ -179,6 +181,23 @@ export default function WorkerSetupPage() {
                       placeholder="e.g. Osu, Accra" 
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
+                      className="w-full pl-16 pr-6 py-5 bg-slate-50/50 border border-slate-100 rounded-[2rem] focus:ring-4 focus:ring-secondary/5 focus:border-secondary focus:bg-white focus:outline-none transition-all font-bold text-slate-900" 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-[0.2em] mb-3 ml-2">Contact Phone</label>
+                  <div className="relative group/field">
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-700 group-focus-within/field:text-secondary transition-colors">
+                      <Phone size={22} />
+                    </div>
+                    <input 
+                      type="tel" 
+                      required 
+                      placeholder="e.g. +233 24 000 0000" 
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       className="w-full pl-16 pr-6 py-5 bg-slate-50/50 border border-slate-100 rounded-[2rem] focus:ring-4 focus:ring-secondary/5 focus:border-secondary focus:bg-white focus:outline-none transition-all font-bold text-slate-900" 
                     />
                   </div>

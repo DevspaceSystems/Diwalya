@@ -35,6 +35,11 @@ export async function getUsers(query?: string, role?: string) {
         workerProfile: profile || null,
         wallet: wallet || null
       };
+    }).filter(u => {
+      // If user has WORKER role, they MUST have a workerProfile to be included in general listings
+      // This prevents "Profile Incomplete" ghost entries
+      if (u.role === 'WORKER' && !u.workerProfile) return false;
+      return true;
     });
 
     return { success: true, data: transformedUsers };
@@ -67,9 +72,9 @@ export async function getWorkers() {
     const transformedWorkers = users?.map(u => ({
       ...u,
       workerProfile: profiles?.find(p => p.userId === u.id) || null
-    })) || [];
+    })).filter(w => w.workerProfile !== null) || [];
 
-    console.log(`[getWorkers] Successfully joined ${transformedWorkers.length} workers.`);
+    console.log(`[getWorkers] Successfully joined and filtered ${transformedWorkers.length} valid workers.`);
     return { success: true, data: transformedWorkers };
   } catch (error: any) {
     console.error('[getWorkers] Fatal Error:', error);
@@ -114,6 +119,7 @@ export async function updateUserProfile(userId: string, data: {
       .from('User')
       .update({
         name: data.name,
+        phone: data.phone,
         slug: generateSlug(data.name), // Note: Assuming generateSlug is imported or defined
         profilePicture: data.profilePicture
       })
@@ -153,13 +159,19 @@ export async function updateUserProfile(userId: string, data: {
     }
 
     // 3. Keep Supabase auth metadata in sync
+    // Ensure the role is updated in Auth metadata only after successful DB updates
     await supabaseAdmin.auth.admin.updateUserById(userId, {
       user_metadata: {
         full_name: data.name,
         profilePicture: data.profilePicture,
-        role: data.role
+        role: data.role // Set the final role (e.g. WORKER) in metadata
       }
     });
+
+    // 4. Update the User role in the database to finalize the transition
+    if (data.role === 'WORKER') {
+      await supabaseAdmin.from('User').update({ role: 'WORKER' }).eq('id', userId);
+    }
 
     revalidatePath('/profile');
     return { success: true };

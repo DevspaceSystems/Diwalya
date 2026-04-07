@@ -10,6 +10,7 @@ import {
   Clock, 
   Camera, 
   CreditCard, 
+  Phone,
   CheckCircle, 
   AlertCircle,
   Loader2,
@@ -52,6 +53,7 @@ export default function WorkerOnboarding() {
     bio: '',
     category: 'Electrician',
     customCategory: '',
+    phone: '',
   });
 
   const [profilePic, setProfilePic] = useState<File | null>(null);
@@ -138,8 +140,8 @@ export default function WorkerOnboarding() {
   const handleNext = () => {
     setError('');
     if (step === 1) {
-      if (!formData.businessName || !formData.location || formData.experienceYears < 0) {
-        setError('Please fill in all the business details correctly.');
+      if (!formData.businessName || !formData.location || !formData.phone || formData.experienceYears < 0) {
+        setError('Please fill in all the business details and contact phone correctly.');
         return;
       }
     }
@@ -161,7 +163,7 @@ export default function WorkerOnboarding() {
     setError('');
     
     try {
-      if (!formData.businessName || !formData.location || !formData.bio || !formData.category) {
+      if (!formData.businessName || !formData.location || !formData.bio || !formData.category || !formData.phone) {
         throw new Error('All profile sections are mandatory. Please fill everything.');
       }
       if (!profilePic || !ghanaCard) {
@@ -363,6 +365,20 @@ export default function WorkerOnboarding() {
                       value={formData.experienceYears}
                       onChange={(e) => setFormData({...formData, experienceYears: parseInt(e.target.value)})}
                       className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 font-bold"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700" size={18} />
+                    <input
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      placeholder="e.g. +233 24 000 0000"
+                      className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 font-bold placeholder:text-slate-300"
                     />
                   </div>
                 </div>

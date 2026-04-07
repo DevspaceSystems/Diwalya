@@ -46,6 +46,12 @@ export default function WorkerLayout({ children }: { children: React.ReactNode }
         const userRes = await getWorkerById(session.user.id);
         if (userRes.success) {
           setUser(userRes.data);
+          
+          // Redirect check: if user has role WORKER but no profile, send to setup
+          if (userRes.data?.role === 'WORKER' && !profileRes.data) {
+            console.warn('[WorkerLayout] Worker profile missing. Redirecting to setup...');
+            router.push('/dashboard/worker/setup');
+          }
         }
       } else {
         router.push('/login');
