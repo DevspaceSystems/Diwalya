@@ -15,10 +15,10 @@ async function saveWorkerProfile(userId: string, data: any) {
   if (error) throw error;
 }
 
-async function saveUserProfilePicture(userId: string, profilePicture: string) {
+async function saveUserDetails(userId: string, data: any) {
   const { error } = await supabase
     .from('User')
-    .update({ profilePicture, updatedAt: new Date().toISOString() })
+    .update({ ...data, updatedAt: new Date().toISOString() })
     .eq('id', userId);
   if (error) throw error;
 }
@@ -39,6 +39,7 @@ export default function WorkerSettingsPage() {
     location: '',
     experienceYears: 0,
     availability: '',
+    phone: '',
   });
   const [profilePicture, setProfilePicture] = useState<string>('');
 
@@ -49,7 +50,10 @@ export default function WorkerSettingsPage() {
       setUser(session.user);
 
       const { data: userData } = await supabase.from('User').select('*').eq('id', session.user.id).single();
-      if (userData) setProfilePicture(userData.profilePicture || '');
+      if (userData) {
+        setProfilePicture(userData.profilePicture || '');
+        setForm(f => ({ ...f, phone: userData.phone || '' }));
+      }
 
       const { data: wp } = await supabase.from('WorkerProfile').select('*').eq('userId', session.user.id).single();
       if (wp) {
@@ -61,6 +65,7 @@ export default function WorkerSettingsPage() {
           location: wp.location || '',
           experienceYears: wp.experienceYears || 0,
           availability: wp.availability || '',
+          phone: userData?.phone || '',
         });
       }
       setLoading(false);
@@ -83,7 +88,7 @@ export default function WorkerSettingsPage() {
       const { data } = supabase.storage.from('diwalya-media').getPublicUrl(path);
       const urlWithCacheBust = `${data.publicUrl}?t=${Date.now()}`;
       setProfilePicture(urlWithCacheBust);
-      await saveUserProfilePicture(user.id, data.publicUrl);
+      await saveUserDetails(user.id, { profilePicture: data.publicUrl });
     } catch (err: any) {
       alert(err.message || 'Failed to upload profile picture');
     } finally {
@@ -97,10 +102,18 @@ export default function WorkerSettingsPage() {
     setSaving(true);
     setSuccess(false);
     try {
-      await saveWorkerProfile(user.id, {
-        id: profile?.id || `WP-${user.id}`,
-        ...form,
-      });
+      await Promise.all([
+        saveWorkerProfile(user.id, {
+          id: profile?.id || `WP-${user.id}`,
+          businessName: form.businessName,
+          bio: form.bio,
+          category: form.category,
+          location: form.location,
+          experienceYears: form.experienceYears,
+          availability: form.availability,
+        }),
+        saveUserDetails(user.id, { phone: form.phone })
+      ]);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -188,6 +201,7 @@ export default function WorkerSettingsPage() {
               { key: 'category', label: 'Service Category', placeholder: 'e.g. Electrician, Plumber, Painter' },
               { key: 'location', label: 'City / Region', placeholder: 'e.g. Accra, Kumasi' },
               { key: 'availability', label: 'Availability', placeholder: 'e.g. Mon-Sat, 8am-6pm' },
+              { key: 'phone', label: 'Contact Phone', placeholder: 'e.g. +233 20 000 0000' },
             ].map(field => (
               <div key={field.key}>
                 <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1 mb-1 block">{field.label}</label>
