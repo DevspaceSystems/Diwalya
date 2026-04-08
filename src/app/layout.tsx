@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import Navbar from "@/components/Navbar";
+import PWARegistry from "@/components/pwa/PWARegistry";
+import InstallPrompt from "@/components/pwa/InstallPrompt";
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -10,7 +13,14 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://diwalya.com'),
   title: "Diwalya - Ghana's Trusted Skilled & Unskilled Worker Marketplace",
   description: "Connect with verified skilled and unskilled workers in Ghana. Diwalya is where talent meets opportunity for plumbers, electricians, cleaners, and more.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Diwalya",
+  },
   icons: {
+
     icon: [
       { url: '/icon.png' },
       { url: '/diwalya-logo.png', sizes: '32x32', type: 'image/png' },
@@ -63,10 +73,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased bg-gray-50 text-gray-900 pb-16 md:pb-0`}>
+        <PWARegistry />
         <Navbar />
         {children}
         <BottomNav />
+        <InstallPrompt />
       </body>
+
     </html>
   );
 }
