@@ -2,8 +2,9 @@
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendEmail } from '@/lib/email'
-
+import { sendMulticastPush } from '@/lib/notifications'
 import { EMAIL_TEMPLATES, PUSH_TEMPLATES } from '@/lib/broadcast-templates'
+
 
 // ─── BROADCAST EMAIL ACTION ───────────────────────────────────────────────────
 
@@ -93,17 +94,20 @@ export async function broadcastPushNotification(data: {
     // Send Firebase push if tokens exist
     let firebaseSent = 0;
     if (usersWithToken.length > 0) {
-      try {
-        const admin = eval('require')('firebase-admin');
-        if (admin?.messaging) {
-          const tokens = usersWithToken.map((u: any) => u.fcmToken);
-          await admin.messaging().sendEachForMulticast({ tokens, notification: { title, body } });
-          firebaseSent = tokens.length;
-        }
-      } catch (e) {
-        // Firebase not initialized, in-app only
+      const tokens = usersWithToken.map((u: any) => u.fcmToken);
+      const pushRes = await sendMulticastPush({
+        tokens,
+        title,
+        body
+      });
+      
+      if (pushRes.success) {
+        firebaseSent = pushRes.successCount || 0;
+      } else {
+        console.error('[broadcastPushNotification] Push failed:', pushRes.error);
       }
     }
+
 
     return { 
       success: true, 
