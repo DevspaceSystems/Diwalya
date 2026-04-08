@@ -175,11 +175,12 @@ export async function updateUserProfile(userId: string, data: {
 
     revalidatePath('/profile');
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update Profile Error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
+
 
 export async function deleteUser(userId: string) {
   try {
@@ -246,3 +247,19 @@ export async function getUserProfile(userId: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function updateFcmToken(userId: string, token: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('User')
+      .update({ fcmToken: token })
+      .eq('id', userId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('[updateFcmToken] Error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+

@@ -5,6 +5,8 @@ import BottomNav from "@/components/BottomNav";
 import Navbar from "@/components/Navbar";
 import PWARegistry from "@/components/pwa/PWARegistry";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
+import FCMHandler from "@/components/pwa/FCMHandler";
+
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -74,11 +76,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} antialiased bg-gray-50 text-gray-900 pb-16 md:pb-0`}>
         <PWARegistry />
+        <FCMHandler />
         <Navbar />
         {children}
         <BottomNav />
         <InstallPrompt />
       </body>
+
 
     </html>
   );
