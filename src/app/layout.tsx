@@ -30,16 +30,16 @@ export const metadata: Metadata = {
     apple: '/apple-icon.png',
   },
   openGraph: {
-    title: "Diwalya - Talent Meets Opportunity",
-    description: "Connect with verified skilled and unskilled workers in Ghana.",
+    title: "Diwalya - Ghana's #1 Marketplace for Skilled Talent",
+    description: "Connect with verified electricians, plumbers, cleaners, and professionals across Ghana. Hire with confidence through Diwalya.",
     url: 'https://diwalya.com',
     siteName: 'Diwalya',
     images: [
       {
-        url: '/diwalya-logo.png',
+        url: 'https://diwalya.com/diwalya-logo.png',
         width: 1200,
         height: 630,
-        alt: 'Diwalya Platform Logo',
+        alt: 'Diwalya - Talent Meets Opportunity',
       },
     ],
     locale: 'en_GH',
@@ -47,9 +47,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Diwalya - Talent Meets Opportunity",
-    description: "Connect with verified skilled and unskilled workers in Ghana.",
-    images: ['/diwalya-logo.png'],
+    title: "Diwalya - Ghana's Trusted Worker Marketplace",
+    description: "Connect with verified professionals in Ghana. Diwalya is where talent meets opportunity.",
+    images: ['https://diwalya.com/diwalya-logo.png'],
   },
 };
 

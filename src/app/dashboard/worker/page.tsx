@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Briefcase, Wallet, Settings, Bell, Star, TrendingUp, DollarSign, Clock, CheckCircle2, MapPin, ArrowRight, Loader2, ShieldCheck, Image as ImageIcon, Calculator, Activity } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Wallet, Settings, Bell, Star, TrendingUp, DollarSign, Clock, CheckCircle2, MapPin, ArrowRight, Loader2, ShieldCheck, Image as ImageIcon, Calculator, Activity, Share2 } from 'lucide-react';
 import { cn, formatGHS } from '@/lib/utils';
 import ChatWindow from '@/components/Chat/ChatWindow';
 import NotificationBell from '@/components/ui/NotificationBell';
@@ -65,6 +65,27 @@ export default function WorkerDashboard() {
     { label: 'Pending Req', value: jobs.filter(j => j.status === 'WORKER_REVIEW').length.toString(), icon: Bell, color: 'text-purple-600', bg: 'bg-purple-50' },
     { label: 'Wallet Balance', value: formatGHS(wallet?.balance || 0), icon: Wallet, color: 'text-amber-600', bg: 'bg-amber-50' },
   ];
+
+  const handleShare = async () => {
+    if (!user) return;
+    const profileUrl = `${window.location.origin}/worker/${user.id}`;
+    const shareMessage = `Hi, I am ${user.user_metadata?.full_name || 'a professional'} and I am a ${workerProfile?.category || 'Specialist'}. Check my profile on Diwalya: ${profileUrl}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'My Diwalya Profile',
+          text: shareMessage,
+          url: profileUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareMessage);
+        alert('Profile link and message copied to clipboard!');
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') console.error('Share failed:', err);
+    }
+  };
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10 pb-20">
@@ -222,6 +243,21 @@ export default function WorkerDashboard() {
               <Link href="/dashboard/worker/wallet" className="w-full py-4 bg-primary text-white font-black rounded-2xl shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all block text-sm">
                 Withdraw Earnings
               </Link>
+           </div>
+
+           <div className="bg-slate-900 p-8 rounded-3xl text-white relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -translate-y-16 translate-x-16 blur-3xl group-hover:bg-primary/20 transition-all duration-700"></div>
+              <h3 className="font-black text-lg mb-2 relative z-10">Promote Your Business</h3>
+              <p className="text-xs text-slate-300 font-bold mb-8 relative z-10 leading-relaxed">
+                Share your professional profile on WhatsApp or Social Media to attract more direct clients.
+              </p>
+              <button 
+                onClick={handleShare}
+                className="w-full py-4 bg-white text-slate-900 font-black rounded-2xl shadow-xl hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2 relative z-10 group"
+              >
+                <Share2 size={18} className="group-hover:rotate-12 transition-transform" />
+                Share My Profile
+              </button>
            </div>
 
         </div>

@@ -167,15 +167,17 @@ export default function WorkerProfilePage({ params }: { params: Promise<{ id: st
 
   const handleShare = async () => {
     try {
+      const shareMessage = `Hi, I am ${worker?.name || 'a professional'} and I am a ${profile?.category || 'Specialist'}. Check my profile on Diwalya: ${window.location.href}`;
+      
       if (navigator.share) {
         await navigator.share({
           title: `Hire ${worker?.name} on Diwalya`,
-          text: `Check out ${worker?.name}'s profile on Diwalya`,
+          text: shareMessage,
           url: window.location.href,
         });
       } else {
-        await navigator.clipboard.writeText(window.location.href);
-        alert('Profile link copied to clipboard!');
+        await navigator.clipboard.writeText(`${shareMessage}`);
+        alert('Profile link and message copied to clipboard!');
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') console.error('Share failed:', err);
