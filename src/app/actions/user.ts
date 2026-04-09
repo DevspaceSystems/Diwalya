@@ -111,6 +111,7 @@ export async function updateUserProfile(userId: string, data: {
     bio: string;
     experienceYears: number;
     hourlyRate?: number;
+    ghanaCardUrl?: string;
   }
 }) {
   try {
@@ -135,7 +136,8 @@ export async function updateUserProfile(userId: string, data: {
         category: data.workerData.category,
         bio: data.workerData.bio,
         experienceYears: data.workerData.experienceYears,
-        hourlyRate: data.workerData.hourlyRate
+        hourlyRate: data.workerData.hourlyRate,
+        ghanaCardUrl: data.workerData.ghanaCardUrl
       };
 
       const { data: existing } = await supabaseAdmin
@@ -153,7 +155,11 @@ export async function updateUserProfile(userId: string, data: {
       } else {
         const { error: insertError } = await supabaseAdmin
           .from('WorkerProfile')
-          .insert({ userId, ...workerProfileData });
+          .insert({ 
+            id: `WP-${userId}`,
+            userId, 
+            ...workerProfileData 
+          });
         if (insertError) throw insertError;
       }
     }
@@ -164,7 +170,8 @@ export async function updateUserProfile(userId: string, data: {
       user_metadata: {
         full_name: data.name,
         profilePicture: data.profilePicture,
-        role: data.role // Set the final role (e.g. WORKER) in metadata
+        role: data.role, // Set the final role (e.g. WORKER) in metadata
+        onboardingComplete: true
       }
     });
 

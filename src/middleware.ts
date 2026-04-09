@@ -45,11 +45,18 @@ export async function middleware(request: NextRequest) {
   // Protect Worker Dashboard
   if (path.startsWith('/dashboard/worker')) {
     const formattedRole = role?.toString().toUpperCase();
-    console.log(`[Middleware Check] Path: ${path}, Session: ${!!session}, Role: ${role}, FormattedRole: ${formattedRole}`);
+    const onboardingComplete = session?.user?.user_metadata?.onboardingComplete;
+    console.log(`[Middleware Check] Path: ${path}, Role: ${role}, Onboarding: ${onboardingComplete}`);
     
     if (!session || formattedRole !== 'WORKER') {
       console.warn(`[Middleware Redirect] Unauthorized access to ${path}. Redirecting to /login`);
       return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Force onboarding if not complete and not already on the setup page
+    if (!onboardingComplete && path !== '/dashboard/worker/setup') {
+      console.warn(`[Middleware Redirect] Incomplete profile for ${session.user.email}. Redirecting to setup.`);
+      return NextResponse.redirect(new URL('/dashboard/worker/setup', request.url));
     }
   }
 

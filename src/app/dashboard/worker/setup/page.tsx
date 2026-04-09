@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { updateUserProfile } from '@/app/actions/user';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { compressImage } from '@/lib/image-utils';
 
 export default function WorkerSetupPage() {
   const router = useRouter();
@@ -36,6 +37,43 @@ export default function WorkerSetupPage() {
   const [bio, setBio] = useState('Skilled professional ready to provide high-quality services.');
   const [experience, setExperience] = useState(2);
   const [phone, setPhone] = useState('');
+  
+  // File State
+  const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
+  const [ghanaCardFile, setGhanaCardFile] = useState<File | null>(null);
+  const [ghanaCardUrl, setGhanaCardUrl] = useState('');
+  
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const ghanaCardInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (file: File, bucket: string, folder: string) => {
+    let uploadFile = file;
+    
+    // Auto-compress if image
+    if (file.type.startsWith('image/')) {
+      try {
+        uploadFile = await compressImage(file, 0.9);
+      } catch (err) {
+        console.error('Compression failed, trying original:', err);
+      }
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+    const filePath = `${folder}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, uploadFile);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
 
   const handleFinish = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,17 +81,44 @@ export default function WorkerSetupPage() {
     
     setLoading(true);
     try {
+      // 1. Upload images if provided
+      let pUrl = profilePicture;
+      let gUrl = '';
+
+      if (profilePicFile) {
+        pUrl = await handleFileUpload(profilePicFile, 'diwalya-media', 'profiles');
+      }
+      
+      if (ghanaCardFile) {
+        gUrl = await handleFileUpload(ghanaCardFile, 'diwalya-media', 'verifications');
+      }
+
+      if (!pUrl && !profilePicture) {
+        alert('Please upload a profile picture.');
+        setLoading(false);
+        setStep(1);
+        return;
+      }
+
+      if (!gUrl && !ghanaCardFile) {
+        alert('Please upload your Ghana Card for verification.');
+        setLoading(false);
+        setStep(2);
+        return;
+      }
+
       const res = await updateUserProfile(user.id, {
         name: user.user_metadata?.full_name || 'User',
         phone: phone,
         role: 'WORKER',
-        profilePicture: profilePicture || user.user_metadata?.profilePicture,
+        profilePicture: pUrl || user.user_metadata?.profilePicture,
         workerData: {
           businessName: user.user_metadata?.full_name || 'My Business',
           location: location,
           category: selectedCategory === 'other' ? customCategory : selectedCategory,
           bio: bio,
           experienceYears: experience,
+          ghanaCardUrl: gUrl // Added this to workerData
         }
       });
 
@@ -62,8 +127,9 @@ export default function WorkerSetupPage() {
       } else {
         alert('Failed to save profile: ' + res.error);
       }
-    } catch (error) {
-      console.error('Setup Error:', error);
+    } catch (err: any) {
+      console.error('Setup Error:', err);
+      alert('Error during setup: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -107,9 +173,30 @@ export default function WorkerSetupPage() {
               <div className="flex flex-col items-center mb-10">
                 <div className="relative group">
                   <div className="w-40 h-40 bg-slate-50 rounded-[3rem] flex items-center justify-center text-slate-200 border-2 border-dashed border-slate-100 overflow-hidden group-hover:border-secondary transition-all duration-500 bg-gradient-to-br from-white to-slate-50 shadow-inner">
-                    <Camera size={48} className="group-hover:scale-110 transition-transform duration-500" />
+                    {profilePicture ? (
+                      <Image src={profilePicture} alt="Profile" fill className="object-cover" />
+                    ) : (
+                      <Camera size={48} className="group-hover:scale-110 transition-transform duration-500" />
+                    )}
                   </div>
-                  <button type="button" className="absolute -bottom-2 -right-2 bg-slate-900 text-white p-4 rounded-3xl shadow-2xl hover:bg-secondary hover:-translate-y-1 transition-all duration-300">
+                  <input 
+                    type="file" 
+                    ref={profileInputRef}
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setProfilePicFile(file);
+                        setProfilePicture(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => profileInputRef.current?.click()}
+                    className="absolute -bottom-2 -right-2 bg-slate-900 text-white p-4 rounded-3xl shadow-2xl hover:bg-secondary hover:-translate-y-1 transition-all duration-300"
+                  >
                     <Upload size={20} />
                   </button>
                 </div>
@@ -233,12 +320,43 @@ export default function WorkerSetupPage() {
                 </div>
               </div>
 
-              <div className="border-4 border-dashed border-slate-50 rounded-[3rem] p-16 text-center hover:border-secondary/30 transition-all duration-500 cursor-pointer group bg-slate-50/30 hover:bg-white">
-                  <div className="w-20 h-20 bg-white text-slate-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary group-hover:text-white group-hover:scale-110 shadow-sm transition-all duration-500">
-                    <Upload size={36} />
-                  </div>
-                  <p className="font-black text-slate-700 uppercase tracking-widest text-xs">Drop files or click to scan</p>
-                  <p className="text-[10px] text-slate-600 font-bold mt-3 uppercase tracking-widest tracking-tighter">Maximum size 50MB (RAW, JPG, PDF)</p>
+              <div 
+                onClick={() => ghanaCardInputRef.current?.click()}
+                className="border-4 border-dashed border-slate-50 rounded-[3rem] p-8 text-center hover:border-secondary/30 transition-all duration-500 cursor-pointer group bg-slate-50/30 hover:bg-white overflow-hidden relative min-h-[200px] flex flex-col items-center justify-center"
+              >
+                  <input 
+                    type="file" 
+                    ref={ghanaCardInputRef}
+                    className="hidden" 
+                    accept="image/*,application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setGhanaCardFile(file);
+                        if (file.type.startsWith('image/')) {
+                          setGhanaCardUrl(URL.createObjectURL(file));
+                        } else {
+                          setGhanaCardUrl(''); // Clear if PDF or other
+                        }
+                      }
+                    }}
+                  />
+                  {ghanaCardUrl ? (
+                    <Image src={ghanaCardUrl} alt="Ghana Card" fill className="object-cover" />
+                  ) : ghanaCardFile ? (
+                    <div className="flex flex-col items-center">
+                      <FileText size={48} className="text-secondary mb-2" />
+                      <p className="font-bold text-slate-900">{ghanaCardFile.name}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-20 h-20 bg-white text-slate-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary group-hover:text-white group-hover:scale-110 shadow-sm transition-all duration-500">
+                        <Upload size={36} />
+                      </div>
+                      <p className="font-black text-slate-700 uppercase tracking-widest text-xs">Drop files or click to scan</p>
+                      <p className="text-[10px] text-slate-600 font-bold mt-3 uppercase tracking-widest tracking-tighter">Maximum size 50MB (RAW, JPG, PDF)</p>
+                    </>
+                  )}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-6">

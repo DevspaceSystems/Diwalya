@@ -74,7 +74,8 @@ export async function createWorkerProfile(userId: string, data: {
       user_metadata: {
         profilePicture: data.profilePicture,
         phone: data.phone,
-        role: 'WORKER'
+        role: 'WORKER',
+        onboardingComplete: true
       }
     });
 
