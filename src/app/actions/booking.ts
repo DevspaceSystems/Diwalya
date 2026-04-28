@@ -294,25 +294,43 @@ export async function completeJobAndReleaseFunds(jobId: string) {
     }
 
     // 5. Update Admin Wallet (for platform fee)
-    const { data: adminUser, error: adminErr } = await supabaseAdmin
-      .from('User')
-      .select('id')
-      .eq('role', 'SUPER_ADMIN')
-      .single();
+    try {
+        const { data: admins } = await supabaseAdmin
+          .from('User')
+          .select('id')
+          .eq('role', 'SUPER_ADMIN')
+          .limit(1);
 
-    if (adminUser) {
-        const { data: adminWallet, error: aWalletErr } = await supabaseAdmin
-          .from('Wallet')
-          .select('*')
-          .eq('userId', adminUser.id)
-          .single();
-        
-        if (adminWallet) {
-            await supabaseAdmin
+        const adminUser = admins?.[0];
+
+        if (adminUser) {
+            const { data: adminWallet, error: aWalletErr } = await supabaseAdmin
               .from('Wallet')
-              .update({ balance: adminWallet.balance + platformFee })
-              .eq('id', adminWallet.id);
+              .select('*')
+              .eq('userId', adminUser.id)
+              .maybeSingle(); // Use maybeSingle to prevent crash if missing
+            
+            if (adminWallet) {
+                await supabaseAdmin
+                  .from('Wallet')
+                  .update({ balance: adminWallet.balance + platformFee })
+                  .eq('id', adminWallet.id);
+                
+                await supabaseAdmin.from('Transaction').insert([
+                  {
+                    id: `TXN-A-${Date.now()}`,
+                    walletId: adminWallet.id,
+                    amount: platformFee,
+                    type: 'CREDIT',
+                    purpose: 'PLATFORM_FEE',
+                    reference: job.payment.reference,
+                    status: 'SUCCESS'
+                  }
+                ]);
+            }
         }
+    } catch (adminErr) {
+        console.error('Failed to credit admin wallet but continuing job completion:', adminErr);
     }
 
     // 6. Notifications

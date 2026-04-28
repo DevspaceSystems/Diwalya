@@ -4,6 +4,12 @@ import * as jose from 'jose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-super-secret-key-change-in-prod';
 
+if (process.env.NODE_ENV === 'production' && 
+    process.env.NEXT_PHASE !== 'phase-production-build' &&
+    JWT_SECRET === 'fallback-super-secret-key-change-in-prod') {
+  console.error('CRITICAL: JWT_SECRET is using fallback in production!');
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -33,8 +39,8 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
-  const role = session?.user?.user_metadata?.role;
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const role = user?.user_metadata?.role;
   const path = request.nextUrl.pathname;
 
   // Retire Client Dashboard
@@ -45,17 +51,17 @@ export async function middleware(request: NextRequest) {
   // Protect Worker Dashboard
   if (path.startsWith('/dashboard/worker')) {
     const formattedRole = role?.toString().toUpperCase();
-    const onboardingComplete = session?.user?.user_metadata?.onboardingComplete;
+    const onboardingComplete = user?.user_metadata?.onboardingComplete;
     console.log(`[Middleware Check] Path: ${path}, Role: ${role}, Onboarding: ${onboardingComplete}`);
     
-    if (!session || formattedRole !== 'WORKER') {
+    if (!user || formattedRole !== 'WORKER') {
       console.warn(`[Middleware Redirect] Unauthorized access to ${path}. Redirecting to /login`);
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
     // Force onboarding if not complete and not already on the setup page
     if (!onboardingComplete && path !== '/dashboard/worker/setup') {
-      console.warn(`[Middleware Redirect] Incomplete profile for ${session.user.email}. Redirecting to setup.`);
+      console.warn(`[Middleware Redirect] Incomplete profile for ${user.email}. Redirecting to setup.`);
       return NextResponse.redirect(new URL('/dashboard/worker/setup', request.url));
     }
   }

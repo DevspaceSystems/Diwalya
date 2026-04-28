@@ -6,6 +6,13 @@ import { authenticator } from 'otplib';
 
 // Use a secure random string for JWT signing in production (set in .env)
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-super-secret-key-change-in-prod';
+
+// Allow fallback during build phase, but throw in actual production runtime
+if (process.env.NODE_ENV === 'production' && 
+    process.env.NEXT_PHASE !== 'phase-production-build' &&
+    JWT_SECRET === 'fallback-super-secret-key-change-in-prod') {
+  throw new Error('JWT_SECRET is not configured for production. Please set it in environment variables.');
+}
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_MINUTES = 15;
 

@@ -19,9 +19,35 @@ export default function WorkerSetupPage() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUser(session.user);
+      // Use getUser() for most accurate metadata
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+        
+        // If already complete, redirect to dashboard
+        if (user.user_metadata?.onboardingComplete) {
+          router.push('/dashboard/worker');
+          return;
+        }
+
+        // Pre-fill from metadata
+        if (user.user_metadata?.full_name && !phone) { // Only pre-fill if not already edited
+           setPhone(user.user_metadata?.phone || '');
+           setProfilePicture(user.user_metadata?.profilePicture || '');
+        }
+
+        // Check if profile exists and pre-fill from DB
+        const { getWorkerProfile } = await import('@/app/actions/worker');
+        const profileRes = await getWorkerProfile(user.id);
+        if (profileRes.success && profileRes.data) {
+          const p = profileRes.data;
+          setSelectedCategory(p.category || '');
+          setLocation(p.location || '');
+          setBio(p.bio || '');
+          setExperience(p.experienceYears || 2);
+          setPhone(p.phone || user.user_metadata?.phone || '');
+          setProfilePicture(p.profilePicture || user.user_metadata?.profilePicture || '');
+        }
       } else {
         router.push('/login');
       }
@@ -123,6 +149,8 @@ export default function WorkerSetupPage() {
       });
 
       if (res.success) {
+        // Force refresh session to update the local cookie with onboardingComplete: true
+        await supabase.auth.refreshSession();
         setStep(4);
       } else {
         alert('Failed to save profile: ' + res.error);

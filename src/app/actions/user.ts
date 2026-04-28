@@ -115,16 +115,17 @@ export async function updateUserProfile(userId: string, data: {
   }
 }) {
   try {
-    // 1. Update User table
+    // 1. Update/Upsert User table
     const { error: userError } = await supabaseAdmin
       .from('User')
-      .update({
+      .upsert({
+        id: userId,
         name: data.name,
         phone: data.phone,
-        slug: generateSlug(data.name), // Note: Assuming generateSlug is imported or defined
-        profilePicture: data.profilePicture
-      })
-      .eq('id', userId);
+        slug: generateSlug(data.name),
+        profilePicture: data.profilePicture,
+        updatedAt: new Date().toISOString()
+      }, { onConflict: 'id' });
 
     if (userError) throw userError;
 

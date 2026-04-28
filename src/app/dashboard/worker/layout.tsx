@@ -34,21 +34,22 @@ export default function WorkerLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     async function loadUser() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUser(session.user);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
         const { getWorkerProfile, getWorkerById } = await import('@/app/actions/worker');
-        const profileRes = await getWorkerProfile(session.user.id);
-        if (profileRes.success) {
+        const profileRes = await getWorkerProfile(user.id);
+        if (profileRes.success && profileRes.data) {
           setWorkerProfile(profileRes.data);
         }
         // Fetch full user record for profile picture source
-        const userRes = await getWorkerById(session.user.id);
+        const userRes = await getWorkerById(user.id);
         if (userRes.success) {
           setUser(userRes.data);
           
           // Redirect check: if user has role WORKER but no profile, send to setup
-          if (userRes.data?.role === 'WORKER' && !profileRes.data) {
+          // BUT: avoid redirect loop if we're already on the setup page
+          if (userRes.data?.role === 'WORKER' && !profileRes.data && pathname !== '/dashboard/worker/setup') {
             console.warn('[WorkerLayout] Worker profile missing. Redirecting to setup...');
             router.push('/dashboard/worker/setup');
           }

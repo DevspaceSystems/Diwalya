@@ -47,10 +47,14 @@ export async function POST(req: Request) {
     // Find or Create Payment record
     const { data: existingPayment } = await supabaseAdmin
         .from('Payment')
-        .select('id')
+        .select('id, status')
         .eq('reference', reference)
-        .single();
+        .maybeSingle();
         
+    if (existingPayment?.status === 'SUCCESS') {
+        return NextResponse.json({ success: true, message: 'Already processed' });
+    }
+
     let paymentId = existingPayment?.id;
     
     if (!paymentId) {
@@ -90,11 +94,13 @@ export async function POST(req: Request) {
 
     if (!isEscrow) {
         // 4. Split Commission (5% to Admin, 95% to Worker) directly
-        const { data: adminUser } = await supabaseAdmin
+        const { data: admins } = await supabaseAdmin
             .from('User')
             .select('id')
             .eq('role', 'SUPER_ADMIN')
-            .single();
+            .limit(1);
+
+        const adminUser = admins?.[0];
 
         if (adminUser) {
             await creditWallet(adminUser.id, platformFee, 'PLATFORM_FEE', reference)

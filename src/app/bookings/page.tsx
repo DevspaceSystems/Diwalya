@@ -334,6 +334,15 @@ export default function BookingsPage() {
                            email={user?.email || ''}
                            amount={Math.round(booking.estimate.totalCost * 100)}
                            publicKey={process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || ''}
+                           metadata={{
+                             job_id: booking.id,
+                             worker_id: booking.workerId,
+                             is_escrow: true,
+                             custom_fields: [
+                               { display_name: "Job ID", variable_name: "job_id", value: booking.id },
+                               { display_name: "Service", variable_name: "service", value: booking.serviceType }
+                             ]
+                           }}
                            onSuccess={(ref: any) => handlePaymentSuccess(ref, booking.id, booking.estimate.totalCost)}
                            onClose={() => console.log('Closed')}
                          />
@@ -379,6 +388,15 @@ export default function BookingsPage() {
                        email={user?.email || ''}
                        amount={Math.round((booking.priceAmount || 0) * 100)}
                        publicKey={process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || ''}
+                       metadata={{
+                         job_id: booking.id,
+                         worker_id: booking.workerId,
+                         is_escrow: true,
+                         custom_fields: [
+                           { display_name: "Job ID", variable_name: "job_id", value: booking.id },
+                           { display_name: "Service", variable_name: "service", value: booking.serviceType }
+                         ]
+                       }}
                        onSuccess={(ref: any) => handlePaymentSuccess(ref, booking.id, booking.priceAmount || 0)}
                        onClose={() => console.log('Closed')}
                      />
