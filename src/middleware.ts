@@ -60,9 +60,20 @@ export async function middleware(request: NextRequest) {
     console.log(`[Middleware] Path: ${path} | MetaRole: ${formattedRole} | Onboarding: ${onboardingComplete}`);
 
     // --- ROLE CHECK ---
-    // If auth metadata doesn't say WORKER, fall back to DB (handles stale session cookies)
+    // If metadata role is not WORKER, query DB as fallback (handles stale session cookies)
     if (formattedRole !== 'WORKER') {
-      const { data: dbUser } = await supabase
+      const supabaseAdmin = createServerClient(
+        supabaseUrl,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          cookies: {
+            getAll() { return request.cookies.getAll() },
+            setAll() { /* no-op */ }
+          }
+        }
+      );
+
+      const { data: dbUser } = await supabaseAdmin
         .from('User')
         .select('role')
         .eq('id', user.id)
@@ -76,30 +87,37 @@ export async function middleware(request: NextRequest) {
     }
 
     // --- ONBOARDING CHECK ---
-    // Only send to setup if metadata flag is missing AND no WorkerProfile row exists in DB.
-    // This prevents looping existing workers who completed setup before the flag was added.
     if (!onboardingComplete && path !== '/dashboard/worker/setup') {
       try {
-        const { data: profile, error: profileError } = await supabase
+        // We MUST use the service role key here because RLS might block the anon key 
+        // from seeing the profile in the Edge Runtime environment.
+        const supabaseAdmin = createServerClient(
+          supabaseUrl,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            cookies: {
+              getAll() { return request.cookies.getAll() },
+              setAll() { /* no-op for check */ }
+            }
+          }
+        );
+
+        const { data: profile, error: profileError } = await supabaseAdmin
           .from('WorkerProfile')
           .select('id')
           .eq('userId', user.id)
           .maybeSingle();
 
-        // If we successfully checked and found NO profile, redirect to setup.
-        // If there was an error (e.g. RLS), we skip the redirect and let the 
-        // client-side handle it (to avoid blocking users due to middleware limitations).
         if (!profileError && !profile) {
           console.warn(`[Middleware] No WorkerProfile found for ${user.email}. Redirecting to setup.`);
           return NextResponse.redirect(new URL('/dashboard/worker/setup', request.url));
         }
         
         if (profile) {
-          console.log(`[Middleware] WorkerProfile confirmed in DB for ${user.id}. Allowing access.`);
+          console.log(`[Middleware] WorkerProfile confirmed via Admin for ${user.id}. Allowing access.`);
         }
       } catch (err) {
         console.error('[Middleware] DB Check Error:', err);
-        // On error, don't redirect to setup to be safe
       }
     }
   }
