@@ -19,34 +19,34 @@ export default function WorkerSetupPage() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      // Use getUser() for most accurate metadata
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        
-        // If already complete, redirect to dashboard
+
+        // Fast path: metadata already has onboardingComplete
         if (user.user_metadata?.onboardingComplete) {
           router.push('/dashboard/worker');
           return;
         }
 
-        // Pre-fill from metadata
-        if (user.user_metadata?.full_name && !phone) { // Only pre-fill if not already edited
-           setPhone(user.user_metadata?.phone || '');
-           setProfilePicture(user.user_metadata?.profilePicture || '');
-        }
-
-        // Check if profile exists and pre-fill from DB
+        // Slow path: metadata is stale — check DB for existing WorkerProfile
+        // This handles workers who completed setup before onboardingComplete was introduced
         const { getWorkerProfile } = await import('@/app/actions/worker');
         const profileRes = await getWorkerProfile(user.id);
+
         if (profileRes.success && profileRes.data) {
-          const p = profileRes.data;
-          setSelectedCategory(p.category || '');
-          setLocation(p.location || '');
-          setBio(p.bio || '');
-          setExperience(p.experienceYears || 2);
-          setPhone(p.phone || user.user_metadata?.phone || '');
-          setProfilePicture(p.profilePicture || user.user_metadata?.profilePicture || '');
+          // Profile exists → they already completed setup. Fix stale metadata and redirect.
+          await supabase.auth.updateUser({
+            data: { role: 'WORKER', onboardingComplete: true }
+          });
+          router.push('/dashboard/worker');
+          return;
+        }
+
+        // Genuinely new worker — pre-fill any available metadata
+        if (user.user_metadata?.full_name && !phone) {
+          setPhone(user.user_metadata?.phone || '');
+          setProfilePicture(user.user_metadata?.profilePicture || '');
         }
       } else {
         router.push('/login');
