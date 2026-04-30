@@ -149,7 +149,15 @@ export default function WorkerSetupPage() {
       });
 
       if (res.success) {
-        // Force refresh session to update the local cookie with onboardingComplete: true
+        // Update client-side auth metadata so the session cookie immediately carries onboardingComplete:true
+        // This prevents the middleware from redirecting back to /setup on the very next page load
+        await supabase.auth.updateUser({
+          data: {
+            role: 'WORKER',
+            onboardingComplete: true,
+          }
+        });
+        // Refresh session to propagate the updated cookie to the browser
         await supabase.auth.refreshSession();
         setStep(4);
       } else {
