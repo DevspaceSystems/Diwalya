@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import * as jose from 'jose';
-import { createClient } from '@supabase/supabase-js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-super-secret-key-change-in-prod';
 
@@ -40,7 +39,7 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   const role = user?.user_metadata?.role;
   const path = request.nextUrl.pathname;
 
@@ -51,63 +50,52 @@ export async function middleware(request: NextRequest) {
 
   // Protect Worker Dashboard
   if (path.startsWith('/dashboard/worker')) {
-    const formattedRole = role?.toString().toUpperCase();
-    const onboardingComplete = user?.user_metadata?.onboardingComplete;
-    console.log(`[Middleware Check] Path: ${path}, Role: ${formattedRole}, Onboarding: ${onboardingComplete}`);
-    
+    // Not logged in at all → redirect to login
     if (!user) {
-      console.warn(`[Middleware Redirect] No session for ${path}. Redirecting to /login`);
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // If role in metadata isn't WORKER, check DB as fallback (handles stale cookies)
+    const formattedRole = role?.toString().toUpperCase();
+    const onboardingComplete = user?.user_metadata?.onboardingComplete;
+    console.log(`[Middleware] Path: ${path} | MetaRole: ${formattedRole} | Onboarding: ${onboardingComplete}`);
+
+    // --- ROLE CHECK ---
+    // If auth metadata doesn't say WORKER, fall back to DB (handles stale session cookies)
     if (formattedRole !== 'WORKER') {
-      // Check if user has WORKER role in the database
-      const adminClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        { auth: { persistSession: false } }
-      );
-      const { data: dbUser } = await adminClient
+      const { data: dbUser } = await supabase
         .from('User')
         .select('role')
         .eq('id', user.id)
         .maybeSingle();
 
       if (!dbUser || dbUser.role !== 'WORKER') {
-        console.warn(`[Middleware Redirect] Non-worker access to ${path}. Redirecting to /login`);
+        console.warn(`[Middleware] Non-worker attempted ${path}. Redirecting to /login`);
         return NextResponse.redirect(new URL('/login', request.url));
       }
-
-      // They ARE a worker in DB — fix their stale metadata and let them through
-      console.log(`[Middleware] Worker ${user.id} has stale metadata. Allowing access to ${path}.`);
+      console.log(`[Middleware] DB confirms WORKER for ${user.id}. Stale metadata — allowing through.`);
     }
 
-    // Force onboarding only if metadata flag is missing AND no WorkerProfile exists in DB
+    // --- ONBOARDING CHECK ---
+    // Only send to setup if metadata flag is missing AND no WorkerProfile row exists in DB.
+    // This prevents looping existing workers who completed setup before the flag was added.
     if (!onboardingComplete && path !== '/dashboard/worker/setup') {
-      // Check DB for existing worker profile before forcing redirect
-      const adminClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        { auth: { persistSession: false } }
-      );
-      const { data: profile } = await adminClient
+      const { data: profile } = await supabase
         .from('WorkerProfile')
         .select('id')
         .eq('userId', user.id)
         .maybeSingle();
 
       if (!profile) {
-        // Truly incomplete — send to setup
-        console.warn(`[Middleware Redirect] No WorkerProfile for ${user.email}. Redirecting to setup.`);
+        // Genuinely new — send to setup
+        console.warn(`[Middleware] No WorkerProfile for ${user.email}. Redirecting to setup.`);
         return NextResponse.redirect(new URL('/dashboard/worker/setup', request.url));
       }
-      // Profile exists — they completed setup, metadata is just stale. Allow through.
-      console.log(`[Middleware] Worker ${user.id} has existing profile. Allowing access despite stale metadata.`);
+      // Profile exists in DB → onboarding done, metadata just stale → allow through
+      console.log(`[Middleware] WorkerProfile found for ${user.id}. Allowing despite stale metadata.`);
     }
   }
 
-  // Only protect /dashboard/admin routes (existing logic)
+  // Protect /dashboard/admin routes
   if (path.startsWith('/dashboard/admin')) {
     const sessionCookie = request.cookies.get('admin_session')?.value;
 
@@ -116,7 +104,6 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      // Verify JWT using jose
       const secret = new TextEncoder().encode(JWT_SECRET);
       const { payload } = await jose.jwtVerify(sessionCookie, secret);
       
@@ -124,12 +111,10 @@ export async function middleware(request: NextRequest) {
         throw new Error('Not an admin');
       }
 
-      // Allow access and optionally pass down admin id in headers
       supabaseResponse.headers.set('x-admin-id', payload.id as string);
       supabaseResponse.headers.set('x-admin-username', payload.username as string);
     } catch (error) {
        console.error('Middleware JWT Error:', error);
-       // Invalid or expired token, redirect to login and clear bad cookie
        const redirectResponse = NextResponse.redirect(new URL('/admin-portal/login', request.url));
        redirectResponse.cookies.delete('admin_session');
        return redirectResponse;
