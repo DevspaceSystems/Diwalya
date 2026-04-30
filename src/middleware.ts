@@ -79,19 +79,28 @@ export async function middleware(request: NextRequest) {
     // Only send to setup if metadata flag is missing AND no WorkerProfile row exists in DB.
     // This prevents looping existing workers who completed setup before the flag was added.
     if (!onboardingComplete && path !== '/dashboard/worker/setup') {
-      const { data: profile } = await supabase
-        .from('WorkerProfile')
-        .select('id')
-        .eq('userId', user.id)
-        .maybeSingle();
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('WorkerProfile')
+          .select('id')
+          .eq('userId', user.id)
+          .maybeSingle();
 
-      if (!profile) {
-        // Genuinely new — send to setup
-        console.warn(`[Middleware] No WorkerProfile for ${user.email}. Redirecting to setup.`);
-        return NextResponse.redirect(new URL('/dashboard/worker/setup', request.url));
+        // If we successfully checked and found NO profile, redirect to setup.
+        // If there was an error (e.g. RLS), we skip the redirect and let the 
+        // client-side handle it (to avoid blocking users due to middleware limitations).
+        if (!profileError && !profile) {
+          console.warn(`[Middleware] No WorkerProfile found for ${user.email}. Redirecting to setup.`);
+          return NextResponse.redirect(new URL('/dashboard/worker/setup', request.url));
+        }
+        
+        if (profile) {
+          console.log(`[Middleware] WorkerProfile confirmed in DB for ${user.id}. Allowing access.`);
+        }
+      } catch (err) {
+        console.error('[Middleware] DB Check Error:', err);
+        // On error, don't redirect to setup to be safe
       }
-      // Profile exists in DB → onboarding done, metadata just stale → allow through
-      console.log(`[Middleware] WorkerProfile found for ${user.id}. Allowing despite stale metadata.`);
     }
   }
 

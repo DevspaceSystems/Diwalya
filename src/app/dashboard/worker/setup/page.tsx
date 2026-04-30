@@ -11,50 +11,14 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { compressImage } from '@/lib/image-utils';
 
+import { getWorkerProfile } from '@/app/actions/worker';
+
 export default function WorkerSetupPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser(user);
-
-        // Fast path: metadata already has onboardingComplete
-        if (user.user_metadata?.onboardingComplete) {
-          router.push('/dashboard/worker');
-          return;
-        }
-
-        // Slow path: metadata is stale — check DB for existing WorkerProfile
-        // This handles workers who completed setup before onboardingComplete was introduced
-        const { getWorkerProfile } = await import('@/app/actions/worker');
-        const profileRes = await getWorkerProfile(user.id);
-
-        if (profileRes.success && profileRes.data) {
-          // Profile exists → they already completed setup. Fix stale metadata and redirect.
-          await supabase.auth.updateUser({
-            data: { role: 'WORKER', onboardingComplete: true }
-          });
-          router.push('/dashboard/worker');
-          return;
-        }
-
-        // Genuinely new worker — pre-fill any available metadata
-        if (user.user_metadata?.full_name && !phone) {
-          setPhone(user.user_metadata?.phone || '');
-          setProfilePicture(user.user_metadata?.profilePicture || '');
-        }
-      } else {
-        router.push('/login');
-      }
-    };
-    fetchUser();
-  }, [router]);
-  
   // Form State
   const [profilePicture, setProfilePicture] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -68,6 +32,50 @@ export default function WorkerSetupPage() {
   const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
   const [ghanaCardFile, setGhanaCardFile] = useState<File | null>(null);
   const [ghanaCardUrl, setGhanaCardUrl] = useState('');
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      console.log('[SetupPage] Checking user status...');
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (authUser) {
+        setUser(authUser);
+
+        // 1. Check metadata (Fastest)
+        if (authUser.user_metadata?.onboardingComplete) {
+          console.log('[SetupPage] Onboarding already complete via metadata. Redirecting...');
+          router.push('/dashboard/worker');
+          return;
+        }
+
+        // 2. Check DB (Fallback for legacy/stale users)
+        const profileRes = await getWorkerProfile(authUser.id);
+        console.log('[SetupPage] Profile check result:', profileRes);
+
+        if (profileRes.success && profileRes.data) {
+          console.log('[SetupPage] Profile found in DB. Syncing metadata and redirecting...');
+          // Sync metadata to prevent future hits to DB
+          await supabase.auth.updateUser({
+            data: { role: 'WORKER', onboardingComplete: true }
+          });
+          router.push('/dashboard/worker');
+          return;
+        }
+
+        // 3. New User - Pre-fill
+        if (authUser.user_metadata?.full_name) {
+          setPhone(prev => prev || authUser.user_metadata?.phone || '');
+          setProfilePicture(prev => prev || authUser.user_metadata?.profilePicture || '');
+        }
+      } else {
+        console.warn('[SetupPage] No auth user. Redirecting to login.');
+        router.push('/login');
+      }
+    };
+    fetchUser();
+  }, [router]);
+
+
   
   const profileInputRef = useRef<HTMLInputElement>(null);
   const ghanaCardInputRef = useRef<HTMLInputElement>(null);
