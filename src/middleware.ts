@@ -37,16 +37,16 @@ export async function middleware(request: NextRequest) {
 
     const role = user.user_metadata?.role?.toString().toUpperCase();
     
-    // If they already have the WORKER role, they are complete.
-    // This handles existing workers with stale session metadata.
+    // If they already have the WORKER role in metadata, allow access immediately.
+    // This is the fastest path and handles most users.
     if (role === 'WORKER') {
       return supabaseResponse;
     }
 
-    // Fallback: Check DB role if metadata is stale
-    const supabaseAdmin = createServerClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-      cookies: { getAll() { return request.cookies.getAll() }, setAll() {} }
-    });
+    // Fallback: Check DB role if metadata is stale (e.g. just finished setup)
+    // We use a clean admin client without cookies to ensure we bypass RLS correctly.
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseAdmin = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
     const { data: dbUser } = await supabaseAdmin
       .from('User')
@@ -55,23 +55,17 @@ export async function middleware(request: NextRequest) {
       .maybeSingle();
 
     if (dbUser?.role === 'WORKER') {
+      console.log(`[Middleware] Role WORKER confirmed in DB for ${user.id}. Allowing access.`);
       return supabaseResponse;
     }
 
-    // Genuinely not a worker or new user -> force setup if they aren't there already
+    // If they are not a WORKER yet, and not already on the setup page, send them to setup.
     if (path !== '/dashboard/worker/setup') {
-      // Check if they have a profile already
-      const { data: profile } = await supabaseAdmin
-        .from('WorkerProfile')
-        .select('id')
-        .eq('userId', user.id)
-        .maybeSingle();
-
-      if (!profile) {
-        return NextResponse.redirect(new URL('/dashboard/worker/setup', request.url));
-      }
+      console.warn(`[Middleware] User ${user.email} (Role: ${dbUser?.role || role}) is not a WORKER. Redirecting to setup.`);
+      return NextResponse.redirect(new URL('/dashboard/worker/setup', request.url));
     }
   }
+
 
   // 3. Protect Admin Dashboard
   if (path.startsWith('/dashboard/admin')) {
