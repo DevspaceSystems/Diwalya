@@ -33,39 +33,17 @@ export async function middleware(request: NextRequest) {
 
   // 2. Protect Worker Dashboard
   if (path.startsWith('/dashboard/worker')) {
-    if (!user) return NextResponse.redirect(new URL('/login', request.url));
-
-    const role = user.user_metadata?.role?.toString().toUpperCase();
+    // If not logged in, always redirect to login
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
     
-    // If they already have the WORKER role in metadata, allow access immediately.
-    // This is the fastest path and handles most users.
-    if (role === 'WORKER') {
-      return supabaseResponse;
-    }
-
-    // Fallback: Check DB role if metadata is stale (e.g. just finished setup)
-    // We use a clean admin client without cookies to ensure we bypass RLS correctly.
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabaseAdmin = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-    const { data: dbUser } = await supabaseAdmin
-      .from('User')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (dbUser?.role === 'WORKER') {
-      console.log(`[Middleware] Role WORKER confirmed in DB for ${user.id}. Allowing access.`);
-      return supabaseResponse;
-    }
-
-    // If they are not a WORKER yet, and not already on the setup page, send them to setup.
-    if (path !== '/dashboard/worker/setup') {
-      console.warn(`[Middleware] User ${user.email} (Role: ${dbUser?.role || role}) is not a WORKER. Redirecting to setup.`);
-      return NextResponse.redirect(new URL('/dashboard/worker/setup', request.url));
-    }
+    // We REMOVE the role/onboarding redirect from here.
+    // It's too prone to stale session loops in the Edge Runtime.
+    // The individual pages (/dashboard/worker/page.tsx and /setup/page.tsx) 
+    // will handle their own internal redirection based on real-time DB state.
+    return supabaseResponse;
   }
-
 
   // 3. Protect Admin Dashboard
   if (path.startsWith('/dashboard/admin')) {

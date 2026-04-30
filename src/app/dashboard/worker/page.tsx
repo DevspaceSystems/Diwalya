@@ -24,17 +24,24 @@ export default function WorkerDashboard() {
       const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
       if (session) {
         setUser(session.user);
+        
+        // Fetch worker profile for verification status AND onboarding check
+        const { getWorkerProfile } = await import('@/app/actions/worker');
+        const profileRes = await getWorkerProfile(session.user.id);
+        
+        if (profileRes.success && profileRes.data) {
+          setWorkerProfile(profileRes.data);
+        } else {
+          // Genuinely no profile -> redirect to setup
+          console.warn('[WorkerDashboard] No profile found. Redirecting to setup...');
+          window.location.href = '/dashboard/worker/setup';
+          return;
+        }
+
         const { getWorkerJobs } = await import('@/app/actions/booking');
         const jobsResult = await getWorkerJobs(session.user.id);
         if (jobsResult.success && jobsResult.data) {
           setJobs(jobsResult.data);
-        }
-
-        // Fetch worker profile for verification status
-        const { getWorkerProfile } = await import('@/app/actions/worker');
-        const profileRes = await getWorkerProfile(session.user.id);
-        if (profileRes.success) {
-          setWorkerProfile(profileRes.data);
         }
 
         // Fetch wallet data
