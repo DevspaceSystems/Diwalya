@@ -22,12 +22,11 @@ export const metadata: Metadata = {
     title: "Diwalya",
   },
   icons: {
-
     icon: [
-      { url: '/icon.png' },
-      { url: '/diwalya-logo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/pwa-icon.png' },
+      { url: '/pwa-icon.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/apple-icon.png',
+    apple: '/pwa-icon.png',
   },
   openGraph: {
     title: "Diwalya - Ghana's #1 Marketplace for Skilled Talent",
